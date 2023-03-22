@@ -3,6 +3,7 @@
 */
 
 #include <SDL2/SDL.h>
+#include <SDL2/SDL_image.h>
 #include <stdio.h>
 #include "engine.h"
 
@@ -47,23 +48,72 @@ int main(int argv, char **args)
         return 1;
     }
 
+    SDL_Surface *pSurface = IMG_Load("resources/caet2.png");
+    if (!pSurface)
+    {
+        printf("Error: %s\n", SDL_GetError());
+        SDL_DestroyRenderer(pRenderer);
+        SDL_DestroyWindow(pWindow);
+        SDL_Quit();
+        return 1;
+    }
+
+    SDL_Texture *pTexture = SDL_CreateTextureFromSurface(pRenderer, pSurface);
+    SDL_FreeSurface(pSurface);
+    if (!pTexture)
+    {
+        printf("Error: %s\n", SDL_GetError());
+        SDL_DestroyRenderer(pRenderer);
+        SDL_DestroyWindow(pWindow);
+        SDL_Quit();
+        return 1;
+    }
+
+    SDL_Rect playerRect;
+    SDL_QueryTexture(pTexture, NULL, NULL, &playerRect.w, &playerRect.h);
+
+    playerRect.x = 100;
+    playerRect.y = 100;
+
+    playerRect.w = 64;
+    playerRect.h = 128;
+
     int running = 1;
 
     while (running)
     {
+        red+=2;
+        green+=10;
+        blue+=5;
         SDL_Event event;
         while (SDL_PollEvent(&event))
         {
+            
             if (event.type == SDL_QUIT)
                 running = 0;
             else if (event.type == SDL_KEYDOWN)
             {
+                if(event.key.keysym.sym == SDLK_w){
+                    playerRect.y--;
+                }
+                if(event.key.keysym.sym == SDLK_s){
+                    playerRect.y++;
+                }
+                if(event.key.keysym.sym == SDLK_a){
+                    playerRect.x--;
+                }
+                if(event.key.keysym.sym == SDLK_d){
+                    playerRect.x++;
+                }
+                /*
                 switch (event.key.keysym.sym)
                 {
-                case SDLK_w: red++; break;
-                case SDLK_d: green++; break;
-                case SDLK_a: blue++; break;
-                }
+                case SDLK_w: playerRect.y--; break;
+                case SDLK_s: playerRect.y++; break;
+                case SDLK_a: playerRect.x--; break;
+                case SDLK_d: playerRect.x--; break;
+                }*/
+
             }
 
             if (red > 255)
@@ -80,10 +130,11 @@ int main(int argv, char **args)
             {
                 blue = 0;
             }
-            
+
         }
         SDL_SetRenderDrawColor(pRenderer, red, green, blue, 255);
         SDL_RenderClear(pRenderer);
+        SDL_RenderCopy(pRenderer, pTexture, NULL, &playerRect);
         SDL_RenderPresent(pRenderer);
         SDL_Delay(1000 / 60);
     }
