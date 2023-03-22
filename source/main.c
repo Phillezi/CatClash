@@ -16,11 +16,14 @@
 #define DEFAULT_WIDTH 800
 #define DEFAULT_HEIGHT 600
 #define WINDOW_NAME "Kitten Game"
+#define FPS 165
 
 void initConfig(int *pWindowWidth, int *pWindowHeight);
 
 int main(int argv, char **args)
 {
+
+    int prevTime = 0;
     int windowWidth = DEFAULT_WIDTH, windowHeight = DEFAULT_HEIGHT;
     int red = 255, green = 0, blue = 0;
 
@@ -82,38 +85,46 @@ int main(int argv, char **args)
 
     while (running)
     {
-        red+=2;
-        green+=10;
-        blue+=5;
-        SDL_Event event;
-        while (SDL_PollEvent(&event))
+        int deltaTime = SDL_GetTicks() - prevTime;
+        if (deltaTime >= 1000 / FPS) // updates at a frequency of FPS
         {
-            
-            if (event.type == SDL_QUIT)
-                running = 0;
-            else if (event.type == SDL_KEYDOWN)
-            {
-                if(event.key.keysym.sym == SDLK_w){
-                    playerRect.y--;
-                }
-                if(event.key.keysym.sym == SDLK_s){
-                    playerRect.y++;
-                }
-                if(event.key.keysym.sym == SDLK_a){
-                    playerRect.x--;
-                }
-                if(event.key.keysym.sym == SDLK_d){
-                    playerRect.x++;
-                }
-                /*
-                switch (event.key.keysym.sym)
-                {
-                case SDLK_w: playerRect.y--; break;
-                case SDLK_s: playerRect.y++; break;
-                case SDLK_a: playerRect.x--; break;
-                case SDLK_d: playerRect.x--; break;
-                }*/
+            prevTime = SDL_GetTicks();
+            red += 2;
+            green += 10;
+            blue += 5;
 
+            SDL_Event event;
+            while (SDL_PollEvent(&event))
+            {
+                if (event.type == SDL_QUIT)
+                    running = 0;
+                else if (event.type == SDL_KEYDOWN)
+                {
+                    if (event.key.keysym.sym == SDLK_w)
+                    {
+                        playerRect.y--;
+                    }
+                    if (event.key.keysym.sym == SDLK_s)
+                    {
+                        playerRect.y++;
+                    }
+                    if (event.key.keysym.sym == SDLK_a)
+                    {
+                        playerRect.x--;
+                    }
+                    if (event.key.keysym.sym == SDLK_d)
+                    {
+                        playerRect.x++;
+                    }
+                    /*
+                    switch (event.key.keysym.sym)
+                    {
+                    case SDLK_w: playerRect.y--; break;
+                    case SDLK_s: playerRect.y++; break;
+                    case SDLK_a: playerRect.x--; break;
+                    case SDLK_d: playerRect.x--; break;
+                    }*/
+                }
             }
 
             if (red > 255)
@@ -131,12 +142,14 @@ int main(int argv, char **args)
                 blue = 0;
             }
 
+            SDL_SetRenderDrawColor(pRenderer, red, green, blue, 255);
+            SDL_RenderClear(pRenderer);
+            SDL_RenderCopy(pRenderer, pTexture, NULL, &playerRect);
+            SDL_RenderPresent(pRenderer);
+
         }
-        SDL_SetRenderDrawColor(pRenderer, red, green, blue, 255);
-        SDL_RenderClear(pRenderer);
-        SDL_RenderCopy(pRenderer, pTexture, NULL, &playerRect);
-        SDL_RenderPresent(pRenderer);
-        SDL_Delay(1000 / 60);
+
+        // SDL_Delay(1000 / 60);
     }
 
     SDL_DestroyWindow(pWindow);
