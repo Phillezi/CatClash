@@ -25,7 +25,7 @@ int main(int argv, char **args)
 
     int prevTime = 0;
     int windowWidth = DEFAULT_WIDTH, windowHeight = DEFAULT_HEIGHT;
-    int red = 255, green = 0, blue = 0;
+    int red = 255, green = 255, blue = 255;
 
     initConfig(&windowWidth, &windowHeight);
 
@@ -89,42 +89,63 @@ int main(int argv, char **args)
         if (deltaTime >= 1000 / FPS) // updates at a frequency of FPS
         {
             prevTime = SDL_GetTicks();
-            red += 2;
-            green += 10;
-            blue += 5;
+            // red += 2;
+            // green += 10;
+            // blue += 5;
 
             SDL_Event event;
             while (SDL_PollEvent(&event))
             {
                 if (event.type == SDL_QUIT)
                     running = 0;
-                else if (event.type == SDL_KEYDOWN)
+
+                const Uint8 *currentKeyStates = SDL_GetKeyboardState(NULL);
+
+                if (currentKeyStates[SDL_SCANCODE_W])
                 {
-                    if (event.key.keysym.sym == SDLK_w)
-                    {
-                        playerRect.y--;
-                    }
-                    if (event.key.keysym.sym == SDLK_s)
-                    {
-                        playerRect.y++;
-                    }
-                    if (event.key.keysym.sym == SDLK_a)
-                    {
-                        playerRect.x--;
-                    }
-                    if (event.key.keysym.sym == SDLK_d)
-                    {
-                        playerRect.x++;
-                    }
-                    /*
-                    switch (event.key.keysym.sym)
-                    {
-                    case SDLK_w: playerRect.y--; break;
-                    case SDLK_s: playerRect.y++; break;
-                    case SDLK_a: playerRect.x--; break;
-                    case SDLK_d: playerRect.x--; break;
-                    }*/
+                    playerRect.y -= 10;
                 }
+                if (currentKeyStates[SDL_SCANCODE_S])
+                {
+                    playerRect.y += 10;
+                }
+                if (currentKeyStates[SDL_SCANCODE_A])
+                {
+                    playerRect.x -= 10;
+                }
+                if (currentKeyStates[SDL_SCANCODE_D])
+                {
+                    playerRect.x += 10;
+                }
+                /*
+            else if (event.type == SDL_KEYDOWN)
+            {
+                if (event.key.keysym.sym == SDLK_w)
+                {
+                    playerRect.y--;
+                }
+                if (event.key.keysym.sym == SDLK_s)
+                {
+                    playerRect.y++;
+                }
+                if (event.key.keysym.sym == SDLK_a)
+                {
+                    playerRect.x--;
+                }
+                if (event.key.keysym.sym == SDLK_d)
+                {
+                    playerRect.x++;
+                }
+                */
+                /*
+                switch (event.key.keysym.sym)
+                {
+                case SDLK_w: playerRect.y--; break;
+                case SDLK_s: playerRect.y++; break;
+                case SDLK_a: playerRect.x--; break;
+                case SDLK_d: playerRect.x--; break;
+                }*/
+                //}
             }
 
             if (red > 255)
@@ -142,11 +163,24 @@ int main(int argv, char **args)
                 blue = 0;
             }
 
+            if(playerRect.x > windowWidth){
+                playerRect.x = 0;
+            }
+            else if(playerRect.x < 0){
+                playerRect.x = windowWidth;
+            }
+
+            if(playerRect.y > windowHeight){
+                playerRect.y = 0;
+            }
+            else if(playerRect.y < 0){
+                playerRect.y = windowHeight;
+            }
+
             SDL_SetRenderDrawColor(pRenderer, red, green, blue, 255);
             SDL_RenderClear(pRenderer);
             SDL_RenderCopy(pRenderer, pTexture, NULL, &playerRect);
             SDL_RenderPresent(pRenderer);
-
         }
 
         // SDL_Delay(1000 / 60);
