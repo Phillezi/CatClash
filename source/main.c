@@ -316,7 +316,7 @@ int main(int argv, char **args)
 
         // SDL_Delay(1000 / 60);
     }
-
+    SDL_DestroyRenderer(pRenderer);
     SDL_DestroyWindow(pWindow);
     SDL_Quit();
     return 0;
