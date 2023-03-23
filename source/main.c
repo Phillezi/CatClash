@@ -31,25 +31,27 @@ int main(int argv, char **args)
 
     printf("Your current resolution is %dx%d", windowWidth, windowHeight);
 
-    SDL_Point vPoints[(windowWidth/64)*2+3];
-    for(int i = 0; i < ((windowWidth/64)*2+3); i++){
+    SDL_Point vPoints[(windowWidth / 64) * 2 + 6];
+    for (int i = 0; i < ((windowWidth / 64) * 2 + 5); i++)
+    {
         vPoints[i].y = 0;
-        vPoints[i].x = i*64;
+        vPoints[i].x = i * 64;
         i++;
         vPoints[i].y = windowHeight;
-        vPoints[i].x = (i-1)*64;
+        vPoints[i].x = (i - 1) * 64;
     }
-    int vLineCount = windowWidth/64+3;
+    int vLineCount = windowWidth / 64 + 3;
 
-    SDL_Point hPoints[(windowHeight/64)*2+3];
-    for(int i = 0; i < ((windowHeight/64)*2+3); i++){
+    SDL_Point hPoints[(windowHeight / 64) * 2 + 6];
+    for (int i = 0; i < ((windowHeight / 64) * 2 + 5); i++)
+    {
         hPoints[i].x = 0;
-        hPoints[i].y = i*64;
+        hPoints[i].y = i * 64;
         i++;
         hPoints[i].x = windowWidth;
-        hPoints[i].y = (i-1)*64;
+        hPoints[i].y = (i - 1) * 64;
     }
-    int hLineCount = windowHeight/64+3;
+    int hLineCount = windowHeight / 64 + 3;
 
     // SDL_Window *pWindow = initWindow(WINDOW_NAME, windowWidth, windowHeight);
     // SDL_Renderer *pRenderer = initRenderer(pWindow);
@@ -95,11 +97,13 @@ int main(int argv, char **args)
     SDL_Rect playerRect;
     SDL_QueryTexture(pTexture, NULL, NULL, &playerRect.w, &playerRect.h);
 
-    playerRect.x = 100;
-    playerRect.y = 100;
+    playerRect.x = windowWidth / 2;
+    playerRect.y = windowHeight / 2;
 
     playerRect.w = 64;
     playerRect.h = 128;
+
+    int movementAmount = 5;
 
     int running = 1;
 
@@ -111,7 +115,7 @@ int main(int argv, char **args)
             prevTime = SDL_GetTicks();
             // red += 2;
             green += 1;
-            //blue += 5;
+            // blue += 5;
 
             SDL_Event event;
             while (SDL_PollEvent(&event))
@@ -123,54 +127,90 @@ int main(int argv, char **args)
 
                 if (currentKeyStates[SDL_SCANCODE_W])
                 {
-                    //playerRect.y--;
-                    for(int i = 0; i < hLineCount; i++){
-                        hPoints[i].y++;
+                    if (playerRect.y > windowHeight / 4)
+                    {
+                        playerRect.y = playerRect.y - movementAmount;
+                    }
+                    else
+                    {
+                        for (int i = 0; i < hLineCount; i++)
+                        {
+                            hPoints[i].y = hPoints[i].y + movementAmount;
+                        }
                     }
                 }
                 if (currentKeyStates[SDL_SCANCODE_S])
                 {
-                    //playerRect.y++;
-                    for(int i = 0; i < hLineCount; i++){
-                        hPoints[i].y--;
+                    if (playerRect.y < ((3 * windowHeight) / 4))
+                    {
+                        playerRect.y = playerRect.y + movementAmount;
+                    }
+                    else
+                    {
+                        for (int i = 0; i < hLineCount; i++)
+                        {
+                            hPoints[i].y = hPoints[i].y - movementAmount;
+                        }
                     }
                 }
                 if (currentKeyStates[SDL_SCANCODE_A])
                 {
-                    //playerRect.x--;
-                    for(int i = 0; i < vLineCount; i++){
-                        vPoints[i].x++;
+                    if (playerRect.x > (windowWidth / 4))
+                    {
+                        playerRect.x = playerRect.x - movementAmount;
+                    }
+                    else
+                    {
+                        for (int i = 0; i < vLineCount; i++)
+                        {
+                            vPoints[i].x = vPoints[i].x + movementAmount;
+                        }
                     }
                 }
                 if (currentKeyStates[SDL_SCANCODE_D])
                 {
-                    //playerRect.x++;
-                    for(int i = 0; i < vLineCount; i++){
-                        vPoints[i].x--;
+                    if (playerRect.x < ((3 * windowWidth) / 4))
+                    {
+                        playerRect.x = playerRect.x + movementAmount;
+                    }
+                    else
+                    {
+                        for (int i = 0; i < vLineCount; i++)
+                        {
+                            vPoints[i].x = vPoints[i].x - movementAmount;
+                        }
                     }
                 }
 
-                if(hPoints[0].y > 128){
-                    for(int i = 0; i < hLineCount; i++){
-                        hPoints[i].y = hPoints[i].y-128;
+                if (hPoints[0].y > 128)
+                {
+                    for (int i = 0; i < hLineCount; i++)
+                    {
+                        hPoints[i].y = hPoints[i].y - 128;
                     }
                 }
 
-                if(hPoints[0].y < -128){
-                    for(int i = 0; i < hLineCount; i++){
-                        hPoints[i].y = hPoints[i].y+128;
+                if (hPoints[0].y < -128)
+                {
+                    for (int i = 0; i < hLineCount; i++)
+                    {
+                        hPoints[i].y = hPoints[i].y + 128;
                     }
                 }
 
-                if(vPoints[0].x > 128){
-                    for(int i = 0; i < vLineCount; i++){
-                        vPoints[i].x = vPoints[i].x-128;
+                if (vPoints[0].x > 128)
+                {
+                    for (int i = 0; i < vLineCount; i++)
+                    {
+                        vPoints[i].x = vPoints[i].x - 128;
                     }
                 }
 
-                if(vPoints[0].x < -128){
-                    for(int i = 0; i < vLineCount; i++){
-                        vPoints[i].x = vPoints[i].x+128;
+                if (vPoints[0].x < -128)
+                {
+                    for (int i = 0; i < vLineCount; i++)
+                    {
+                        vPoints[i].x = vPoints[i].x + 128;
                     }
                 }
                 /*
@@ -219,36 +259,42 @@ int main(int argv, char **args)
                 blue = 0;
             }
 
-            if(playerRect.x > windowWidth){
+            if (playerRect.x > windowWidth)
+            {
                 playerRect.x = 0;
             }
-            else if(playerRect.x < 0){
+            else if (playerRect.x < 0)
+            {
                 playerRect.x = windowWidth;
             }
 
-            if(playerRect.y > windowHeight){
+            if (playerRect.y > windowHeight)
+            {
                 playerRect.y = 0;
             }
-            else if(playerRect.y < 0){
+            else if (playerRect.y < 0)
+            {
                 playerRect.y = windowHeight;
             }
 
             SDL_SetRenderDrawColor(pRenderer, red, green, blue, 255);
             SDL_RenderClear(pRenderer);
-            
+
             SDL_SetRenderDrawColor(pRenderer, 0, 0, 0, 255);
-            //SDL_RenderDrawLines(pRenderer, vertPoints, vLineCount);
-            //SDL_RenderDrawLines(pRenderer, horiPoints, hLineCount);
-            for(int i = 0; i < vLineCount; i++){
-                SDL_RenderDrawLine(pRenderer, vPoints[i].x, vPoints[i].y, vPoints[i+1].x, vPoints[i+1].y);
+            // SDL_RenderDrawLines(pRenderer, vertPoints, vLineCount);
+            // SDL_RenderDrawLines(pRenderer, horiPoints, hLineCount);
+            for (int i = 0; i < vLineCount; i++)
+            {
+                SDL_RenderDrawLine(pRenderer, vPoints[i].x, vPoints[i].y, vPoints[i + 1].x, vPoints[i + 1].y);
                 i++;
             }
 
-            for(int i = 0; i < hLineCount; i++){
-                SDL_RenderDrawLine(pRenderer, hPoints[i].x, hPoints[i].y, hPoints[i+1].x, hPoints[i+1].y);
+            for (int i = 0; i < hLineCount; i++)
+            {
+                SDL_RenderDrawLine(pRenderer, hPoints[i].x, hPoints[i].y, hPoints[i + 1].x, hPoints[i + 1].y);
                 i++;
             }
-            
+
             SDL_SetRenderDrawColor(pRenderer, 255, 0, 0, 255);
             SDL_RenderDrawRect(pRenderer, &playerRect);
 
