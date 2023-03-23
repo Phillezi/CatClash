@@ -104,6 +104,7 @@ int main(int argv, char **args)
     playerRect.h = 128;
 
     int movementAmount = 5;
+    int colorChanger = 1;
 
     int running = 1;
 
@@ -114,7 +115,7 @@ int main(int argv, char **args)
         {
             prevTime = SDL_GetTicks();
             // red += 2;
-            green += 1;
+            green += colorChanger;
             // blue += 5;
 
             SDL_Event event;
@@ -123,19 +124,51 @@ int main(int argv, char **args)
                 if (event.type == SDL_QUIT)
                     running = 0;
 
-                const Uint8 *currentKeyStates = SDL_GetKeyboardState(NULL);
+                
+                /*
+            else if (event.type == SDL_KEYDOWN)
+            {
+                if (event.key.keysym.sym == SDLK_w)
+                {
+                    playerRect.y--;
+                }
+                if (event.key.keysym.sym == SDLK_s)
+                {
+                    playerRect.y++;
+                }
+                if (event.key.keysym.sym == SDLK_a)
+                {
+                    playerRect.x--;
+                }
+                if (event.key.keysym.sym == SDLK_d)
+                {
+                    playerRect.x++;
+                }
+                */
+                /*
+                switch (event.key.keysym.sym)
+                {
+                case SDLK_w: playerRect.y--; break;
+                case SDLK_s: playerRect.y++; break;
+                case SDLK_a: playerRect.x--; break;
+                case SDLK_d: playerRect.x--; break;
+                }*/
+                //}
+            }
+
+            const Uint8 *currentKeyStates = SDL_GetKeyboardState(NULL);
 
                 if (currentKeyStates[SDL_SCANCODE_W])
                 {
                     if (playerRect.y > windowHeight / 4)
                     {
-                        playerRect.y = playerRect.y - movementAmount;
+                        playerRect.y -= movementAmount;
                     }
                     else
                     {
                         for (int i = 0; i < hLineCount; i++)
                         {
-                            hPoints[i].y = hPoints[i].y + movementAmount;
+                            hPoints[i].y += movementAmount;
                         }
                     }
                 }
@@ -143,13 +176,13 @@ int main(int argv, char **args)
                 {
                     if (playerRect.y < ((3 * windowHeight) / 4))
                     {
-                        playerRect.y = playerRect.y + movementAmount;
+                        playerRect.y += movementAmount;
                     }
                     else
                     {
                         for (int i = 0; i < hLineCount; i++)
                         {
-                            hPoints[i].y = hPoints[i].y - movementAmount;
+                            hPoints[i].y -= movementAmount;
                         }
                     }
                 }
@@ -157,13 +190,13 @@ int main(int argv, char **args)
                 {
                     if (playerRect.x > (windowWidth / 4))
                     {
-                        playerRect.x = playerRect.x - movementAmount;
+                        playerRect.x -= movementAmount;
                     }
                     else
                     {
                         for (int i = 0; i < vLineCount; i++)
                         {
-                            vPoints[i].x = vPoints[i].x + movementAmount;
+                            vPoints[i].x += movementAmount;
                         }
                     }
                 }
@@ -171,13 +204,13 @@ int main(int argv, char **args)
                 {
                     if (playerRect.x < ((3 * windowWidth) / 4))
                     {
-                        playerRect.x = playerRect.x + movementAmount;
+                        playerRect.x += movementAmount;
                     }
                     else
                     {
                         for (int i = 0; i < vLineCount; i++)
                         {
-                            vPoints[i].x = vPoints[i].x - movementAmount;
+                            vPoints[i].x -= movementAmount;
                         }
                     }
                 }
@@ -213,36 +246,6 @@ int main(int argv, char **args)
                         vPoints[i].x = vPoints[i].x + 128;
                     }
                 }
-                /*
-            else if (event.type == SDL_KEYDOWN)
-            {
-                if (event.key.keysym.sym == SDLK_w)
-                {
-                    playerRect.y--;
-                }
-                if (event.key.keysym.sym == SDLK_s)
-                {
-                    playerRect.y++;
-                }
-                if (event.key.keysym.sym == SDLK_a)
-                {
-                    playerRect.x--;
-                }
-                if (event.key.keysym.sym == SDLK_d)
-                {
-                    playerRect.x++;
-                }
-                */
-                /*
-                switch (event.key.keysym.sym)
-                {
-                case SDLK_w: playerRect.y--; break;
-                case SDLK_s: playerRect.y++; break;
-                case SDLK_a: playerRect.x--; break;
-                case SDLK_d: playerRect.x--; break;
-                }*/
-                //}
-            }
 
             if (red > 255)
             {
@@ -252,6 +255,15 @@ int main(int argv, char **args)
             if (green > 255)
             {
                 green = 0;
+            }
+
+            if (green == 255)
+            {
+                colorChanger = -1;
+            }
+            if (green == 0)
+            {
+                colorChanger = 1;
             }
 
             if (blue > 255)
