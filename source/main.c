@@ -31,6 +31,26 @@ int main(int argv, char **args)
 
     printf("Your current resolution is %dx%d", windowWidth, windowHeight);
 
+    SDL_Point vPoints[(windowWidth/64)*2+3];
+    for(int i = 0; i < ((windowWidth/64)*2+3); i++){
+        vPoints[i].y = 0;
+        vPoints[i].x = i*64;
+        i++;
+        vPoints[i].y = windowHeight;
+        vPoints[i].x = (i-1)*64;
+    }
+    int vLineCount = windowWidth/64+3;
+
+    SDL_Point hPoints[(windowHeight/64)*2+3];
+    for(int i = 0; i < ((windowHeight/64)*2+3); i++){
+        hPoints[i].x = 0;
+        hPoints[i].y = i*64;
+        i++;
+        hPoints[i].x = windowWidth;
+        hPoints[i].y = (i-1)*64;
+    }
+    int hLineCount = windowHeight/64+3;
+
     // SDL_Window *pWindow = initWindow(WINDOW_NAME, windowWidth, windowHeight);
     // SDL_Renderer *pRenderer = initRenderer(pWindow);
 
@@ -90,8 +110,8 @@ int main(int argv, char **args)
         {
             prevTime = SDL_GetTicks();
             // red += 2;
-            // green += 10;
-            // blue += 5;
+            green += 1;
+            //blue += 5;
 
             SDL_Event event;
             while (SDL_PollEvent(&event))
@@ -103,19 +123,55 @@ int main(int argv, char **args)
 
                 if (currentKeyStates[SDL_SCANCODE_W])
                 {
-                    playerRect.y -= 10;
+                    //playerRect.y--;
+                    for(int i = 0; i < hLineCount; i++){
+                        hPoints[i].y++;
+                    }
                 }
                 if (currentKeyStates[SDL_SCANCODE_S])
                 {
-                    playerRect.y += 10;
+                    //playerRect.y++;
+                    for(int i = 0; i < hLineCount; i++){
+                        hPoints[i].y--;
+                    }
                 }
                 if (currentKeyStates[SDL_SCANCODE_A])
                 {
-                    playerRect.x -= 10;
+                    //playerRect.x--;
+                    for(int i = 0; i < vLineCount; i++){
+                        vPoints[i].x++;
+                    }
                 }
                 if (currentKeyStates[SDL_SCANCODE_D])
                 {
-                    playerRect.x += 10;
+                    //playerRect.x++;
+                    for(int i = 0; i < vLineCount; i++){
+                        vPoints[i].x--;
+                    }
+                }
+
+                if(hPoints[0].y > 128){
+                    for(int i = 0; i < hLineCount; i++){
+                        hPoints[i].y = hPoints[i].y-128;
+                    }
+                }
+
+                if(hPoints[0].y < -128){
+                    for(int i = 0; i < hLineCount; i++){
+                        hPoints[i].y = hPoints[i].y+128;
+                    }
+                }
+
+                if(vPoints[0].x > 128){
+                    for(int i = 0; i < vLineCount; i++){
+                        vPoints[i].x = vPoints[i].x-128;
+                    }
+                }
+
+                if(vPoints[0].x < -128){
+                    for(int i = 0; i < vLineCount; i++){
+                        vPoints[i].x = vPoints[i].x+128;
+                    }
                 }
                 /*
             else if (event.type == SDL_KEYDOWN)
@@ -179,6 +235,23 @@ int main(int argv, char **args)
 
             SDL_SetRenderDrawColor(pRenderer, red, green, blue, 255);
             SDL_RenderClear(pRenderer);
+            
+            SDL_SetRenderDrawColor(pRenderer, 0, 0, 0, 255);
+            //SDL_RenderDrawLines(pRenderer, vertPoints, vLineCount);
+            //SDL_RenderDrawLines(pRenderer, horiPoints, hLineCount);
+            for(int i = 0; i < vLineCount; i++){
+                SDL_RenderDrawLine(pRenderer, vPoints[i].x, vPoints[i].y, vPoints[i+1].x, vPoints[i+1].y);
+                i++;
+            }
+
+            for(int i = 0; i < hLineCount; i++){
+                SDL_RenderDrawLine(pRenderer, hPoints[i].x, hPoints[i].y, hPoints[i+1].x, hPoints[i+1].y);
+                i++;
+            }
+            
+            SDL_SetRenderDrawColor(pRenderer, 255, 0, 0, 255);
+            SDL_RenderDrawRect(pRenderer, &playerRect);
+
             SDL_RenderCopy(pRenderer, pTexture, NULL, &playerRect);
             SDL_RenderPresent(pRenderer);
         }
