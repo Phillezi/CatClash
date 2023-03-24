@@ -23,7 +23,7 @@ void initConfig(int *pWindowWidth, int *pWindowHeight);
 int main(int argv, char **args)
 {
 
-    int prevTime = 0;
+    int prevTime = 0, movementPrevTime = 0;
     int windowWidth = DEFAULT_WIDTH, windowHeight = DEFAULT_HEIGHT;
     int red = 255, green = 255, blue = 255;
 
@@ -124,7 +124,6 @@ int main(int argv, char **args)
                 if (event.type == SDL_QUIT)
                     running = 0;
 
-                
                 /*
             else if (event.type == SDL_KEYDOWN)
             {
@@ -155,18 +154,21 @@ int main(int argv, char **args)
                 }*/
                 //}
             }
-
-            const Uint8 *currentKeyStates = SDL_GetKeyboardState(NULL);
+            int movementDeltaTime = SDL_GetTicks() - movementPrevTime;
+            if (movementDeltaTime >= 1000 / 60)
+            {
+                movementPrevTime = SDL_GetTicks();
+                const Uint8 *currentKeyStates = SDL_GetKeyboardState(NULL);
 
                 if (currentKeyStates[SDL_SCANCODE_W])
                 {
-                    if (playerRect.y > windowHeight / 4)
+                    if (playerRect.y >= windowHeight / 4)
                     {
                         playerRect.y -= movementAmount;
                     }
                     else
                     {
-                        for (int i = 0; i < hLineCount; i++)
+                        for (int i = 0; i <= hLineCount; i++)
                         {
                             hPoints[i].y += movementAmount;
                         }
@@ -174,13 +176,13 @@ int main(int argv, char **args)
                 }
                 if (currentKeyStates[SDL_SCANCODE_S])
                 {
-                    if (playerRect.y < ((3 * windowHeight) / 4))
+                    if (playerRect.y <= ((3 * windowHeight) / 4))
                     {
                         playerRect.y += movementAmount;
                     }
                     else
                     {
-                        for (int i = 0; i < hLineCount; i++)
+                        for (int i = 0; i <= hLineCount; i++)
                         {
                             hPoints[i].y -= movementAmount;
                         }
@@ -188,13 +190,13 @@ int main(int argv, char **args)
                 }
                 if (currentKeyStates[SDL_SCANCODE_A])
                 {
-                    if (playerRect.x > (windowWidth / 4))
+                    if (playerRect.x >= (windowWidth / 4))
                     {
                         playerRect.x -= movementAmount;
                     }
                     else
                     {
-                        for (int i = 0; i < vLineCount; i++)
+                        for (int i = 0; i <= vLineCount; i++)
                         {
                             vPoints[i].x += movementAmount;
                         }
@@ -202,13 +204,13 @@ int main(int argv, char **args)
                 }
                 if (currentKeyStates[SDL_SCANCODE_D])
                 {
-                    if (playerRect.x < ((3 * windowWidth) / 4))
+                    if (playerRect.x <= ((3 * windowWidth) / 4))
                     {
                         playerRect.x += movementAmount;
                     }
                     else
                     {
-                        for (int i = 0; i < vLineCount; i++)
+                        for (int i = 0; i <= vLineCount; i++)
                         {
                             vPoints[i].x -= movementAmount;
                         }
@@ -217,7 +219,7 @@ int main(int argv, char **args)
 
                 if (hPoints[0].y > 128)
                 {
-                    for (int i = 0; i < hLineCount; i++)
+                    for (int i = 0; i <= hLineCount; i++)
                     {
                         hPoints[i].y = hPoints[i].y - 128;
                     }
@@ -225,7 +227,7 @@ int main(int argv, char **args)
 
                 if (hPoints[0].y < -128)
                 {
-                    for (int i = 0; i < hLineCount; i++)
+                    for (int i = 0; i <= hLineCount; i++)
                     {
                         hPoints[i].y = hPoints[i].y + 128;
                     }
@@ -233,19 +235,20 @@ int main(int argv, char **args)
 
                 if (vPoints[0].x > 128)
                 {
-                    for (int i = 0; i < vLineCount; i++)
+                    for (int i = 0; i <= vLineCount; i++)
                     {
                         vPoints[i].x = vPoints[i].x - 128;
                     }
                 }
 
-                if (vPoints[0].x < -128)
+                if (vPoints[0].x <= -128)
                 {
                     for (int i = 0; i < vLineCount; i++)
                     {
                         vPoints[i].x = vPoints[i].x + 128;
                     }
                 }
+            }
 
             if (red > 255)
             {
