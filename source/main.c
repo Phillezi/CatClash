@@ -13,12 +13,24 @@
 #include "server.h"
 
 #define CONFIG_FILEPATH "resources/config.txt"
+#define MAP_FILEPATH "resources/map.txt"
 #define DEFAULT_WIDTH 800
 #define DEFAULT_HEIGHT 600
 #define WINDOW_NAME "Kitten Game"
 #define FPS 165
+#define MAPSIZE 32
+#define TILESIZE 16 * 10
+// #define TILESIZE 33
+
+struct wall
+{
+    SDL_Rect wall;
+};
+typedef struct wall Wall;
 
 void initConfig(int *pWindowWidth, int *pWindowHeight);
+void initMap(int map[][MAPSIZE]);
+Wall createWall(int row, int col);
 
 int main(int argv, char **args)
 {
@@ -26,8 +38,36 @@ int main(int argv, char **args)
     int prevTime = 0, movementPrevTime = 0;
     int windowWidth = DEFAULT_WIDTH, windowHeight = DEFAULT_HEIGHT;
     int red = 255, green = 255, blue = 255;
+    int map[MAPSIZE][MAPSIZE];
+    int nrOfWalls = 0;
+    Wall walls[MAPSIZE * MAPSIZE];
 
     initConfig(&windowWidth, &windowHeight);
+    initMap(map);
+
+    for (int row = 0; row < MAPSIZE; row++)
+    {
+        for (int col = 0; col < MAPSIZE; col++)
+        {
+            switch (map[row][col])
+            {
+            case 0:
+                break;
+            case 1:
+                walls[nrOfWalls] = createWall(row, col);
+                nrOfWalls++;
+                break;
+            case 2:
+                break; // walls[nrOfWalls] = createWall(row, col); nrOfWalls++; break;
+            case 3:
+                break; // walls[nrOfWalls] = createWall(row, col); nrOfWalls++; break;
+            case 4:
+                break; // walls[nrOfWalls] = createWall(row, col); nrOfWalls++; break;
+            default:
+                break; // walls[nrOfWalls] = createWall(row, col); nrOfWalls++; break;
+            }
+        }
+    }
 
     printf("Your current resolution is %dx%d", windowWidth, windowHeight);
 
@@ -73,7 +113,7 @@ int main(int argv, char **args)
         return 1;
     }
 
-    SDL_Surface *pSurface = IMG_Load("resources/caet2.png");
+    SDL_Surface *pSurface = IMG_Load("resources/cat3.png");
     if (!pSurface)
     {
         printf("Error: %s\n", SDL_GetError());
@@ -97,13 +137,13 @@ int main(int argv, char **args)
     SDL_Rect playerRect;
     SDL_QueryTexture(pTexture, NULL, NULL, &playerRect.w, &playerRect.h);
 
-    playerRect.x = windowWidth / 2;
-    playerRect.y = windowHeight / 2;
+    playerRect.x = 0;//TILESIZE;//windowWidth / 2;
+    playerRect.y = 0;//TILESIZE;//windowHeight / 2;
 
-    playerRect.w = 64;
-    playerRect.h = 128;
+    playerRect.w = TILESIZE;
+    playerRect.h = TILESIZE;
 
-    int movementAmount = 5;
+    int movementAmount = 1;
     int colorChanger = 1;
 
     int running = 1;
@@ -116,43 +156,13 @@ int main(int argv, char **args)
             prevTime = SDL_GetTicks();
             // red += 2;
             green += colorChanger;
-            // blue += 5;
+            blue += colorChanger;
 
             SDL_Event event;
             while (SDL_PollEvent(&event))
             {
                 if (event.type == SDL_QUIT)
                     running = 0;
-
-                /*
-            else if (event.type == SDL_KEYDOWN)
-            {
-                if (event.key.keysym.sym == SDLK_w)
-                {
-                    playerRect.y--;
-                }
-                if (event.key.keysym.sym == SDLK_s)
-                {
-                    playerRect.y++;
-                }
-                if (event.key.keysym.sym == SDLK_a)
-                {
-                    playerRect.x--;
-                }
-                if (event.key.keysym.sym == SDLK_d)
-                {
-                    playerRect.x++;
-                }
-                */
-                /*
-                switch (event.key.keysym.sym)
-                {
-                case SDLK_w: playerRect.y--; break;
-                case SDLK_s: playerRect.y++; break;
-                case SDLK_a: playerRect.x--; break;
-                case SDLK_d: playerRect.x--; break;
-                }*/
-                //}
             }
             int movementDeltaTime = SDL_GetTicks() - movementPrevTime;
             if (movementDeltaTime >= 1000 / 60)
@@ -162,57 +172,125 @@ int main(int argv, char **args)
 
                 if (currentKeyStates[SDL_SCANCODE_W])
                 {
-                    if (playerRect.y >= windowHeight / 4)
+                    int validPos = 1;
+                    for (int i = 0; i < nrOfWalls; i++)
                     {
-                        playerRect.y -= movementAmount;
-                    }
-                    else
-                    {
-                        for (int i = 0; i <= hLineCount; i++)
+                        if ((((playerRect.y - movementAmount) >= walls[i].wall.y) && ((playerRect.y - movementAmount) <= (walls[i].wall.y + TILESIZE))) && ((playerRect.x >= walls[i].wall.x) && (playerRect.x <= walls[i].wall.x + TILESIZE)))
                         {
-                            hPoints[i].y += movementAmount;
+                            validPos = 0;
+                        }
+                    }
+                    if (validPos)
+                    {
+                        if (playerRect.y >= windowHeight / 4)
+                        {
+                            playerRect.y -= movementAmount;
+                        }
+                        else
+                        {
+                            /*
+                            for (int i = 0; i <= hLineCount; i++)
+                            {
+                                hPoints[i].y += movementAmount;
+                            }
+                            */
+                            for (int i = 0; i < nrOfWalls; i++)
+                            {
+                                walls[i].wall.y += movementAmount;
+                            }
                         }
                     }
                 }
                 if (currentKeyStates[SDL_SCANCODE_S])
                 {
-                    if (playerRect.y <= ((3 * windowHeight) / 4))
+                    int validPos = 1;
+                    for (int i = 0; i < nrOfWalls; i++)
                     {
-                        playerRect.y += movementAmount;
-                    }
-                    else
-                    {
-                        for (int i = 0; i <= hLineCount; i++)
+                        if ((((playerRect.y + TILESIZE + movementAmount) >= walls[i].wall.y) && ((playerRect.y + TILESIZE + movementAmount) <= (walls[i].wall.y + TILESIZE))) && ((playerRect.x >= walls[i].wall.x) && (playerRect.x <= walls[i].wall.x + TILESIZE)))
                         {
-                            hPoints[i].y -= movementAmount;
+                            validPos = 0;
+                        }
+                    }
+                    if (validPos)
+                    {
+                        if (playerRect.y <= ((3 * windowHeight) / 4))
+                        {
+                            playerRect.y += movementAmount;
+                        }
+                        else
+                        {
+                            /*
+                            for (int i = 0; i <= hLineCount; i++)
+                            {
+                                hPoints[i].y -= movementAmount;
+                            }
+                            */
+                            for (int i = 0; i < nrOfWalls; i++)
+                            {
+                                walls[i].wall.y -= movementAmount;
+                            }
                         }
                     }
                 }
                 if (currentKeyStates[SDL_SCANCODE_A])
                 {
-                    if (playerRect.x >= (windowWidth / 4))
+                    int validPos = 1;
+                    for (int i = 0; i < nrOfWalls; i++)
                     {
-                        playerRect.x -= movementAmount;
-                    }
-                    else
-                    {
-                        for (int i = 0; i <= vLineCount; i++)
+                        if ((((playerRect.x - movementAmount) >= walls[i].wall.x) && ((playerRect.x - movementAmount) <= (walls[i].wall.x + TILESIZE)))&& ((playerRect.y >= walls[i].wall.y) && (playerRect.y <= walls[i].wall.y + TILESIZE)))
                         {
-                            vPoints[i].x += movementAmount;
+                            validPos = 0;
+                        }
+                    }
+                    if (validPos)
+                    {
+                        if (playerRect.x >= (windowWidth / 4))
+                        {
+                            playerRect.x -= movementAmount;
+                        }
+                        else
+                        {
+                            /*
+                            for (int i = 0; i <= vLineCount; i++)
+                            {
+                                vPoints[i].x += movementAmount;
+                            }
+                            */
+                            for (int i = 0; i < nrOfWalls; i++)
+                            {
+                                walls[i].wall.x += movementAmount;
+                            }
                         }
                     }
                 }
                 if (currentKeyStates[SDL_SCANCODE_D])
                 {
-                    if (playerRect.x <= ((3 * windowWidth) / 4))
+                    int validPos = 1;
+                    for (int i = 0; i < nrOfWalls; i++)
                     {
-                        playerRect.x += movementAmount;
-                    }
-                    else
-                    {
-                        for (int i = 0; i <= vLineCount; i++)
+                        if ((((playerRect.x + TILESIZE + movementAmount) >= walls[i].wall.x) && ((playerRect.x + TILESIZE + movementAmount) <= (walls[i].wall.x + TILESIZE)))&& ((playerRect.y >= walls[i].wall.y) && (playerRect.y <= walls[i].wall.y + TILESIZE)))
                         {
-                            vPoints[i].x -= movementAmount;
+                            validPos = 0;
+                        }
+                    }
+                    if (validPos)
+                    {
+                        if (playerRect.x <= ((3 * windowWidth) / 4))
+                        {
+                            playerRect.x += movementAmount;
+                        }
+                        else
+                        {
+                            /*
+                            for (int i = 0; i <= vLineCount; i++)
+                            {
+                                vPoints[i].x -= movementAmount;
+                            }
+                            */
+                            for (int i = 0; i < nrOfWalls; i++)
+                            {
+                                walls[i].wall.x -= movementAmount;
+                            }
                         }
                     }
                 }
@@ -298,6 +376,7 @@ int main(int argv, char **args)
             SDL_SetRenderDrawColor(pRenderer, 0, 0, 0, 255);
             // SDL_RenderDrawLines(pRenderer, vertPoints, vLineCount);
             // SDL_RenderDrawLines(pRenderer, horiPoints, hLineCount);
+            /*
             for (int i = 0; i < vLineCount; i++)
             {
                 SDL_RenderDrawLine(pRenderer, vPoints[i].x, vPoints[i].y, vPoints[i + 1].x, vPoints[i + 1].y);
@@ -308,16 +387,18 @@ int main(int argv, char **args)
             {
                 SDL_RenderDrawLine(pRenderer, hPoints[i].x, hPoints[i].y, hPoints[i + 1].x, hPoints[i + 1].y);
                 i++;
+            }*/
+            for (int i = 0; i < nrOfWalls; i++)
+            {
+                SDL_RenderFillRect(pRenderer, &walls[i].wall);
+                // SDL_RenderDrawRect(pRenderer, &walls[i].wall);
             }
 
             SDL_SetRenderDrawColor(pRenderer, 255, 0, 0, 255);
             SDL_RenderDrawRect(pRenderer, &playerRect);
-
             SDL_RenderCopy(pRenderer, pTexture, NULL, &playerRect);
             SDL_RenderPresent(pRenderer);
         }
-
-        // SDL_Delay(1000 / 60);
     }
     SDL_DestroyRenderer(pRenderer);
     SDL_DestroyWindow(pWindow);
@@ -357,4 +438,36 @@ void initConfig(int *pWindowWidth, int *pWindowHeight)
     {
         printf("ERROR READING FILE");
     }
+}
+
+void initMap(int map[][MAPSIZE])
+{
+    // READ FROM map.txt
+    FILE *fp;
+    fp = fopen(MAP_FILEPATH, "r");
+    if (fp != NULL)
+    {
+        // while (!feof(fp))
+        //{
+        for (int row = 0; row < MAPSIZE; row++)
+        {
+            for (int col = 0; col < MAPSIZE; col++)
+                fscanf(fp, "%d", &map[row][col]);
+        }
+        //}
+        fclose(fp);
+    }
+    else
+    {
+        printf("ERROR READING FILE");
+    }
+}
+Wall createWall(int row, int col)
+{
+    Wall i;
+    i.wall.x = col * TILESIZE;
+    i.wall.y = row * TILESIZE;
+    i.wall.w = TILESIZE;
+    i.wall.h = TILESIZE;
+    return i;
 }
