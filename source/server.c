@@ -25,6 +25,8 @@ int main(int argc, char **argv)
     SDLNet_SocketSet sockets = SDLNet_AllocSocketSet(MAX_SOCKETS);
 
     TCPsocket server = SDLNet_TCP_Open(&ip);
+
+    printf("Server is up and running\n");
     // TCPsocket client;
     char tmp[1400];
     Data player[MAX_SOCKETS];
@@ -62,7 +64,11 @@ int main(int argc, char **argv)
                 {
                     player[i].timeout = SDL_GetTicks();
                     SDLNet_TCP_Recv(player[i].socket, tmp, 1400);
-                    
+                    //for(int j = 0; j < strlen(player[i].playerId))
+                    //for(int k = strlen(tmp)+1; k > 1 ; k--)
+                    //    tmp[k] = tmp[k-1];
+                        
+                    /*
                     int num = tmp[0] - '0';
                     int j = 1;
                     while (tmp[j] >= '0' && tmp[j] <= '9')
@@ -70,10 +76,26 @@ int main(int argc, char **argv)
                         num *= 10;
                         num += tmp[j] - '0';
                         j++;
-                    }
-                    if (num == 1)
-                    {
-                        printf("Player%d: %s\n", player[i].playerId, tmp);
+                    }*/
+                    //if (num == 1)
+                    //{
+                        if(tmp[0] == '2'){
+                            printf("(LEAVE)Player%d: %s\n", player[i].playerId, tmp);
+                        for (int k = 0; k < playerCount; k++)
+                        {
+                            if (k == i)
+                            {
+                                SDLNet_TCP_Send(player[k].socket, "2\n", 3);
+                                continue;
+                            }
+                            SDLNet_TCP_Send(player[k].socket, tmp, strlen(tmp) + 1);
+                        }
+                        SDLNet_TCP_DelSocket(sockets, player[i].socket);
+                        SDLNet_TCP_Close(player[i].socket);
+                        playerCount--;
+                        }
+                        else {
+                            printf("Player%d: %s\n", player[i].playerId, tmp);
                         for (int k = 0; k < playerCount; k++)
                         {
                             if (k == i)
@@ -82,6 +104,9 @@ int main(int argc, char **argv)
                             }
                             SDLNet_TCP_Send(player[k].socket, tmp, strlen(tmp) + 1);
                         }
+                        }
+                        
+                        /*
                     }
                     else if (num == 2)
                     {
@@ -98,6 +123,7 @@ int main(int argc, char **argv)
                         SDLNet_TCP_Close(player[i].socket);
                         playerCount--;
                     }
+                    */
                 }
             }
         }
@@ -112,4 +138,6 @@ int main(int argc, char **argv)
 
     SDLNet_Quit();
     SDL_Quit;
+
+    return 0;
 }
