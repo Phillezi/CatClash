@@ -41,18 +41,18 @@ int main(int argc, char **argv)
                 char text[100];
                 SDLNet_TCP_Recv(client, text, 99);
                 printf("MESSAGE: %s\n", text);
-                if(text[0] == '2' && text[1] == 0)
+                if(text[0] == '2')
                     running = 0;
             }
             
         }
         
     }
-    pthread_join(thread1, NULL);
+    pthread_join(thread1, NULL); 
 
     // strcpy(message, "2");
     // SDLNet_TCP_Send(client, message, strlen(message)+1);
-    SDL_Delay(5000);
+    //SDL_Delay(1);
     SDLNet_TCP_Close(client);
 
     SDLNet_Quit();
@@ -66,7 +66,7 @@ void *readMessage(void *client){
     char message[1400];
         scanf("%s", message);
         if(message[0] == 'L' && message[1] == 'V' && message[2] == 0){
-            SDLNet_TCP_Send(((TCPsocket *)client), "2\n", 3);
+            SDLNet_TCP_Send(((TCPsocket *)client), "2", 2);
             return NULL;
             
         }

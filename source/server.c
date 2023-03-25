@@ -1,3 +1,10 @@
+/*
+    TODO: fixa buggen om en klient lämnar så förstörs 
+    listan av spelare som man skickar meddelanden till
+    fixa att den byter ut leave (2) meddelandet till Player(id) left för de som ej skrev Leave
+    fixa client att om man tar emot (2) så lämnar man
+*/
+
 // #include "server.h"
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_net.h>
@@ -85,7 +92,7 @@ int main(int argc, char **argv)
                         {
                             if (k == i)
                             {
-                                SDLNet_TCP_Send(player[k].socket, "2\n", 3);
+                                SDLNet_TCP_Send(player[k].socket, "2", 2);
                                 continue;
                             }
                             SDLNet_TCP_Send(player[k].socket, tmp, strlen(tmp) + 1);
