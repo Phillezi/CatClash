@@ -32,7 +32,6 @@ int main(int argv, char **args)
 
     initMap(map);
     
-
     SDL_Window *pWindow = SDL_CreateWindow(WINDOW_NAME, SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, windowWidth, windowHeight, 0);
     if (!pWindow)
     {
@@ -45,6 +44,90 @@ int main(int argv, char **args)
     if (!pRenderer)
     {
         printf("Error: %s\n", SDL_GetError());
+        SDL_DestroyWindow(pWindow);
+        SDL_Quit();
+        return 1;
+    }
+
+    SDL_Surface *pSurface1 = IMG_Load("resources/Tile1.png");
+    if (!pSurface1)
+    {
+        printf("Error: %s\n", SDL_GetError());
+        SDL_DestroyRenderer(pRenderer);
+        SDL_DestroyWindow(pWindow);
+        SDL_Quit();
+        return 1;
+    }
+
+    SDL_Texture *pTextureTile1 = SDL_CreateTextureFromSurface(pRenderer, pSurface1);
+    SDL_FreeSurface(pSurface1);
+    if (!pTextureTile1)
+    {
+        printf("Error: %s\n", SDL_GetError());
+        SDL_DestroyRenderer(pRenderer);
+        SDL_DestroyWindow(pWindow);
+        SDL_Quit();
+        return 1;
+    }
+
+    SDL_Surface *pSurface2 = IMG_Load("resources/Tile2.png");
+    if (!pSurface2)
+    {
+        printf("Error: %s\n", SDL_GetError());
+        SDL_DestroyRenderer(pRenderer);
+        SDL_DestroyWindow(pWindow);
+        SDL_Quit();
+        return 1;
+    }
+
+    SDL_Texture *pTextureTile2 = SDL_CreateTextureFromSurface(pRenderer, pSurface2);
+    SDL_FreeSurface(pSurface2);
+    if (!pTextureTile2)
+    {
+        printf("Error: %s\n", SDL_GetError());
+        SDL_DestroyRenderer(pRenderer);
+        SDL_DestroyWindow(pWindow);
+        SDL_Quit();
+        return 1;
+    }
+
+SDL_Surface *pSurface3 = IMG_Load("resources/Tile3.png");
+    if (!pSurface3)
+    {
+        printf("Error: %s\n", SDL_GetError());
+        SDL_DestroyRenderer(pRenderer);
+        SDL_DestroyWindow(pWindow);
+        SDL_Quit();
+        return 1;
+    }
+
+    SDL_Texture *pTextureTile3 = SDL_CreateTextureFromSurface(pRenderer, pSurface3);
+    SDL_FreeSurface(pSurface3);
+    if (!pTextureTile3)
+    {
+        printf("Error: %s\n", SDL_GetError());
+        SDL_DestroyRenderer(pRenderer);
+        SDL_DestroyWindow(pWindow);
+        SDL_Quit();
+        return 1;
+    }
+
+SDL_Surface *pSurface4 = IMG_Load("resources/Tile4.png");
+    if (!pSurface4)
+    {
+        printf("Error: %s\n", SDL_GetError());
+        SDL_DestroyRenderer(pRenderer);
+        SDL_DestroyWindow(pWindow);
+        SDL_Quit();
+        return 1;
+    }
+
+    SDL_Texture *pTextureTile4 = SDL_CreateTextureFromSurface(pRenderer, pSurface4);
+    SDL_FreeSurface(pSurface4);
+    if (!pTextureTile4)
+    {
+        printf("Error: %s\n", SDL_GetError());
+        SDL_DestroyRenderer(pRenderer);
         SDL_DestroyWindow(pWindow);
         SDL_Quit();
         return 1;
@@ -89,6 +172,18 @@ int main(int argv, char **args)
                 saveToFile(map);
                 printf("saved file");
             }
+            else if (currentKeyStates[SDL_SCANCODE_DELETE])
+            {
+                for(int i = 0; i < MAPSIZE * MAPSIZE; i++){
+                    map[i].type = 0;
+                }
+            }
+            else if (currentKeyStates[SDL_SCANCODE_INSERT])
+            {
+                for(int i = 0; i < MAPSIZE * MAPSIZE; i++){
+                    map[i].type = 1;
+                }
+            }
 
             if (buttons & SDL_BUTTON(SDL_BUTTON_LEFT))
             {
@@ -113,19 +208,19 @@ int main(int argv, char **args)
                     break;
                 case 1:
                     SDL_SetRenderDrawColor(pRenderer, 0, 0, 0, 255);
-                    SDL_RenderFillRect(pRenderer, &map[i].wall);
+                    SDL_RenderCopy(pRenderer, pTextureTile1, NULL, &map[i].wall);//SDL_RenderFillRect(pRenderer, &map[i].wall);
                     break;
                 case 2:
                     SDL_SetRenderDrawColor(pRenderer, 100, 0, 0, 255);
-                    SDL_RenderFillRect(pRenderer, &map[i].wall);
+                    SDL_RenderCopy(pRenderer, pTextureTile2, NULL, &map[i].wall);//SDL_RenderFillRect(pRenderer, &map[i].wall);
                     break;
                 case 3:
                     SDL_SetRenderDrawColor(pRenderer, 0, 100, 0, 255);
-                    SDL_RenderFillRect(pRenderer, &map[i].wall);
+                    SDL_RenderCopy(pRenderer, pTextureTile3, NULL, &map[i].wall);//SDL_RenderFillRect(pRenderer, &map[i].wall);
                     break;
                 case 4:
                     SDL_SetRenderDrawColor(pRenderer, 0, 0, 100, 255);
-                    SDL_RenderFillRect(pRenderer, &map[i].wall);
+                    SDL_RenderCopy(pRenderer, pTextureTile4, NULL, &map[i].wall);//SDL_RenderFillRect(pRenderer, &map[i].wall);
                     break;
                 default:
                     break;
