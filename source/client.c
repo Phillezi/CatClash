@@ -62,7 +62,7 @@ int main(int argc, char **argv)
 void *readMessage(void *client){
     //TCPsocket client1 = ((TCPsocket *)client);
     while(1){
-        printf(": ");
+        //printf(": ");
     char message[1400];
         scanf("%s", message);
         if(message[0] == 'L' && message[1] == 'V' && message[2] == 0){

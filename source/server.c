@@ -1,5 +1,5 @@
 /*
-    TODO: fixa buggen om en klient lämnar så förstörs 
+    TODO: fixa buggen om en klient lämnar så förstörs
     listan av spelare som man skickar meddelanden till
     fixa att den byter ut leave (2) meddelandet till Player(id) left för de som ej skrev Leave
     fixa client att om man tar emot (2) så lämnar man
@@ -12,6 +12,8 @@
 #include <string.h>
 
 #define MAX_SOCKETS 5
+#define PORT 1234
+
 typedef struct data
 {
     TCPsocket socket;
@@ -21,19 +23,19 @@ typedef struct data
 
 int main(int argc, char **argv)
 {
-    // SDL_Init(SDL_INIT_EVERYTHING);
     SDLNet_Init();
 
     int playerCount = 0, playerId = 0;
 
     IPaddress ip;
-    SDLNet_ResolveHost(&ip, NULL, 1234);
+    SDLNet_ResolveHost(&ip, NULL, PORT);
 
     SDLNet_SocketSet sockets = SDLNet_AllocSocketSet(MAX_SOCKETS);
 
     TCPsocket server = SDLNet_TCP_Open(&ip);
 
     printf("Server is up and running\n");
+    printf("Server is hosted at: %d:%d\n", ip.host, PORT);
     // TCPsocket client;
     char tmp[1400];
     Data player[MAX_SOCKETS];
@@ -71,23 +73,10 @@ int main(int argc, char **argv)
                 {
                     player[i].timeout = SDL_GetTicks();
                     SDLNet_TCP_Recv(player[i].socket, tmp, 1400);
-                    //for(int j = 0; j < strlen(player[i].playerId))
-                    //for(int k = strlen(tmp)+1; k > 1 ; k--)
-                    //    tmp[k] = tmp[k-1];
-                        
-                    /*
-                    int num = tmp[0] - '0';
-                    int j = 1;
-                    while (tmp[j] >= '0' && tmp[j] <= '9')
+                    char *msg = ("Player%d: %s", player[i].playerId, tmp);
+                    if (tmp[0] == '2')
                     {
-                        num *= 10;
-                        num += tmp[j] - '0';
-                        j++;
-                    }*/
-                    //if (num == 1)
-                    //{
-                        if(tmp[0] == '2'){
-                            printf("(LEAVE)Player%d: %s\n", player[i].playerId, tmp);
+                        printf("Player%d has left the channel\n", player[i].playerId);
                         for (int k = 0; k < playerCount; k++)
                         {
                             if (k == i)
@@ -95,48 +84,32 @@ int main(int argc, char **argv)
                                 SDLNet_TCP_Send(player[k].socket, "2", 2);
                                 continue;
                             }
-                            SDLNet_TCP_Send(player[k].socket, tmp, strlen(tmp) + 1);
+                            char *leaveMsg = ("Player%d has left the channel", player[k].playerId);
+                            SDLNet_TCP_Send(player[k].socket, leaveMsg, strlen(leaveMsg) + 1);
                         }
                         SDLNet_TCP_DelSocket(sockets, player[i].socket);
                         SDLNet_TCP_Close(player[i].socket);
                         playerCount--;
-                        }
-                        else {
-                            printf("Player%d: %s\n", player[i].playerId, tmp);
-                        for (int k = 0; k < playerCount; k++)
-                        {
-                            if (k == i)
-                            {
-                                continue;
-                            }
-                            SDLNet_TCP_Send(player[k].socket, tmp, strlen(tmp) + 1);
-                        }
-                        }
-                        
-                        /*
                     }
-                    else if (num == 2)
+                    else
                     {
-                        printf("(LEAVE)Player%d: %s\n", player[i].playerId, tmp);
+                        printf("Player%d: %s\n", player[i].playerId, tmp);
                         for (int k = 0; k < playerCount; k++)
                         {
                             if (k == i)
                             {
                                 continue;
                             }
-                            SDLNet_TCP_Send(player[k].socket, tmp, strlen(tmp) + 1);
+                            SDLNet_TCP_Send(player[k].socket, msg, strlen(msg) + 1);
                         }
-                        SDLNet_TCP_DelSocket(sockets, player[i].socket);
-                        SDLNet_TCP_Close(player[i].socket);
-                        playerCount--;
                     }
-                    */
                 }
             }
         }
         SDL_Delay(1);
     }
-    for(int i = 0; i < playerCount; i++){
+    for (int i = 0; i < playerCount; i++)
+    {
         SDLNet_TCP_Close(player[i].socket);
     }
 
