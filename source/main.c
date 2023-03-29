@@ -1,6 +1,7 @@
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_image.h>
 #include <stdio.h>
+#include "init.h"
 
 #define MAP_FILEPATH "resources/map.txt"
 #define SAVE_MAP_FILEPATH "resources/savedMap.txt"
@@ -10,6 +11,7 @@
 #define FPS 165
 #define MAPSIZE 32
 #define TILESIZE 16
+#define TILES 4
 
 struct tile
 {
@@ -50,9 +52,9 @@ int main(int argv, char **args)
         return 1;
     }
 
-    SDL_Surface *pSurface1 = IMG_Load("resources/Tile1.png");
-    if (!pSurface1)
-    {
+    char tileTextures[TILES][20] = {"resources/Tile1.png", "resources/Tile2.png", "resources/Tile3.png", "resources/Tile4.png"};
+    SDL_Texture *pTextureTiles[TILES];
+    if(initTiles(pRenderer, pWindow, pTextureTiles, tileTextures) == -1){
         printf("Error: %s\n", SDL_GetError());
         SDL_DestroyRenderer(pRenderer);
         SDL_DestroyWindow(pWindow);
@@ -60,10 +62,8 @@ int main(int argv, char **args)
         return 1;
     }
 
-    SDL_Texture *pTextureTile1 = SDL_CreateTextureFromSurface(pRenderer, pSurface1);
-    SDL_FreeSurface(pSurface1);
-    if (!pTextureTile1)
-    {
+    SDL_Texture *pTexturePlayer;
+    if(initPlayer(pRenderer, pWindow, &pTexturePlayer) == -1){
         printf("Error: %s\n", SDL_GetError());
         SDL_DestroyRenderer(pRenderer);
         SDL_DestroyWindow(pWindow);
@@ -71,89 +71,6 @@ int main(int argv, char **args)
         return 1;
     }
 
-    SDL_Surface *pSurface2 = IMG_Load("resources/Tile2.png");
-    if (!pSurface2)
-    {
-        printf("Error: %s\n", SDL_GetError());
-        SDL_DestroyRenderer(pRenderer);
-        SDL_DestroyWindow(pWindow);
-        SDL_Quit();
-        return 1;
-    }
-
-    SDL_Texture *pTextureTile2 = SDL_CreateTextureFromSurface(pRenderer, pSurface2);
-    SDL_FreeSurface(pSurface2);
-    if (!pTextureTile2)
-    {
-        printf("Error: %s\n", SDL_GetError());
-        SDL_DestroyRenderer(pRenderer);
-        SDL_DestroyWindow(pWindow);
-        SDL_Quit();
-        return 1;
-    }
-
-    SDL_Surface *pSurface3 = IMG_Load("resources/Tile3.png");
-    if (!pSurface3)
-    {
-        printf("Error: %s\n", SDL_GetError());
-        SDL_DestroyRenderer(pRenderer);
-        SDL_DestroyWindow(pWindow);
-        SDL_Quit();
-        return 1;
-    }
-
-    SDL_Texture *pTextureTile3 = SDL_CreateTextureFromSurface(pRenderer, pSurface3);
-    SDL_FreeSurface(pSurface3);
-    if (!pTextureTile3)
-    {
-        printf("Error: %s\n", SDL_GetError());
-        SDL_DestroyRenderer(pRenderer);
-        SDL_DestroyWindow(pWindow);
-        SDL_Quit();
-        return 1;
-    }
-
-    SDL_Surface *pSurface4 = IMG_Load("resources/Tile4.png");
-    if (!pSurface4)
-    {
-        printf("Error: %s\n", SDL_GetError());
-        SDL_DestroyRenderer(pRenderer);
-        SDL_DestroyWindow(pWindow);
-        SDL_Quit();
-        return 1;
-    }
-
-    SDL_Texture *pTextureTile4 = SDL_CreateTextureFromSurface(pRenderer, pSurface4);
-    SDL_FreeSurface(pSurface4);
-    if (!pTextureTile4)
-    {
-        printf("Error: %s\n", SDL_GetError());
-        SDL_DestroyRenderer(pRenderer);
-        SDL_DestroyWindow(pWindow);
-        SDL_Quit();
-        return 1;
-    }
-
-    SDL_Surface *pSurface = IMG_Load("resources/cat3.png");
-    if (!pSurface)
-    {
-        printf("Error: %s\n", SDL_GetError());
-        SDL_DestroyRenderer(pRenderer);
-        SDL_DestroyWindow(pWindow);
-        SDL_Quit();
-        return 1;
-    }
-
-    SDL_Texture *pTexturePlayer = SDL_CreateTextureFromSurface(pRenderer, pSurface);
-    SDL_FreeSurface(pSurface);
-    if (!pTexturePlayer)
-    {
-        printf("Error: %s\n", SDL_GetError());
-        SDL_DestroyRenderer(pRenderer);
-        SDL_DestroyWindow(pWindow);
-        SDL_Quit();
-        return 1;
-    }
 
     SDL_Rect playerRect;
     SDL_QueryTexture(pTexturePlayer, NULL, NULL, &playerRect.w, &playerRect.h);
@@ -302,19 +219,19 @@ int main(int argv, char **args)
                     break;
                 case 1:
                     SDL_SetRenderDrawColor(pRenderer, 0, 0, 0, 255);
-                    SDL_RenderCopy(pRenderer, pTextureTile1, NULL, &map[i].wall); // SDL_RenderFillRect(pRenderer, &map[i].wall);
+                    SDL_RenderCopy(pRenderer, pTextureTiles[0], NULL, &map[i].wall); // SDL_RenderFillRect(pRenderer, &map[i].wall);
                     break;
                 case 2:
                     SDL_SetRenderDrawColor(pRenderer, 100, 0, 0, 255);
-                    SDL_RenderCopy(pRenderer, pTextureTile2, NULL, &map[i].wall); // SDL_RenderFillRect(pRenderer, &map[i].wall);
+                    SDL_RenderCopy(pRenderer, pTextureTiles[1], NULL, &map[i].wall); // SDL_RenderFillRect(pRenderer, &map[i].wall);
                     break;
                 case 3:
                     SDL_SetRenderDrawColor(pRenderer, 0, 100, 0, 255);
-                    SDL_RenderCopy(pRenderer, pTextureTile3, NULL, &map[i].wall); // SDL_RenderFillRect(pRenderer, &map[i].wall);
+                    SDL_RenderCopy(pRenderer, pTextureTiles[2], NULL, &map[i].wall); // SDL_RenderFillRect(pRenderer, &map[i].wall);
                     break;
                 case 4:
                     SDL_SetRenderDrawColor(pRenderer, 0, 0, 100, 255);
-                    SDL_RenderCopy(pRenderer, pTextureTile4, NULL, &map[i].wall); // SDL_RenderFillRect(pRenderer, &map[i].wall);
+                    SDL_RenderCopy(pRenderer, pTextureTiles[3], NULL, &map[i].wall); // SDL_RenderFillRect(pRenderer, &map[i].wall);
                     break;
                 default:
                     break;
@@ -327,10 +244,10 @@ int main(int argv, char **args)
             SDL_RenderPresent(pRenderer);
         }
     }
-    SDL_DestroyTexture(pTextureTile1);
-    SDL_DestroyTexture(pTextureTile2);
-    SDL_DestroyTexture(pTextureTile3);
-    SDL_DestroyTexture(pTextureTile4);
+    SDL_DestroyTexture(pTextureTiles[0]);
+    SDL_DestroyTexture(pTextureTiles[1]);
+    SDL_DestroyTexture(pTextureTiles[2]);
+    SDL_DestroyTexture(pTextureTiles[3]);
     SDL_DestroyTexture(pTexturePlayer);
     SDL_DestroyRenderer(pRenderer);
     SDL_DestroyWindow(pWindow);
