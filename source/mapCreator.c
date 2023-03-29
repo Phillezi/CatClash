@@ -231,6 +231,10 @@ SDL_Surface *pSurface4 = IMG_Load("resources/Tile4.png");
             SDL_RenderPresent(pRenderer);
         }
     }
+    SDL_DestroyTexture(pTextureTile1);
+    SDL_DestroyTexture(pTextureTile2);
+    SDL_DestroyTexture(pTextureTile3);
+    SDL_DestroyTexture(pTextureTile4);
     SDL_DestroyRenderer(pRenderer);
     SDL_DestroyWindow(pWindow);
     SDL_Quit();

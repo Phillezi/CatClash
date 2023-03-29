@@ -6,8 +6,8 @@ LDFLAGS = -lmingw32 -lSDL2main -lSDL2_image -lSDL2 -lSDL2_net #-mwindows -lm
 
 all:
 	@echo "Building test"
-	$(CC) $(CFLAGS) $(SRCDIR)/server.c 
-	$(CC) server.o -o server.exe $(LDFLAGS)
+	$(CC) $(CFLAGS) $(SRCDIR)/tmpmain.c 
+	$(CC) tmpmain.o -o tmpmain.exe $(LDFLAGS)
 
 clean:
 	rm *.exe
