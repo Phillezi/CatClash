@@ -16,6 +16,7 @@ int main(int argc, char **argv)
     // SDL_Init(SDL_INIT_EVERYTHING);
     SDLNet_Init();
     int running = 1;
+    char serverIP[16];
     IPaddress ip;
     //if (SDLNet_ResolveHost(&ip, "localhost", 1234))
     //{
@@ -23,10 +24,10 @@ int main(int argc, char **argv)
     //}
     //else
     //{
-        char serverIP[16];
-        printf("Ip: ");
+    do {
+        printf("Host Address: ");
         scanf(" %15s", serverIP);
-        SDLNet_ResolveHost(&ip, serverIP, 1234);
+    } while(SDLNet_ResolveHost(&ip, serverIP, 1234) == -1);
     //}
 
     SDLNet_SocketSet sockets = SDLNet_AllocSocketSet(1);
