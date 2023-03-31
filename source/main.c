@@ -2,6 +2,7 @@
 #include <SDL2/SDL_image.h>
 #include <stdio.h>
 #include "init.h"
+//#include "inputHandler.h"
 
 #define MAP_FILEPATH "resources/map.txt"
 #define SAVE_MAP_FILEPATH "resources/savedMap.txt"
@@ -25,6 +26,7 @@ Tile createTile(int x, int y, int type);
 
 int main(int argv, char **args)
 {
+    int fullScreen = 0;
     int collision = 0;
     int movementPrevTime = 0;
     int prevTime = 0;
@@ -54,7 +56,7 @@ int main(int argv, char **args)
 
     char tileTextures[TILES][20] = {"resources/Tile1.png", "resources/Tile2.png", "resources/Tile3.png", "resources/Tile4.png"};
     SDL_Texture *pTextureTiles[TILES];
-    if(initTiles(pRenderer, pWindow, pTextureTiles, tileTextures) == -1){
+    if(initTextureTiles(pRenderer, pWindow, pTextureTiles, tileTextures) == -1){
         printf("Error: %s\n", SDL_GetError());
         SDL_DestroyRenderer(pRenderer);
         SDL_DestroyWindow(pWindow);
@@ -63,7 +65,7 @@ int main(int argv, char **args)
     }
 
     SDL_Texture *pTexturePlayer;
-    if(initPlayer(pRenderer, pWindow, &pTexturePlayer) == -1){
+    if(initTexturePlayer(pRenderer, pWindow, &pTexturePlayer) == -1){
         printf("Error: %s\n", SDL_GetError());
         SDL_DestroyRenderer(pRenderer);
         SDL_DestroyWindow(pWindow);
@@ -135,6 +137,8 @@ int main(int argv, char **args)
                 }
                 if (currentKeyStates[SDL_SCANCODE_A] || currentKeyStates[SDL_SCANCODE_LEFT])
                 {
+                    //moveUp(map, playerRect, movementAmount, TILESIZE, MAPSIZE)
+                    
                     collision = 0;
                     if(map[((playerRect.y/TILESIZE)*MAPSIZE)+((playerRect.x-movementAmount)/TILESIZE)].type != 0){
                         map[((playerRect.y/TILESIZE)*MAPSIZE)+((playerRect.x-movementAmount)/TILESIZE)].type = 2;
@@ -156,6 +160,7 @@ int main(int argv, char **args)
                             }
                         }
                     }
+                    
                 }
                 if (currentKeyStates[SDL_SCANCODE_S] || currentKeyStates[SDL_SCANCODE_DOWN])
                 {
@@ -205,6 +210,18 @@ int main(int argv, char **args)
                         }
                     }
                 }
+                if (currentKeyStates[SDL_SCANCODE_F11])
+                {
+                    if(!fullScreen){
+                        SDL_SetWindowFullscreen(pWindow, SDL_WINDOW_FULLSCREEN);
+                        fullScreen = 1;
+                    }
+                    else{
+                        SDL_SetWindowFullscreen(pWindow, 0);
+                        fullScreen = 0;
+                    }
+                    
+                }
             }
 
             SDL_SetRenderDrawColor(pRenderer, red, green, blue, 255);
@@ -218,19 +235,19 @@ int main(int argv, char **args)
                 case 0:
                     break;
                 case 1:
-                    SDL_SetRenderDrawColor(pRenderer, 0, 0, 0, 255);
+                    //SDL_SetRenderDrawColor(pRenderer, 0, 0, 0, 255);
                     SDL_RenderCopy(pRenderer, pTextureTiles[0], NULL, &map[i].wall); // SDL_RenderFillRect(pRenderer, &map[i].wall);
                     break;
                 case 2:
-                    SDL_SetRenderDrawColor(pRenderer, 100, 0, 0, 255);
+                    //SDL_SetRenderDrawColor(pRenderer, 100, 0, 0, 255);
                     SDL_RenderCopy(pRenderer, pTextureTiles[1], NULL, &map[i].wall); // SDL_RenderFillRect(pRenderer, &map[i].wall);
                     break;
                 case 3:
-                    SDL_SetRenderDrawColor(pRenderer, 0, 100, 0, 255);
+                    //SDL_SetRenderDrawColor(pRenderer, 0, 100, 0, 255);
                     SDL_RenderCopy(pRenderer, pTextureTiles[2], NULL, &map[i].wall); // SDL_RenderFillRect(pRenderer, &map[i].wall);
                     break;
                 case 4:
-                    SDL_SetRenderDrawColor(pRenderer, 0, 0, 100, 255);
+                    //SDL_SetRenderDrawColor(pRenderer, 0, 0, 100, 255);
                     SDL_RenderCopy(pRenderer, pTextureTiles[3], NULL, &map[i].wall); // SDL_RenderFillRect(pRenderer, &map[i].wall);
                     break;
                 default:

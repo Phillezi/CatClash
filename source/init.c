@@ -1,11 +1,12 @@
 #include "init.h"
 
 /*
-    initTiles
+    initTextureTiles:
+    initializes textures for tiles
     Expected in-parameters: pRenderer, pWindow, pTextureTiles, tileTextures
     Returns -1 if it fails
 */
-int initTiles(SDL_Renderer *pRenderer, SDL_Window *pWindow, SDL_Texture *pTextureTiles[], char tileTextures[][PATH_LEN])
+int initTextureTiles(SDL_Renderer *pRenderer, SDL_Window *pWindow, SDL_Texture *pTextureTiles[], char tileTextures[][PATH_LEN])
 {
 
     for (int tile = 0; tile < sizeof(*pTextureTiles)/sizeof(int); tile++)
@@ -13,7 +14,6 @@ int initTiles(SDL_Renderer *pRenderer, SDL_Window *pWindow, SDL_Texture *pTextur
         SDL_Surface *pSurface1 = IMG_Load(tileTextures[tile]);
         if (!pSurface1)
         {
-            printf("%s failed\n",tileTextures[tile]);
             return -1;
         }
 
@@ -28,11 +28,12 @@ int initTiles(SDL_Renderer *pRenderer, SDL_Window *pWindow, SDL_Texture *pTextur
 }
 
 /*
-    initPlayer
+    initTexturePlayer:
+    initializes textures for player
     Expected in-parameters: pRenderer, pWindow, &pTexturePlayer
     Returns -1 if it fails
 */
-int initPlayer(SDL_Renderer *pRenderer, SDL_Window *pWindow, SDL_Texture **pTexturePlayer){
+int initTexturePlayer(SDL_Renderer *pRenderer, SDL_Window *pWindow, SDL_Texture **pTexturePlayer){
     
     SDL_Surface *pSurface = IMG_Load("resources/cat3.png");
     if (!pSurface)
