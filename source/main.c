@@ -26,6 +26,8 @@ Tile createTile(int x, int y, int type);
 
 int main(int argv, char **args)
 {
+
+    SDL_Init(SDL_INIT_EVERYTHING);
     int fullScreen = 0;
     int collision = 0;
     int movementPrevTime = 0;
@@ -56,7 +58,7 @@ int main(int argv, char **args)
 
     char tileTextures[TILES][20] = {"resources/Tile1.png", "resources/Tile2.png", "resources/Tile3.png", "resources/Tile4.png"};
     SDL_Texture *pTextureTiles[TILES];
-    if(initTextureTiles(pRenderer, pWindow, pTextureTiles, tileTextures) == -1){
+    if(initTextureTiles(pRenderer, pWindow, pTextureTiles, tileTextures, TILES) == -1){
         printf("Error: %s\n", SDL_GetError());
         SDL_DestroyRenderer(pRenderer);
         SDL_DestroyWindow(pWindow);
@@ -248,7 +250,7 @@ int main(int argv, char **args)
                     break;
                 case 4:
                     //SDL_SetRenderDrawColor(pRenderer, 0, 0, 100, 255);
-                    SDL_RenderCopy(pRenderer, pTextureTiles[3], NULL, &map[i].wall); // SDL_RenderFillRect(pRenderer, &map[i].wall);
+                    SDL_RenderCopy(pRenderer, pTextureTiles[3], NULL, &map[i].wall); //SDL_RenderFillRect(pRenderer, &map[i].wall);
                     break;
                 default:
                     break;

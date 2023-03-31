@@ -3,7 +3,7 @@
         {
             "name": "Win32",
             "includePath": [
-                "${default}", "c:/msys64/mingw64/include"
+                "${default}"
             ],
             "defines": [
                 "_DEBUG",

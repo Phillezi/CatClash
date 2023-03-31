@@ -6,11 +6,12 @@
     Expected in-parameters: pRenderer, pWindow, pTextureTiles, tileTextures
     Returns -1 if it fails
 */
-int initTextureTiles(SDL_Renderer *pRenderer, SDL_Window *pWindow, SDL_Texture *pTextureTiles[], char tileTextures[][PATH_LEN])
+int initTextureTiles(SDL_Renderer *pRenderer, SDL_Window *pWindow, SDL_Texture *pTextureTiles[], char tileTextures[][PATH_LEN], int nrOfTiles)
 {
 
-    for (int tile = 0; tile < sizeof(*pTextureTiles)/sizeof(int); tile++)
+    for (int tile = 0; tile < nrOfTiles; tile++)
     {
+        //DEBUG printf("TEXTURE %d\n", tile);
         SDL_Surface *pSurface1 = IMG_Load(tileTextures[tile]);
         if (!pSurface1)
         {
