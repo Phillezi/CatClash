@@ -86,13 +86,21 @@ int main(int argv, char **args)
     playerRect.h = TILESIZE;
 
     int running = 1;
+    int oneSecTimer = 0, frameCounter = 0;
 
     while (running)
     {
+        if(SDL_GetTicks() - oneSecTimer >= 1000){
+            oneSecTimer = SDL_GetTicks();
+            printf("FPS: %d\n", frameCounter);
+            frameCounter = 0;
+        }
         int deltaTime = SDL_GetTicks() - prevTime;
         if (deltaTime >= 1000 / FPS) // updates at a frequency of FPS
         {
             prevTime = SDL_GetTicks();
+            
+
             SDL_Event event;
             while (SDL_PollEvent(&event))
             {
@@ -261,6 +269,7 @@ int main(int argv, char **args)
             SDL_RenderDrawRect(pRenderer, &playerRect);
             SDL_RenderCopy(pRenderer, pTexturePlayer, NULL, &playerRect);
             SDL_RenderPresent(pRenderer);
+            frameCounter++;
         }
     }
     SDL_DestroyTexture(pTextureTiles[0]);
