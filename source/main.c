@@ -69,6 +69,8 @@ int main(int argv, char **args)
     player.rect.w = TILESIZE;
     player.rect.h = TILESIZE;
 
+    player.hp = 8 * TILESIZE;
+
     int running = 1;
     int oneSecTimer = 0, frameCounter = 0;
     int charge = 0;
@@ -78,6 +80,12 @@ int main(int argv, char **args)
     chargeBar.w = 4 * TILESIZE;
     chargeBar.x = (windowWidth / 2) - chargeBar.w;
     chargeBar.y = 3 * (windowHeight / 4);
+
+    SDL_Rect healthBar;
+    healthBar.h = TILESIZE;
+    healthBar.w = player.hp;
+    healthBar.x = 2 * TILESIZE;
+    healthBar.y = 3 * (windowHeight / 4);
 
     while (running)
     {
@@ -135,6 +143,11 @@ int main(int argv, char **args)
                                 player.rect.y -= (2 * movementAmount);
                             }
                         }
+                        else
+                        {
+                            player.hp -= (2 * movementAmount);
+                            healthBar.w = player.hp;
+                        }
                         charge -= (2 * movementAmount);
                         if (charge < 0)
                         {
@@ -142,11 +155,14 @@ int main(int argv, char **args)
                         }
                         chargeBar.w = charge;
                     }
-                    if (currentKeyStates[SDL_SCANCODE_R] || currentKeyStates[SDL_SCANCODE_DELETE])
+                    if ((currentKeyStates[SDL_SCANCODE_R] || currentKeyStates[SDL_SCANCODE_DELETE]) || (player.hp <= 0))
                     {
                         initMap(map);
                         player.rect.x = windowWidth / 2;
                         player.rect.y = windowHeight / 2;
+                        player.hp = 8 * TILESIZE;
+                        charge = 0;
+                        healthBar.w = player.hp;
                         printf("Reset\n");
                     }
                     if (currentKeyStates[SDL_SCANCODE_W] || currentKeyStates[SDL_SCANCODE_UP])
@@ -326,6 +342,9 @@ int main(int argv, char **args)
             {
                 SDL_RenderFillRect(pRenderer, &chargeBar);
             }
+            //printf("hp val: %d\n", ((int)(((float)player.hp/(8*TILESIZE)) * 255)));
+            SDL_SetRenderDrawColor(pRenderer, 255-((int)(((float)player.hp/(8*TILESIZE)) * 255)), ((int)(((float)player.hp/(8*TILESIZE)) * 255)), 0, 255);
+            SDL_RenderFillRect(pRenderer, &healthBar);
             SDL_RenderPresent(pRenderer);
             frameCounter++;
         }

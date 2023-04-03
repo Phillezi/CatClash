@@ -23,6 +23,7 @@ typedef struct tile Tile;
 
 struct player
 {
+    int hp;
     int x, y;
     SDL_Rect rect;
 };
