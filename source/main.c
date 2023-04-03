@@ -71,6 +71,13 @@ int main(int argv, char **args)
 
     int running = 1;
     int oneSecTimer = 0, frameCounter = 0;
+    int charge = 0;
+
+    SDL_Rect chargeBar;
+    chargeBar.h = TILESIZE;
+    chargeBar.w = 4 * TILESIZE;
+    chargeBar.x = (windowWidth / 2) - chargeBar.w;
+    chargeBar.y = 3 * (windowHeight / 4);
 
     while (running)
     {
@@ -98,143 +105,185 @@ int main(int argv, char **args)
                 movementPrevTime = SDL_GetTicks();
 
                 const Uint8 *currentKeyStates = SDL_GetKeyboardState(NULL);
-                if (currentKeyStates[SDL_SCANCODE_R] || currentKeyStates[SDL_SCANCODE_DELETE])
+                if (currentKeyStates[SDL_SCANCODE_SPACE])
                 {
-                    initMap(map);
-                    player.rect.x = windowWidth / 2;
-                    player.rect.y = windowHeight / 2;
-                    printf("Reset\n");
+                    if(charge < 8*TILESIZE){
+                        charge++;
+                    }
+                    chargeBar.w = charge;
                 }
-                if (currentKeyStates[SDL_SCANCODE_W] || currentKeyStates[SDL_SCANCODE_UP])
+                else
                 {
-                    collision = 0;
-                    if (map[(((player.rect.y - movementAmount) / TILESIZE) * MAPSIZE) + (player.rect.x / TILESIZE)].type != 0)
+                    if (charge > 0)
                     {
-                        map[(((player.rect.y - movementAmount) / TILESIZE) * MAPSIZE) + (player.rect.x / TILESIZE)].type = 2;
-                        collision = 1;
-
-                        printf("DEBUG: COLLISION W at player(%d,%d) and tile(%d,%d)\n", player.rect.x, player.rect.y, map[(((player.rect.y - movementAmount) / TILESIZE) * MAPSIZE) + (player.rect.x / TILESIZE)].wall.x, map[(((player.rect.y - movementAmount) / TILESIZE) * MAPSIZE) + (player.rect.x / TILESIZE)].wall.y);
-                    }
-                    else if (map[(((player.rect.y - movementAmount) / TILESIZE) * MAPSIZE) + ((player.rect.x + (TILESIZE-1)) / TILESIZE)].type != 0){
-                        map[(((player.rect.y - movementAmount) / TILESIZE) * MAPSIZE) + ((player.rect.x + (TILESIZE-1)) / TILESIZE)].type = 2;
-                        collision = 1;
-                    }
-
-                    if (!collision)
-                    {
-                        if (1) // playerRect.y >= windowHeight / 4)
+                        collision = 0;
+                        if (map[(((player.rect.y - (2 * movementAmount)) / TILESIZE) * MAPSIZE) + (player.rect.x / TILESIZE)].type != 0)
                         {
-                            player.rect.y -= movementAmount;
+                            map[(((player.rect.y - (2 * movementAmount)) / TILESIZE) * MAPSIZE) + (player.rect.x / TILESIZE)].type = 2;
+                            collision = 1;
                         }
-                        else
+                        else if (map[(((player.rect.y - (2 * movementAmount)) / TILESIZE) * MAPSIZE) + ((player.rect.x + (TILESIZE - 1)) / TILESIZE)].type != 0)
                         {
-                            for (int i = 0; i < MAPSIZE * MAPSIZE; i++)
+                            map[(((player.rect.y - (2 * movementAmount)) / TILESIZE) * MAPSIZE) + ((player.rect.x + (TILESIZE - 1)) / TILESIZE)].type = 2;
+                            collision = 1;
+                        }
+
+                        if (!collision)
+                        {
+                            if (1) // playerRect.y >= windowHeight / 4)
                             {
-                                map[i].wall.y += movementAmount;
+                                player.rect.y -= (2 * movementAmount);
+                            }
+                        }
+                        charge -= (2 * movementAmount);
+                        if (charge < 0)
+                        {
+                            charge = 0;
+                        }
+                        chargeBar.w = charge;
+                    }
+                    if (currentKeyStates[SDL_SCANCODE_R] || currentKeyStates[SDL_SCANCODE_DELETE])
+                    {
+                        initMap(map);
+                        player.rect.x = windowWidth / 2;
+                        player.rect.y = windowHeight / 2;
+                        printf("Reset\n");
+                    }
+                    if (currentKeyStates[SDL_SCANCODE_W] || currentKeyStates[SDL_SCANCODE_UP])
+                    {
+                        collision = 0;
+                        if (map[(((player.rect.y - movementAmount) / TILESIZE) * MAPSIZE) + (player.rect.x / TILESIZE)].type != 0)
+                        {
+                            map[(((player.rect.y - movementAmount) / TILESIZE) * MAPSIZE) + (player.rect.x / TILESIZE)].type = 2;
+                            collision = 1;
+
+                            printf("DEBUG: COLLISION W at player(%d,%d) and tile(%d,%d)\n", player.rect.x, player.rect.y, map[(((player.rect.y - movementAmount) / TILESIZE) * MAPSIZE) + (player.rect.x / TILESIZE)].wall.x, map[(((player.rect.y - movementAmount) / TILESIZE) * MAPSIZE) + (player.rect.x / TILESIZE)].wall.y);
+                        }
+                        else if (map[(((player.rect.y - movementAmount) / TILESIZE) * MAPSIZE) + ((player.rect.x + (TILESIZE - 1)) / TILESIZE)].type != 0)
+                        {
+                            map[(((player.rect.y - movementAmount) / TILESIZE) * MAPSIZE) + ((player.rect.x + (TILESIZE - 1)) / TILESIZE)].type = 2;
+                            collision = 1;
+                        }
+
+                        if (!collision)
+                        {
+                            if (1) // playerRect.y >= windowHeight / 4)
+                            {
+                                player.rect.y -= movementAmount;
+                            }
+                            else
+                            {
+                                for (int i = 0; i < MAPSIZE * MAPSIZE; i++)
+                                {
+                                    map[i].wall.y += movementAmount;
+                                }
                             }
                         }
                     }
-                }
-                if (currentKeyStates[SDL_SCANCODE_A] || currentKeyStates[SDL_SCANCODE_LEFT])
-                {
-                    // moveUp(map, playerRect, movementAmount, TILESIZE, MAPSIZE)
+                    if (currentKeyStates[SDL_SCANCODE_A] || currentKeyStates[SDL_SCANCODE_LEFT])
+                    {
+                        // moveUp(map, playerRect, movementAmount, TILESIZE, MAPSIZE)
 
-                    collision = 0;
-                    if (map[((player.rect.y / TILESIZE) * MAPSIZE) + ((player.rect.x - movementAmount) / TILESIZE)].type != 0)
-                    {
-                        map[((player.rect.y / TILESIZE) * MAPSIZE) + ((player.rect.x - movementAmount) / TILESIZE)].type = 2;
-                        collision = 1;
-                        printf("DEBUG: COLLISION A at player(%d,%d) and tile(%d,%d)\n", player.rect.x, player.rect.y, map[(((player.rect.y - movementAmount) / TILESIZE) * MAPSIZE) + (player.rect.x / TILESIZE)].wall.x, map[(((player.rect.y - movementAmount) / TILESIZE) * MAPSIZE) + (player.rect.x / TILESIZE)].wall.y);
-                    } else if (map[(((player.rect.y + TILESIZE - 1)/ TILESIZE) * MAPSIZE) + ((player.rect.x - movementAmount) / TILESIZE)].type != 0)
-                    {
-                        map[(((player.rect.y + TILESIZE - 1) / TILESIZE) * MAPSIZE) + ((player.rect.x - movementAmount) / TILESIZE)].type = 2;
-                        collision = 1;
-                    }
-
-                    if (!collision)
-                    {
-                        if (1) // playerRect.x >= windowWidth / 4)
+                        collision = 0;
+                        if (map[((player.rect.y / TILESIZE) * MAPSIZE) + ((player.rect.x - movementAmount) / TILESIZE)].type != 0)
                         {
-                            player.rect.x -= movementAmount;
+                            map[((player.rect.y / TILESIZE) * MAPSIZE) + ((player.rect.x - movementAmount) / TILESIZE)].type = 2;
+                            collision = 1;
+                            printf("DEBUG: COLLISION A at player(%d,%d) and tile(%d,%d)\n", player.rect.x, player.rect.y, map[(((player.rect.y - movementAmount) / TILESIZE) * MAPSIZE) + (player.rect.x / TILESIZE)].wall.x, map[(((player.rect.y - movementAmount) / TILESIZE) * MAPSIZE) + (player.rect.x / TILESIZE)].wall.y);
                         }
-                        else
+                        else if (map[(((player.rect.y + TILESIZE - 1) / TILESIZE) * MAPSIZE) + ((player.rect.x - movementAmount) / TILESIZE)].type != 0)
                         {
-                            for (int i = 0; i < MAPSIZE * MAPSIZE; i++)
+                            map[(((player.rect.y + TILESIZE - 1) / TILESIZE) * MAPSIZE) + ((player.rect.x - movementAmount) / TILESIZE)].type = 2;
+                            collision = 1;
+                        }
+
+                        if (!collision)
+                        {
+                            if (1) // playerRect.x >= windowWidth / 4)
                             {
-                                map[i].wall.x += movementAmount;
+                                player.rect.x -= movementAmount;
+                            }
+                            else
+                            {
+                                for (int i = 0; i < MAPSIZE * MAPSIZE; i++)
+                                {
+                                    map[i].wall.x += movementAmount;
+                                }
                             }
                         }
                     }
-                }
-                if (currentKeyStates[SDL_SCANCODE_S] || currentKeyStates[SDL_SCANCODE_DOWN])
-                {
-                    collision = 0;
-                    if (map[(((player.rect.y + (TILESIZE - 1) + movementAmount) / TILESIZE) * MAPSIZE) + (player.rect.x / TILESIZE)].type != 0)
+                    if (currentKeyStates[SDL_SCANCODE_S] || currentKeyStates[SDL_SCANCODE_DOWN])
                     {
-                        map[(((player.rect.y + (TILESIZE - 1) + movementAmount) / TILESIZE) * MAPSIZE) + (player.rect.x / TILESIZE)].type = 2;
-                        collision = 1;
-                        printf("DEBUG: COLLISION S at player(%d,%d) and tile(%d,%d)\n", player.rect.x, player.rect.y, map[(((player.rect.y - movementAmount) / TILESIZE) * MAPSIZE) + (player.rect.x / TILESIZE)].wall.x, map[(((player.rect.y - movementAmount) / TILESIZE) * MAPSIZE) + (player.rect.x / TILESIZE)].wall.y);
-                    }
-                    else if (map[(((player.rect.y + (TILESIZE - 1) + movementAmount) / TILESIZE) * MAPSIZE) + ((player.rect.x + (TILESIZE-1)) / TILESIZE)].type != 0){
-                        map[(((player.rect.y + (TILESIZE - 1) + movementAmount) / TILESIZE) * MAPSIZE) + ((player.rect.x + (TILESIZE-1)) / TILESIZE)].type = 2;
-                        collision = 1;
-                    }
-
-                    if (!collision)
-                    {
-                        if (1) // playerRect.y <= ((3 * windowHeight) / 4))
+                        collision = 0;
+                        if (map[(((player.rect.y + (TILESIZE - 1) + movementAmount) / TILESIZE) * MAPSIZE) + (player.rect.x / TILESIZE)].type != 0)
                         {
-                            player.rect.y += movementAmount;
+                            map[(((player.rect.y + (TILESIZE - 1) + movementAmount) / TILESIZE) * MAPSIZE) + (player.rect.x / TILESIZE)].type = 2;
+                            collision = 1;
+                            printf("DEBUG: COLLISION S at player(%d,%d) and tile(%d,%d)\n", player.rect.x, player.rect.y, map[(((player.rect.y - movementAmount) / TILESIZE) * MAPSIZE) + (player.rect.x / TILESIZE)].wall.x, map[(((player.rect.y - movementAmount) / TILESIZE) * MAPSIZE) + (player.rect.x / TILESIZE)].wall.y);
                         }
-                        else
+                        else if (map[(((player.rect.y + (TILESIZE - 1) + movementAmount) / TILESIZE) * MAPSIZE) + ((player.rect.x + (TILESIZE - 1)) / TILESIZE)].type != 0)
                         {
-                            for (int i = 0; i < MAPSIZE * MAPSIZE; i++)
+                            map[(((player.rect.y + (TILESIZE - 1) + movementAmount) / TILESIZE) * MAPSIZE) + ((player.rect.x + (TILESIZE - 1)) / TILESIZE)].type = 2;
+                            collision = 1;
+                        }
+
+                        if (!collision)
+                        {
+                            if (1) // playerRect.y <= ((3 * windowHeight) / 4))
                             {
-                                map[i].wall.y -= movementAmount;
+                                player.rect.y += movementAmount;
+                            }
+                            else
+                            {
+                                for (int i = 0; i < MAPSIZE * MAPSIZE; i++)
+                                {
+                                    map[i].wall.y -= movementAmount;
+                                }
                             }
                         }
                     }
-                }
-                if (currentKeyStates[SDL_SCANCODE_D] || currentKeyStates[SDL_SCANCODE_RIGHT])
-                {
-                    collision = 0;
-                    if (map[((player.rect.y / TILESIZE) * MAPSIZE) + ((player.rect.x + (TILESIZE - 1) + movementAmount) / TILESIZE)].type != 0)
+                    if (currentKeyStates[SDL_SCANCODE_D] || currentKeyStates[SDL_SCANCODE_RIGHT])
                     {
-                        map[((player.rect.y / TILESIZE) * MAPSIZE) + ((player.rect.x + (TILESIZE - 1) + movementAmount) / TILESIZE)].type = 2;
-                        collision = 1;
-                        printf("DEBUG: COLLISION D at player(%d,%d) and tile(%d,%d)\n", player.rect.x, player.rect.y, map[(((player.rect.y - movementAmount) / TILESIZE) * MAPSIZE) + (player.rect.x / TILESIZE)].wall.x, map[(((player.rect.y - movementAmount) / TILESIZE) * MAPSIZE) + (player.rect.x / TILESIZE)].wall.y);
-                    } else if (map[(((player.rect.y + TILESIZE - 1)/ TILESIZE) * MAPSIZE) + ((player.rect.x + (TILESIZE - 1) + movementAmount) / TILESIZE)].type != 0)
-                    {
-                        map[(((player.rect.y + TILESIZE - 1) / TILESIZE) * MAPSIZE) + ((player.rect.x + (TILESIZE - 1) + movementAmount) / TILESIZE)].type = 2;
-                        collision = 1;
-                    }
-
-                    if (!collision)
-                    {
-                        if (1) // playerRect.x <= ((3 * windowWidth) / 4))
+                        collision = 0;
+                        if (map[((player.rect.y / TILESIZE) * MAPSIZE) + ((player.rect.x + (TILESIZE - 1) + movementAmount) / TILESIZE)].type != 0)
                         {
-                            player.rect.x += movementAmount;
+                            map[((player.rect.y / TILESIZE) * MAPSIZE) + ((player.rect.x + (TILESIZE - 1) + movementAmount) / TILESIZE)].type = 2;
+                            collision = 1;
+                            printf("DEBUG: COLLISION D at player(%d,%d) and tile(%d,%d)\n", player.rect.x, player.rect.y, map[(((player.rect.y - movementAmount) / TILESIZE) * MAPSIZE) + (player.rect.x / TILESIZE)].wall.x, map[(((player.rect.y - movementAmount) / TILESIZE) * MAPSIZE) + (player.rect.x / TILESIZE)].wall.y);
                         }
-                        else
+                        else if (map[(((player.rect.y + TILESIZE - 1) / TILESIZE) * MAPSIZE) + ((player.rect.x + (TILESIZE - 1) + movementAmount) / TILESIZE)].type != 0)
                         {
-                            for (int i = 0; i < MAPSIZE * MAPSIZE; i++)
+                            map[(((player.rect.y + TILESIZE - 1) / TILESIZE) * MAPSIZE) + ((player.rect.x + (TILESIZE - 1) + movementAmount) / TILESIZE)].type = 2;
+                            collision = 1;
+                        }
+
+                        if (!collision)
+                        {
+                            if (1) // playerRect.x <= ((3 * windowWidth) / 4))
                             {
-                                map[i].wall.x -= movementAmount;
+                                player.rect.x += movementAmount;
+                            }
+                            else
+                            {
+                                for (int i = 0; i < MAPSIZE * MAPSIZE; i++)
+                                {
+                                    map[i].wall.x -= movementAmount;
+                                }
                             }
                         }
                     }
-                }
-                if (currentKeyStates[SDL_SCANCODE_F11])
-                {
-                    if (!fullScreen)
+                    if (currentKeyStates[SDL_SCANCODE_F11])
                     {
-                        SDL_SetWindowFullscreen(pWindow, SDL_WINDOW_FULLSCREEN);
-                        fullScreen = 1;
-                    }
-                    else
-                    {
-                        SDL_SetWindowFullscreen(pWindow, 0);
-                        fullScreen = 0;
+                        if (!fullScreen)
+                        {
+                            SDL_SetWindowFullscreen(pWindow, SDL_WINDOW_FULLSCREEN);
+                            fullScreen = 1;
+                        }
+                        else
+                        {
+                            SDL_SetWindowFullscreen(pWindow, 0);
+                            fullScreen = 0;
+                        }
                     }
                 }
             }
@@ -273,6 +322,10 @@ int main(int argv, char **args)
             SDL_SetRenderDrawColor(pRenderer, 255, 0, 0, 255);
             SDL_RenderDrawRect(pRenderer, &player.rect);
             SDL_RenderCopy(pRenderer, pTexturePlayer, NULL, &player.rect);
+            if (charge > 0)
+            {
+                SDL_RenderFillRect(pRenderer, &chargeBar);
+            }
             SDL_RenderPresent(pRenderer);
             frameCounter++;
         }
