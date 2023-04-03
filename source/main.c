@@ -42,7 +42,8 @@ int main(int argv, char **args)
 
     char tileTextures[TILES][20] = {"resources/Tile1.png", "resources/Tile2.png", "resources/Tile3.png", "resources/Tile4.png"};
     SDL_Texture *pTextureTiles[TILES];
-    if(initTextureTiles(pRenderer, pWindow, pTextureTiles, tileTextures, TILES) == -1){
+    if (initTextureTiles(pRenderer, pWindow, pTextureTiles, tileTextures, TILES) == -1)
+    {
         printf("Error: %s\n", SDL_GetError());
         SDL_DestroyRenderer(pRenderer);
         SDL_DestroyWindow(pWindow);
@@ -51,7 +52,8 @@ int main(int argv, char **args)
     }
 
     SDL_Texture *pTexturePlayer;
-    if(initTexturePlayer(pRenderer, pWindow, &pTexturePlayer) == -1){
+    if (initTexturePlayer(pRenderer, pWindow, &pTexturePlayer) == -1)
+    {
         printf("Error: %s\n", SDL_GetError());
         SDL_DestroyRenderer(pRenderer);
         SDL_DestroyWindow(pWindow);
@@ -72,7 +74,8 @@ int main(int argv, char **args)
 
     while (running)
     {
-        if(SDL_GetTicks() - oneSecTimer >= 1000){
+        if (SDL_GetTicks() - oneSecTimer >= 1000) // Performance monitor
+        {
             oneSecTimer = SDL_GetTicks();
             printf("FPS: %d\n", frameCounter);
             frameCounter = 0;
@@ -81,7 +84,7 @@ int main(int argv, char **args)
         if (deltaTime >= 1000 / FPS) // updates at a frequency of FPS
         {
             prevTime = SDL_GetTicks();
-            
+
             SDL_Event event;
             while (SDL_PollEvent(&event))
             {
@@ -95,26 +98,31 @@ int main(int argv, char **args)
                 movementPrevTime = SDL_GetTicks();
 
                 const Uint8 *currentKeyStates = SDL_GetKeyboardState(NULL);
-                if (currentKeyStates[SDL_SCANCODE_R] || currentKeyStates[SDL_SCANCODE_DELETE]){
-                        initMap(map);
-                        player.rect.x = windowWidth / 2;
-                        player.rect.y = windowHeight / 2;
-                        printf("Reset\n");
+                if (currentKeyStates[SDL_SCANCODE_R] || currentKeyStates[SDL_SCANCODE_DELETE])
+                {
+                    initMap(map);
+                    player.rect.x = windowWidth / 2;
+                    player.rect.y = windowHeight / 2;
+                    printf("Reset\n");
                 }
                 if (currentKeyStates[SDL_SCANCODE_W] || currentKeyStates[SDL_SCANCODE_UP])
                 {
                     collision = 0;
-                    if(map[(((player.rect.y-movementAmount)/TILESIZE)*MAPSIZE)+(player.rect.x/TILESIZE)].type != 0){
-                        map[(((player.rect.y-movementAmount)/TILESIZE)*MAPSIZE)+(player.rect.x/TILESIZE)].type = 2;
+                    if (map[(((player.rect.y - movementAmount) / TILESIZE) * MAPSIZE) + (player.rect.x / TILESIZE)].type != 0)
+                    {
+                        map[(((player.rect.y - movementAmount) / TILESIZE) * MAPSIZE) + (player.rect.x / TILESIZE)].type = 2;
                         collision = 1;
 
-                        printf("DEBUG: COLLISION W at player(%d,%d) and tile(%d,%d)\n",player.rect.x,player.rect.y, map[(((player.rect.y-movementAmount)/TILESIZE)*MAPSIZE)+(player.rect.x/TILESIZE)].wall.x, map[(((player.rect.y-movementAmount)/TILESIZE)*MAPSIZE)+(player.rect.x/TILESIZE)].wall.y);
+                        printf("DEBUG: COLLISION W at player(%d,%d) and tile(%d,%d)\n", player.rect.x, player.rect.y, map[(((player.rect.y - movementAmount) / TILESIZE) * MAPSIZE) + (player.rect.x / TILESIZE)].wall.x, map[(((player.rect.y - movementAmount) / TILESIZE) * MAPSIZE) + (player.rect.x / TILESIZE)].wall.y);
                     }
-                        
+                    else if (map[(((player.rect.y - movementAmount) / TILESIZE) * MAPSIZE) + ((player.rect.x + (TILESIZE-1)) / TILESIZE)].type != 0){
+                        map[(((player.rect.y - movementAmount) / TILESIZE) * MAPSIZE) + ((player.rect.x + (TILESIZE-1)) / TILESIZE)].type = 2;
+                        collision = 1;
+                    }
 
                     if (!collision)
                     {
-                        if (1)//playerRect.y >= windowHeight / 4)
+                        if (1) // playerRect.y >= windowHeight / 4)
                         {
                             player.rect.y -= movementAmount;
                         }
@@ -129,18 +137,23 @@ int main(int argv, char **args)
                 }
                 if (currentKeyStates[SDL_SCANCODE_A] || currentKeyStates[SDL_SCANCODE_LEFT])
                 {
-                    //moveUp(map, playerRect, movementAmount, TILESIZE, MAPSIZE)
-                    
+                    // moveUp(map, playerRect, movementAmount, TILESIZE, MAPSIZE)
+
                     collision = 0;
-                    if(map[((player.rect.y/TILESIZE)*MAPSIZE)+((player.rect.x-movementAmount)/TILESIZE)].type != 0){
-                        map[((player.rect.y/TILESIZE)*MAPSIZE)+((player.rect.x-movementAmount)/TILESIZE)].type = 2;
+                    if (map[((player.rect.y / TILESIZE) * MAPSIZE) + ((player.rect.x - movementAmount) / TILESIZE)].type != 0)
+                    {
+                        map[((player.rect.y / TILESIZE) * MAPSIZE) + ((player.rect.x - movementAmount) / TILESIZE)].type = 2;
                         collision = 1;
-                        printf("DEBUG: COLLISION A at player(%d,%d) and tile(%d,%d)\n",player.rect.x,player.rect.y, map[(((player.rect.y-movementAmount)/TILESIZE)*MAPSIZE)+(player.rect.x/TILESIZE)].wall.x, map[(((player.rect.y-movementAmount)/TILESIZE)*MAPSIZE)+(player.rect.x/TILESIZE)].wall.y);
+                        printf("DEBUG: COLLISION A at player(%d,%d) and tile(%d,%d)\n", player.rect.x, player.rect.y, map[(((player.rect.y - movementAmount) / TILESIZE) * MAPSIZE) + (player.rect.x / TILESIZE)].wall.x, map[(((player.rect.y - movementAmount) / TILESIZE) * MAPSIZE) + (player.rect.x / TILESIZE)].wall.y);
+                    } else if (map[(((player.rect.y + TILESIZE - 1)/ TILESIZE) * MAPSIZE) + ((player.rect.x - movementAmount) / TILESIZE)].type != 0)
+                    {
+                        map[(((player.rect.y + TILESIZE - 1) / TILESIZE) * MAPSIZE) + ((player.rect.x - movementAmount) / TILESIZE)].type = 2;
+                        collision = 1;
                     }
 
                     if (!collision)
                     {
-                        if (1)//playerRect.x >= windowWidth / 4)
+                        if (1) // playerRect.x >= windowWidth / 4)
                         {
                             player.rect.x -= movementAmount;
                         }
@@ -152,20 +165,24 @@ int main(int argv, char **args)
                             }
                         }
                     }
-                    
                 }
                 if (currentKeyStates[SDL_SCANCODE_S] || currentKeyStates[SDL_SCANCODE_DOWN])
                 {
                     collision = 0;
-                    if(map[(((player.rect.y+(TILESIZE-1)+movementAmount)/TILESIZE)*MAPSIZE)+(player.rect.x/TILESIZE)].type != 0){
-                        map[(((player.rect.y+(TILESIZE-1)+movementAmount)/TILESIZE)*MAPSIZE)+(player.rect.x/TILESIZE)].type = 2;
+                    if (map[(((player.rect.y + (TILESIZE - 1) + movementAmount) / TILESIZE) * MAPSIZE) + (player.rect.x / TILESIZE)].type != 0)
+                    {
+                        map[(((player.rect.y + (TILESIZE - 1) + movementAmount) / TILESIZE) * MAPSIZE) + (player.rect.x / TILESIZE)].type = 2;
                         collision = 1;
-                        printf("DEBUG: COLLISION S at player(%d,%d) and tile(%d,%d)\n",player.rect.x,player.rect.y, map[(((player.rect.y-movementAmount)/TILESIZE)*MAPSIZE)+(player.rect.x/TILESIZE)].wall.x, map[(((player.rect.y-movementAmount)/TILESIZE)*MAPSIZE)+(player.rect.x/TILESIZE)].wall.y);
+                        printf("DEBUG: COLLISION S at player(%d,%d) and tile(%d,%d)\n", player.rect.x, player.rect.y, map[(((player.rect.y - movementAmount) / TILESIZE) * MAPSIZE) + (player.rect.x / TILESIZE)].wall.x, map[(((player.rect.y - movementAmount) / TILESIZE) * MAPSIZE) + (player.rect.x / TILESIZE)].wall.y);
+                    }
+                    else if (map[(((player.rect.y + (TILESIZE - 1) + movementAmount) / TILESIZE) * MAPSIZE) + ((player.rect.x + (TILESIZE-1)) / TILESIZE)].type != 0){
+                        map[(((player.rect.y + (TILESIZE - 1) + movementAmount) / TILESIZE) * MAPSIZE) + ((player.rect.x + (TILESIZE-1)) / TILESIZE)].type = 2;
+                        collision = 1;
                     }
 
                     if (!collision)
                     {
-                        if (1)//playerRect.y <= ((3 * windowHeight) / 4))
+                        if (1) // playerRect.y <= ((3 * windowHeight) / 4))
                         {
                             player.rect.y += movementAmount;
                         }
@@ -181,15 +198,20 @@ int main(int argv, char **args)
                 if (currentKeyStates[SDL_SCANCODE_D] || currentKeyStates[SDL_SCANCODE_RIGHT])
                 {
                     collision = 0;
-                    if(map[((player.rect.y/TILESIZE)*MAPSIZE)+((player.rect.x+(TILESIZE-1)+movementAmount)/TILESIZE)].type != 0){
-                        map[((player.rect.y/TILESIZE)*MAPSIZE)+((player.rect.x+(TILESIZE-1)+movementAmount)/TILESIZE)].type = 2;
+                    if (map[((player.rect.y / TILESIZE) * MAPSIZE) + ((player.rect.x + (TILESIZE - 1) + movementAmount) / TILESIZE)].type != 0)
+                    {
+                        map[((player.rect.y / TILESIZE) * MAPSIZE) + ((player.rect.x + (TILESIZE - 1) + movementAmount) / TILESIZE)].type = 2;
                         collision = 1;
-                        printf("DEBUG: COLLISION D at player(%d,%d) and tile(%d,%d)\n",player.rect.x,player.rect.y, map[(((player.rect.y-movementAmount)/TILESIZE)*MAPSIZE)+(player.rect.x/TILESIZE)].wall.x, map[(((player.rect.y-movementAmount)/TILESIZE)*MAPSIZE)+(player.rect.x/TILESIZE)].wall.y);
+                        printf("DEBUG: COLLISION D at player(%d,%d) and tile(%d,%d)\n", player.rect.x, player.rect.y, map[(((player.rect.y - movementAmount) / TILESIZE) * MAPSIZE) + (player.rect.x / TILESIZE)].wall.x, map[(((player.rect.y - movementAmount) / TILESIZE) * MAPSIZE) + (player.rect.x / TILESIZE)].wall.y);
+                    } else if (map[(((player.rect.y + TILESIZE - 1)/ TILESIZE) * MAPSIZE) + ((player.rect.x + (TILESIZE - 1) + movementAmount) / TILESIZE)].type != 0)
+                    {
+                        map[(((player.rect.y + TILESIZE - 1) / TILESIZE) * MAPSIZE) + ((player.rect.x + (TILESIZE - 1) + movementAmount) / TILESIZE)].type = 2;
+                        collision = 1;
                     }
 
                     if (!collision)
                     {
-                        if (1)//playerRect.x <= ((3 * windowWidth) / 4))
+                        if (1) // playerRect.x <= ((3 * windowWidth) / 4))
                         {
                             player.rect.x += movementAmount;
                         }
@@ -204,15 +226,16 @@ int main(int argv, char **args)
                 }
                 if (currentKeyStates[SDL_SCANCODE_F11])
                 {
-                    if(!fullScreen){
+                    if (!fullScreen)
+                    {
                         SDL_SetWindowFullscreen(pWindow, SDL_WINDOW_FULLSCREEN);
                         fullScreen = 1;
                     }
-                    else{
+                    else
+                    {
                         SDL_SetWindowFullscreen(pWindow, 0);
                         fullScreen = 0;
                     }
-                    
                 }
             }
 
@@ -227,20 +250,20 @@ int main(int argv, char **args)
                 case 0:
                     break;
                 case 1:
-                    //SDL_SetRenderDrawColor(pRenderer, 0, 0, 0, 255);
+                    // SDL_SetRenderDrawColor(pRenderer, 0, 0, 0, 255);
                     SDL_RenderCopy(pRenderer, pTextureTiles[0], NULL, &map[i].wall); // SDL_RenderFillRect(pRenderer, &map[i].wall);
                     break;
                 case 2:
-                    //SDL_SetRenderDrawColor(pRenderer, 100, 0, 0, 255);
+                    // SDL_SetRenderDrawColor(pRenderer, 100, 0, 0, 255);
                     SDL_RenderCopy(pRenderer, pTextureTiles[1], NULL, &map[i].wall); // SDL_RenderFillRect(pRenderer, &map[i].wall);
                     break;
                 case 3:
-                    //SDL_SetRenderDrawColor(pRenderer, 0, 100, 0, 255);
+                    // SDL_SetRenderDrawColor(pRenderer, 0, 100, 0, 255);
                     SDL_RenderCopy(pRenderer, pTextureTiles[2], NULL, &map[i].wall); // SDL_RenderFillRect(pRenderer, &map[i].wall);
                     break;
                 case 4:
-                    //SDL_SetRenderDrawColor(pRenderer, 0, 0, 100, 255);
-                    SDL_RenderCopy(pRenderer, pTextureTiles[3], NULL, &map[i].wall); //SDL_RenderFillRect(pRenderer, &map[i].wall);
+                    // SDL_SetRenderDrawColor(pRenderer, 0, 0, 100, 255);
+                    SDL_RenderCopy(pRenderer, pTextureTiles[3], NULL, &map[i].wall); // SDL_RenderFillRect(pRenderer, &map[i].wall);
                     break;
                 default:
                     break;
