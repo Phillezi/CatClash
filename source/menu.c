@@ -9,9 +9,9 @@ int menu(SDL_Window *pWindow, SDL_Renderer *pRenderer)
     int oneSecTimer = 0, frameCounter = 0;
 
     SDL_Rect test;
-    test.w = DEFAULT_WIDTH / 2;
+    test.w = DEFAULT_WIDTH - 20;
     test.h = DEFAULT_HEIGHT / 2;
-    test.x = 20;
+    test.x = 10;
     test.y = 20;
 
     SDL_Rect fpsFrame;
@@ -22,7 +22,7 @@ int menu(SDL_Window *pWindow, SDL_Renderer *pRenderer)
 
     TTF_Font *pFont = TTF_OpenFont("resources/fonts/Pixelletters.ttf", 20);
     SDL_Color color = {255, 255, 255};
-    SDL_Surface *pSurface = TTF_RenderText_Solid(pFont, "Menu", color);
+    SDL_Surface *pSurface = TTF_RenderText_Solid(pFont, "Press SPACE to start", color);
     SDL_Texture *pTexture = SDL_CreateTextureFromSurface(pRenderer, pSurface);
     SDL_FreeSurface(pSurface);
 
