@@ -3,6 +3,7 @@
 #include <stdio.h>
 #include "init.h"
 #include "definitions.h"
+#include "menu.h"
 
 void initMap(Tile map[]);
 Tile createTile(int x, int y, int type);
@@ -39,6 +40,8 @@ int main(int argv, char **args)
         SDL_Quit();
         return 1;
     }
+
+    menu(pWindow, pRenderer);
 
     char tileTextures[TILES][20] = {"resources/Tile1.png", "resources/Tile2.png", "resources/Tile3.png", "resources/Tile4.png"};
     SDL_Texture *pTextureTiles[TILES];
