@@ -12,6 +12,8 @@ int main(int argv, char **args)
 {
 
     SDL_Init(SDL_INIT_EVERYTHING);
+    TTF_Init();
+    
     int fullScreen = 0;
     int collision = 0;
     int movementPrevTime = 0;
@@ -90,12 +92,30 @@ int main(int argv, char **args)
     healthBar.x = 2 * TILESIZE;
     healthBar.y = 3 * (windowHeight / 4);
 
+    SDL_Rect fpsFrame;
+    fpsFrame.w = 40;
+    fpsFrame.h = 40;
+    fpsFrame.x = DEFAULT_WIDTH - fpsFrame.w;
+    fpsFrame.y = 0;
+
+    TTF_Font *pFont = TTF_OpenFont("resources/fonts/Pixelletters.ttf", 20);
+    SDL_Color colGreen = {0, 255, 0};
+    SDL_Surface *pFpsSurface = TTF_RenderText_Solid(pFont, "FPS", colGreen);
+    SDL_Texture *pFpsTexture = SDL_CreateTextureFromSurface(pRenderer, pFpsSurface);
+    SDL_FreeSurface(pFpsSurface);
+
     while (running)
     {
         if (SDL_GetTicks() - oneSecTimer >= 1000) // Performance monitor
         {
             oneSecTimer = SDL_GetTicks();
-            printf("FPS: %d\n", frameCounter);
+            // printf("FPS: %d\n", frameCounter);
+            char buffer[50];
+            SDL_DestroyTexture(pFpsTexture);
+            sprintf(buffer, "%d", frameCounter);
+            SDL_Surface *pFpsSurface = TTF_RenderText_Solid(pFont, buffer, colGreen);
+            SDL_Texture *pFpsTexture = SDL_CreateTextureFromSurface(pRenderer, pFpsSurface);
+            SDL_FreeSurface(pFpsSurface);
             frameCounter = 0;
         }
         int deltaTime = SDL_GetTicks() - prevTime;
@@ -118,7 +138,8 @@ int main(int argv, char **args)
                 const Uint8 *currentKeyStates = SDL_GetKeyboardState(NULL);
                 if (currentKeyStates[SDL_SCANCODE_SPACE])
                 {
-                    if(charge < 8*TILESIZE){
+                    if (charge < 8 * TILESIZE)
+                    {
                         charge++;
                     }
                     chargeBar.w = charge;
@@ -345,13 +366,15 @@ int main(int argv, char **args)
             {
                 SDL_RenderFillRect(pRenderer, &chargeBar);
             }
-            //printf("hp val: %d\n", ((int)(((float)player.hp/(8*TILESIZE)) * 255)));
-            SDL_SetRenderDrawColor(pRenderer, 255-((int)(((float)player.hp/(8*TILESIZE)) * 255)), ((int)(((float)player.hp/(8*TILESIZE)) * 255)), 0, 255);
+            // printf("hp val: %d\n", ((int)(((float)player.hp/(8*TILESIZE)) * 255)));
+            SDL_SetRenderDrawColor(pRenderer, 255 - ((int)(((float)player.hp / (8 * TILESIZE)) * 255)), ((int)(((float)player.hp / (8 * TILESIZE)) * 255)), 0, 255);
             SDL_RenderFillRect(pRenderer, &healthBar);
+            SDL_RenderCopy(pRenderer, pFpsTexture, NULL, &fpsFrame);
             SDL_RenderPresent(pRenderer);
             frameCounter++;
         }
     }
+    SDL_DestroyTexture(pFpsTexture);
     SDL_DestroyTexture(pTextureTiles[0]);
     SDL_DestroyTexture(pTextureTiles[1]);
     SDL_DestroyTexture(pTextureTiles[2]);
@@ -359,6 +382,8 @@ int main(int argv, char **args)
     SDL_DestroyTexture(pTexturePlayer);
     SDL_DestroyRenderer(pRenderer);
     SDL_DestroyWindow(pWindow);
+    TTF_CloseFont(pFont);
+    TTF_Quit();
     SDL_Quit();
     return 0;
 }
