@@ -12,7 +12,7 @@ int menu(SDL_Window *pWindow, SDL_Renderer *pRenderer)
     test.w = DEFAULT_WIDTH - 20;
     test.h = DEFAULT_HEIGHT / 2;
     test.x = 10;
-    test.y = 20;
+    test.y = 200;
 
     SDL_Rect fpsFrame;
     fpsFrame.w = 40;
