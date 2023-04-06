@@ -1,22 +1,20 @@
 {
-    "configurations": [
-        {
-            "name": "Win32",
-            "includePath": [
-                "${default}", "C:/msys64/mingw64/include"
-            ],
-            "defines": [
-                "_DEBUG",
-                "UNICODE",
-                "_UNICODE"
-            ],
-            "windowsSdkVersion": "10.0.22000.0",
-            "compilerPath": "C:/msys64/mingw64/bin/gcc.exe",
-            "cStandard": "c17",
-            "cppStandard": "c++17",
-            "intelliSenseMode": "windows-gcc-x86",
-            "configurationProvider": "ms-vscode.makefile-tools"
-        }
-    ],
+    "configurations": [{
+        "name": "Win32",
+        "includePath": [
+            "${default}", "C:/msys2/mingw64/include"
+        ],
+        "defines": [
+            "_DEBUG",
+            "UNICODE",
+            "_UNICODE"
+        ],
+        "windowsSdkVersion": "10.0.22000.0",
+        "compilerPath": "C:/msys2/mingw64/bin/gcc.exe",
+        "cStandard": "c17",
+        "cppStandard": "c++17",
+        "intelliSenseMode": "windows-gcc-x86",
+        "configurationProvider": "ms-vscode.makefile-tools"
+    }],
     "version": 4
 }

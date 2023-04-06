@@ -1,12 +1,4 @@
 {
-    "workbench.colorTheme": "Default Dark+",
-    "code-runner.runInTerminal": true,
-    "explorer.confirmDragAndDrop": false,
-    "code-runner.ignoreSelection": true,
-    "C_Cpp.errorSquiggles": "enabled",
-    "files.associations": {
-        "sdl.h": "c",
-        "sdl_net.h": "c",
-        "sdl.g": "c"
-        }
+    "C_Cpp.default.configurationProvider": "ms-vscode.makefile-tools",
+    "codetogether.virtualCursorJoin": "ownVirtualCursor"
 }
