@@ -103,6 +103,6 @@ int main(int argc, char **argv) {
 int newAddress(Player player[], UDPpacket *pRecieve) {
     for (int i = 0; i < MAX_PLAYERS; i++) {
         if (pRecieve->address.port == player[i].port) return -1;
-        else if (player[i].ip == 0) return i; 
+        else if (player[i].ip == 0) return i+1; 
     }
 }
