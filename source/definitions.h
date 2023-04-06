@@ -4,7 +4,7 @@
 
 // DEFINITIONS
 #define MAP_FILEPATH "resources/map.txt"
-#define SAVE_MAP_FILEPATH "resources/savedMap.txt"
+#define SAVE_MAP_PATH "resources/"
 #define DEFAULT_WIDTH 1024
 #define DEFAULT_HEIGHT 1024
 #define WINDOW_NAME "Test"
@@ -17,6 +17,7 @@
 // ADTS
 struct tile
 {
+    int x, y;
     SDL_Rect wall;
     int type;
 };

@@ -50,3 +50,47 @@ int initTexturePlayer(SDL_Renderer *pRenderer, SDL_Window *pWindow, SDL_Texture 
     }
     return 0;
 }
+/*
+    initMap:
+    Reads the mapfile and fills the Tile map array
+    expected in-parameters: Tile map[]
+*/
+void initMap(Tile map[])
+{
+    int type = 0;
+    // READ FROM map.txt
+    FILE *fp;
+    fp = fopen(MAP_FILEPATH, "r");
+    if (fp != NULL)
+    {
+        for (int row = 0; row < MAPSIZE; row++)
+        {
+            for (int col = 0; col < MAPSIZE; col++)
+            {
+                type = 0;
+                fscanf(fp, "%d", &type);
+                map[row * MAPSIZE + col] = createTile(col * TILESIZE, row * TILESIZE, type);
+            }
+        }
+        fclose(fp);
+    }
+    else
+    {
+        printf("ERROR READING FILE");
+    }
+}
+/*
+    createTile:
+    creates a tile
+    expected in-parameters: int x, int y, int type
+*/
+Tile createTile(int x, int y, int type)
+{
+    Tile i;
+    i.wall.x = x;
+    i.wall.y = y;
+    i.wall.w = TILESIZE;
+    i.wall.h = TILESIZE;
+    i.type = type;
+    return i;
+}
