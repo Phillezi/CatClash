@@ -11,6 +11,19 @@ all:
 	$(CC) $(CFLAGS) $(SRCDIR)/menu.c 
 	$(CC) main.o init.o menu.o -o main.exe $(LDFLAGS)
 
+net:
+	@echo "Building Networking"
+	$(CC) $(CFLAGS) $(SRCDIR)/udpClient.c 
+	$(CC) $(CFLAGS) $(SRCDIR)/udpServer.c 
+	$(CC) udpClient.o -o udpClient.exe $(LDFLAGS)
+	$(CC) udpServer.o -o udpServer.exe $(LDFLAGS)
+
+mapC:
+	@echo "Building MapCreator"
+	$(CC) $(CFLAGS) $(SRCDIR)/mapCreator.c 
+	$(CC) $(CFLAGS) $(SRCDIR)/init.c 
+	$(CC) mapCreator.o init.o -o mapCreator.exe $(LDFLAGS)
+
 clean:
 	rm *.exe
 	rm *.o

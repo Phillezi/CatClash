@@ -5,6 +5,7 @@
 #include <stdlib.h>
 
 #define MAX_PLAYERS 5
+#define PORT 1234
 
 typedef struct data {
    int x;
@@ -38,7 +39,7 @@ int main(int argc, char **argv) {
         }
 
         // Open socket
-        if (!(socketDesc = SDLNet_UDP_Open(2000))) {
+        if (!(socketDesc = SDLNet_UDP_Open(PORT))) {
             fprintf(stderr, "SDLNet_UDP_Open: %s\n", SDLNet_GetError());
             exit(EXIT_FAILURE);
         }
@@ -54,7 +55,8 @@ int main(int argc, char **argv) {
         
         // Get ready to recieve packet - UDP_Recv != 0 if a packet is coming
         if (SDLNet_UDP_Recv(socketDesc, pRecieve)) {
-            
+            printf("ACTION over UDP\n");
+
             // Add new players
             if (players < MAX_PLAYERS){
                 if (players = newAddress(player, pRecieve)) {
@@ -102,7 +104,9 @@ int main(int argc, char **argv) {
 
 int newAddress(Player player[], UDPpacket *pRecieve) {
     for (int i = 0; i < MAX_PLAYERS; i++) {
-        if (pRecieve->address.port == player[i].port) return -1;
-        else if (player[i].ip == 0) return i+1; 
+        if (pRecieve->address.port == player[i].port)   // known user?
+            return -1;                                  // yes return -1
+        else if (player[i].ip == 0)                     // not known user, empty ip att player[i].ip?
+            return (i+1);                               // yes return new number of players;
     }
 }

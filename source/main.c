@@ -5,9 +5,6 @@
 #include "definitions.h"
 #include "menu.h"
 
-void initMap(Tile map[]);
-Tile createTile(int x, int y, int type);
-
 int main(int argv, char **args)
 {
 
@@ -386,39 +383,4 @@ int main(int argv, char **args)
     TTF_Quit();
     SDL_Quit();
     return 0;
-}
-
-void initMap(Tile map[])
-{
-    int type = 0;
-    // READ FROM map.txt
-    FILE *fp;
-    fp = fopen(MAP_FILEPATH, "r");
-    if (fp != NULL)
-    {
-        for (int row = 0; row < MAPSIZE; row++)
-        {
-            for (int col = 0; col < MAPSIZE; col++)
-            {
-                type = 0;
-                fscanf(fp, "%d", &type);
-                map[row * MAPSIZE + col] = createTile(col * TILESIZE, row * TILESIZE, type);
-            }
-        }
-        fclose(fp);
-    }
-    else
-    {
-        printf("ERROR READING FILE");
-    }
-}
-Tile createTile(int x, int y, int type)
-{
-    Tile i;
-    i.wall.x = x;
-    i.wall.y = y;
-    i.wall.w = TILESIZE;
-    i.wall.h = TILESIZE;
-    i.type = type;
-    return i;
 }

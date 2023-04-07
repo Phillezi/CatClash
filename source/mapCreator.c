@@ -1,26 +1,12 @@
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_image.h>
 #include <stdio.h>
+#include <string.h>
 
-#define MAP_FILEPATH "resources/map.txt"
-#define SAVE_MAP_FILEPATH "resources/savedMap.txt"
-#define DEFAULT_WIDTH 512
-#define DEFAULT_HEIGHT 512
-#define WINDOW_NAME "MapCreator v.2"
-#define FPS 60
-#define MAPSIZE 32
-#define TILESIZE 16
+#include "definitions.h"
+#include "init.h"
 
-struct tile
-{
-    SDL_Rect wall;
-    int type;
-};
-typedef struct tile Tile;
-
-void initMap(Tile map[]);
-Tile createTile(int x, int y, int type);
-void saveToFile(Tile map[]);
+void saveToFile(Tile map[], char fileName[31]);
 
 int main(int argv, char **args)
 {
@@ -31,7 +17,7 @@ int main(int argv, char **args)
     Tile map[MAPSIZE * MAPSIZE];
 
     initMap(map);
-    
+
     SDL_Window *pWindow = SDL_CreateWindow(WINDOW_NAME, SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, windowWidth, windowHeight, 0);
     if (!pWindow)
     {
@@ -49,8 +35,9 @@ int main(int argv, char **args)
         return 1;
     }
 
-    SDL_Surface *pSurface1 = IMG_Load("resources/Tile1.png");
-    if (!pSurface1)
+    char tileTextures[TILES][20] = {"resources/Tile1.png", "resources/Tile2.png", "resources/Tile3.png", "resources/Tile4.png"};
+    SDL_Texture *pTextureTiles[TILES];
+    if (initTextureTiles(pRenderer, pWindow, pTextureTiles, tileTextures, TILES) == -1)
     {
         printf("Error: %s\n", SDL_GetError());
         SDL_DestroyRenderer(pRenderer);
@@ -59,80 +46,8 @@ int main(int argv, char **args)
         return 1;
     }
 
-    SDL_Texture *pTextureTile1 = SDL_CreateTextureFromSurface(pRenderer, pSurface1);
-    SDL_FreeSurface(pSurface1);
-    if (!pTextureTile1)
-    {
-        printf("Error: %s\n", SDL_GetError());
-        SDL_DestroyRenderer(pRenderer);
-        SDL_DestroyWindow(pWindow);
-        SDL_Quit();
-        return 1;
-    }
-
-    SDL_Surface *pSurface2 = IMG_Load("resources/Tile2.png");
-    if (!pSurface2)
-    {
-        printf("Error: %s\n", SDL_GetError());
-        SDL_DestroyRenderer(pRenderer);
-        SDL_DestroyWindow(pWindow);
-        SDL_Quit();
-        return 1;
-    }
-
-    SDL_Texture *pTextureTile2 = SDL_CreateTextureFromSurface(pRenderer, pSurface2);
-    SDL_FreeSurface(pSurface2);
-    if (!pTextureTile2)
-    {
-        printf("Error: %s\n", SDL_GetError());
-        SDL_DestroyRenderer(pRenderer);
-        SDL_DestroyWindow(pWindow);
-        SDL_Quit();
-        return 1;
-    }
-
-SDL_Surface *pSurface3 = IMG_Load("resources/Tile3.png");
-    if (!pSurface3)
-    {
-        printf("Error: %s\n", SDL_GetError());
-        SDL_DestroyRenderer(pRenderer);
-        SDL_DestroyWindow(pWindow);
-        SDL_Quit();
-        return 1;
-    }
-
-    SDL_Texture *pTextureTile3 = SDL_CreateTextureFromSurface(pRenderer, pSurface3);
-    SDL_FreeSurface(pSurface3);
-    if (!pTextureTile3)
-    {
-        printf("Error: %s\n", SDL_GetError());
-        SDL_DestroyRenderer(pRenderer);
-        SDL_DestroyWindow(pWindow);
-        SDL_Quit();
-        return 1;
-    }
-
-SDL_Surface *pSurface4 = IMG_Load("resources/Tile4.png");
-    if (!pSurface4)
-    {
-        printf("Error: %s\n", SDL_GetError());
-        SDL_DestroyRenderer(pRenderer);
-        SDL_DestroyWindow(pWindow);
-        SDL_Quit();
-        return 1;
-    }
-
-    SDL_Texture *pTextureTile4 = SDL_CreateTextureFromSurface(pRenderer, pSurface4);
-    SDL_FreeSurface(pSurface4);
-    if (!pTextureTile4)
-    {
-        printf("Error: %s\n", SDL_GetError());
-        SDL_DestroyRenderer(pRenderer);
-        SDL_DestroyWindow(pWindow);
-        SDL_Quit();
-        return 1;
-    }
     int running = 1;
+    char fileName[31];
 
     while (running)
     {
@@ -153,48 +68,57 @@ SDL_Surface *pSurface4 = IMG_Load("resources/Tile4.png");
             const Uint8 *currentKeyStates = SDL_GetKeyboardState(NULL);
             if (currentKeyStates[SDL_SCANCODE_1])
             {
-                map[((mouseY/TILESIZE * MAPSIZE) + (mouseX/TILESIZE))].type = 1;
+                if(mouseY < (TILESIZE * MAPSIZE) && mouseX < (TILESIZE * MAPSIZE))
+                    map[((mouseY / TILESIZE * MAPSIZE) + (mouseX / TILESIZE))].type = 1;
             }
             else if (currentKeyStates[SDL_SCANCODE_2])
             {
-                map[((mouseY/TILESIZE * MAPSIZE) + (mouseX/TILESIZE))].type = 2;
+                if(mouseY < (TILESIZE * MAPSIZE) && mouseX < (TILESIZE * MAPSIZE))
+                    map[((mouseY / TILESIZE * MAPSIZE) + (mouseX / TILESIZE))].type = 2;
             }
             else if (currentKeyStates[SDL_SCANCODE_3])
             {
-                map[((mouseY/TILESIZE * MAPSIZE) + (mouseX/TILESIZE))].type = 3;
+                if(mouseY < (TILESIZE * MAPSIZE) && mouseX < (TILESIZE * MAPSIZE))
+                    map[((mouseY / TILESIZE * MAPSIZE) + (mouseX / TILESIZE))].type = 3;
             }
             else if (currentKeyStates[SDL_SCANCODE_4])
             {
-                map[((mouseY/TILESIZE * MAPSIZE) + (mouseX/TILESIZE))].type = 4;
+                if(mouseY < (TILESIZE * MAPSIZE) && mouseX < (TILESIZE * MAPSIZE))
+                    map[((mouseY / TILESIZE * MAPSIZE) + (mouseX / TILESIZE))].type = 4;
             }
             else if (currentKeyStates[SDL_SCANCODE_S] && currentKeyStates[SDL_SCANCODE_LCTRL])
             {
-                saveToFile(map);
+                printf("What would you like to name the file?\n: ");
+                scanf(" %30s", fileName);
+                saveToFile(map, fileName);
                 printf("saved file");
             }
             else if (currentKeyStates[SDL_SCANCODE_DELETE])
             {
-                for(int i = 0; i < MAPSIZE * MAPSIZE; i++){
+                for (int i = 0; i < MAPSIZE * MAPSIZE; i++)
+                {
                     map[i].type = 0;
                 }
             }
             else if (currentKeyStates[SDL_SCANCODE_INSERT])
             {
-                for(int i = 0; i < MAPSIZE * MAPSIZE; i++){
+                for (int i = 0; i < MAPSIZE * MAPSIZE; i++)
+                {
                     map[i].type = 1;
                 }
             }
 
             if (buttons & SDL_BUTTON(SDL_BUTTON_LEFT))
             {
-                map[((mouseY/TILESIZE * MAPSIZE) + (mouseX/TILESIZE))].type = 1;
+                if(mouseY < (TILESIZE * MAPSIZE) && mouseX < (TILESIZE * MAPSIZE))
+                    map[((mouseY / TILESIZE * MAPSIZE) + (mouseX / TILESIZE))].type = 1;
             }
 
             if (buttons & SDL_BUTTON(SDL_BUTTON_RIGHT))
             {
-                map[((mouseY/TILESIZE * MAPSIZE) + (mouseX/TILESIZE))].type = 0;
+                if(mouseY < (TILESIZE * MAPSIZE) && mouseX < (TILESIZE * MAPSIZE))
+                    map[((mouseY / TILESIZE * MAPSIZE) + (mouseX / TILESIZE))].type = 0;
             }
-            
 
             SDL_SetRenderDrawColor(pRenderer, red, green, blue, 255);
             SDL_RenderClear(pRenderer);
@@ -207,77 +131,55 @@ SDL_Surface *pSurface4 = IMG_Load("resources/Tile4.png");
                 case 0:
                     break;
                 case 1:
-                    SDL_SetRenderDrawColor(pRenderer, 0, 0, 0, 255);
-                    SDL_RenderCopy(pRenderer, pTextureTile1, NULL, &map[i].wall);//SDL_RenderFillRect(pRenderer, &map[i].wall);
+                    //SDL_SetRenderDrawColor(pRenderer, 0, 0, 0, 255);
+                    SDL_RenderCopy(pRenderer, pTextureTiles[0], NULL, &map[i].wall); // SDL_RenderFillRect(pRenderer, &map[i].wall);
                     break;
                 case 2:
-                    SDL_SetRenderDrawColor(pRenderer, 100, 0, 0, 255);
-                    SDL_RenderCopy(pRenderer, pTextureTile2, NULL, &map[i].wall);//SDL_RenderFillRect(pRenderer, &map[i].wall);
+                    //SDL_SetRenderDrawColor(pRenderer, 100, 0, 0, 255);
+                    SDL_RenderCopy(pRenderer, pTextureTiles[1], NULL, &map[i].wall); // SDL_RenderFillRect(pRenderer, &map[i].wall);
                     break;
                 case 3:
-                    SDL_SetRenderDrawColor(pRenderer, 0, 100, 0, 255);
-                    SDL_RenderCopy(pRenderer, pTextureTile3, NULL, &map[i].wall);//SDL_RenderFillRect(pRenderer, &map[i].wall);
+                    //SDL_SetRenderDrawColor(pRenderer, 0, 100, 0, 255);
+                    SDL_RenderCopy(pRenderer, pTextureTiles[2], NULL, &map[i].wall); // SDL_RenderFillRect(pRenderer, &map[i].wall);
                     break;
                 case 4:
-                    SDL_SetRenderDrawColor(pRenderer, 0, 0, 100, 255);
-                    SDL_RenderCopy(pRenderer, pTextureTile4, NULL, &map[i].wall);//SDL_RenderFillRect(pRenderer, &map[i].wall);
+                    //SDL_SetRenderDrawColor(pRenderer, 0, 0, 100, 255);
+                    SDL_RenderCopy(pRenderer, pTextureTiles[3], NULL, &map[i].wall); // SDL_RenderFillRect(pRenderer, &map[i].wall);
                     break;
                 default:
                     break;
                 }
             }
-
+            // Draw grid
+            SDL_SetRenderDrawColor(pRenderer, 100, 100, 100, 255);
+            for(int line = 0; line < TILESIZE*MAPSIZE; line+=TILESIZE){
+                SDL_RenderDrawLine(pRenderer, 0, line, TILESIZE*MAPSIZE, line);
+                SDL_RenderDrawLine(pRenderer, line, 0, line, TILESIZE*MAPSIZE);
+            }
             SDL_SetRenderDrawColor(pRenderer, 255, 0, 0, 255);
             SDL_RenderPresent(pRenderer);
         }
     }
-    SDL_DestroyTexture(pTextureTile1);
-    SDL_DestroyTexture(pTextureTile2);
-    SDL_DestroyTexture(pTextureTile3);
-    SDL_DestroyTexture(pTextureTile4);
+    SDL_DestroyTexture(pTextureTiles[0]);
+    SDL_DestroyTexture(pTextureTiles[1]);
+    SDL_DestroyTexture(pTextureTiles[2]);
+    SDL_DestroyTexture(pTextureTiles[3]);
     SDL_DestroyRenderer(pRenderer);
     SDL_DestroyWindow(pWindow);
     SDL_Quit();
     return 0;
 }
 
-void initMap(Tile map[])
+void saveToFile(Tile map[], char fileName[31])
 {
-    int type = 0;
-    // READ FROM map.txt
-    FILE *fp;
-    fp = fopen(MAP_FILEPATH, "r");
-    if (fp != NULL)
-    {
-        for (int row = 0; row < MAPSIZE; row++)
-        {
-            for (int col = 0; col < MAPSIZE; col++)
-            {
-                type = 0;
-                fscanf(fp, "%d", &type);
-                map[row * MAPSIZE + col] = createTile(col * TILESIZE, row * TILESIZE, type);
-            }
-        }
-        fclose(fp);
-    }
+    char location[100];
+    if(strstr(fileName,".txt"))
+        sprintf(location,"%s%s",SAVE_MAP_PATH, fileName);
     else
-    {
-        printf("ERROR READING FILE");
-    }
-}
-Tile createTile(int x, int y, int type)
-{
-    Tile i;
-    i.wall.x = x;
-    i.wall.y = y;
-    i.wall.w = TILESIZE;
-    i.wall.h = TILESIZE;
-    i.type = type;
-    return i;
-}
-void saveToFile(Tile map[]){
+        sprintf(location,"%s%s.txt", SAVE_MAP_PATH, fileName);
+    printf("Saved at: %s\n", location);
     FILE *fp;
-    fp = fopen(SAVE_MAP_FILEPATH, "w+");
+    fp = fopen(location, "w+");
     if (fp != NULL)
     {
         for (int row = 0; row < MAPSIZE; row++)
@@ -286,7 +188,7 @@ void saveToFile(Tile map[]){
             {
                 fprintf(fp, "%d ", map[row * MAPSIZE + col].type);
             }
-            fprintf(fp,"\n");
+            fprintf(fp, "\n");
         }
         fclose(fp);
     }
