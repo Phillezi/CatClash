@@ -1,4 +1,5 @@
 {
+<<<<<<< HEAD
     "files.associations": {
         "sdl.h": "c",
         "sdl_net.h": "c",
@@ -8,4 +9,8 @@
     [
         "C:\\msys64\\mingw64\\include",
     ]
+=======
+    "C_Cpp.default.configurationProvider": "ms-vscode.makefile-tools",
+    "codetogether.virtualCursorJoin": "ownVirtualCursor"
+>>>>>>> 9c5c187915aa5fa9bc2498159e0a750cf65c0e50
 }
