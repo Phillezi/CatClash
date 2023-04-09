@@ -58,9 +58,8 @@ int main(int argc, char **argv)
 		pSent->len = strlen((char *)pSent->data) + 1;
 		SDLNet_UDP_Send(socketDesc, -1, pSent); /* This sets the pSent->channel */
  
-		/* Quit if packet contains "quit" */
-		if (!strcmp((char *)pSent->data, "quit"))
-			quit = 1;
+		/* Quit if packet contains "quit" or "exit" */
+		if (!strcmp((char *)pSent->data, "quit") || !strcmp((char *)pSent->data, "exit")) quit = 1;
 	}
  
 	SDLNet_FreePacket(pSent);

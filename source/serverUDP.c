@@ -82,16 +82,27 @@ int main(int argc, char **argv) {
 
                     // Print data on server as well
                     sscanf((char * )pRecieve->data, "%s\n", &a);
-                    printf("%s\n", a);
+                    //printf("%s\n", a);
 
                     sprintf((char *)pSent->data, "%s", a);
                     pSent->len = strlen((char *)pSent->data) + 1;
                     SDLNet_UDP_Send(socketDesc, -1, pSent);
                 }
             }
+
+            // Remove player if packet contains "exit" and adjust other players
+            if (!strcmp((char *)pRecieve->data, "exit")) {
+                printf("Player %d has exited\n", id);
+                for (int i = id-1; i < players-1; i++) {
+                    player[i] = player[i+1];
+                    player[i].id--;
+                    printf("- Player %d is now player %d\n", i+2, player[i].id);
+                }
+                players--;
+            }
             
             // Quit main loop if packet contains "quit"
-            if (!strcmp((char *)pSent->data, "quit")) quit = 1;
+            if (!strcmp((char *)pRecieve->data, "quit")) quit = 1;
         }
     }
 
