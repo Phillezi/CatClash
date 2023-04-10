@@ -16,8 +16,19 @@ int main(int argv, char **args)
     int windowWidth = DEFAULT_WIDTH + 100, windowHeight = DEFAULT_HEIGHT;
     int red = 255, green = 255, blue = 255;
     Tile map[MAPSIZE * MAPSIZE];
+    char fileName[31];
+    char location[100];
+    do
+    {
+        printf("map name?\n: ");
+        scanf(" %30s", fileName);
 
-    initMap(map);
+        if (strstr(fileName, ".txt"))
+            sprintf(location, "%s%s", SAVE_MAP_PATH, fileName);
+        else
+            sprintf(location, "%s%s.txt", SAVE_MAP_PATH, fileName);
+            
+    } while (initMap(map, location) == -1);
 
     SDL_Window *pWindow = SDL_CreateWindow(WINDOW_NAME, SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, windowWidth, windowHeight, 0);
     if (!pWindow)
@@ -48,7 +59,6 @@ int main(int argv, char **args)
     }
 
     int running = 1;
-    char fileName[31];
 
     while (running)
     {

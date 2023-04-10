@@ -55,12 +55,20 @@ int initTexturePlayer(SDL_Renderer *pRenderer, SDL_Window *pWindow, SDL_Texture 
     Reads the mapfile and fills the Tile map array
     expected in-parameters: Tile map[]
 */
-void initMap(Tile map[])
+int initMap(Tile map[], char filepath[])
 {
     int type = 0;
-    // READ FROM map.txt
+
     FILE *fp;
-    fp = fopen(MAP_FILEPATH, "r");
+    if(!filepath[0]){
+        // READ FROM map.txt
+        fp = fopen(MAP_FILEPATH, "r");
+        printf("Reading fromn map.txt\n");
+    }
+    else{
+        fp = fopen(filepath, "r");
+    }
+    
     if (fp != NULL)
     {
         for (int row = 0; row < MAPSIZE; row++)
@@ -76,8 +84,10 @@ void initMap(Tile map[])
     }
     else
     {
-        printf("ERROR READING FILE");
+        printf("ERROR READING FILE\n");
+        return -1;
     }
+    return 0;
 }
 /*
     createTile:

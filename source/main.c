@@ -21,7 +21,7 @@ int main(int argv, char **args)
     Tile map[MAPSIZE * MAPSIZE];
     Player player;
 
-    initMap(map);
+    initMap(map, "");
 
     SDL_Window *pWindow = SDL_CreateWindow(WINDOW_NAME, SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, windowWidth, windowHeight, 0);
     if (!pWindow)
@@ -178,7 +178,7 @@ int main(int argv, char **args)
                     }
                     if ((currentKeyStates[SDL_SCANCODE_R] || currentKeyStates[SDL_SCANCODE_DELETE]) || (player.hp <= 0))
                     {
-                        initMap(map);
+                        initMap(map, "");
                         player.rect.x = windowWidth / 2;
                         player.rect.y = windowHeight / 2;
                         player.hp = 8 * TILESIZE;
