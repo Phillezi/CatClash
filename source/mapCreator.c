@@ -58,6 +58,18 @@ int main(int argv, char **args)
         return 1;
     }
 
+    SDL_Rect saveButton;
+    saveButton.x = (TILESIZE * MAPSIZE);
+    saveButton.y = 0;
+    saveButton.w = windowWidth - (TILESIZE * MAPSIZE);
+    saveButton.h = windowWidth - (TILESIZE * MAPSIZE);
+
+    SDL_Rect openButton;
+    openButton.x = (TILESIZE * MAPSIZE);
+    openButton.y = saveButton.h;
+    openButton.w = windowWidth - (TILESIZE * MAPSIZE);
+    openButton.h = windowWidth - (TILESIZE * MAPSIZE);
+
     int running = 1;
 
     while (running)
@@ -77,6 +89,11 @@ int main(int argv, char **args)
             int buttons = SDL_GetMouseState(&mouseX, &mouseY);
 
             const Uint8 *currentKeyStates = SDL_GetKeyboardState(NULL);
+            if (currentKeyStates[SDL_SCANCODE_0])
+            {
+                if (mouseY < (TILESIZE * MAPSIZE) && mouseX < (TILESIZE * MAPSIZE))
+                    map[((mouseY / TILESIZE * MAPSIZE) + (mouseX / TILESIZE))].type = 0;
+            }
             if (currentKeyStates[SDL_SCANCODE_1])
             {
                 if (mouseY < (TILESIZE * MAPSIZE) && mouseX < (TILESIZE * MAPSIZE))
@@ -119,17 +136,59 @@ int main(int argv, char **args)
                     map[i].type = 1;
                 }
             }
+            else if (currentKeyStates[SDL_SCANCODE_W])
+            {
+                if (map[0].wall.w >= 5)
+                {
+                    for (int i = 0; i < MAPSIZE * MAPSIZE; i++)
+                    {
+                        map[i].wall.w--;
+                        map[i].wall.h--;
+                        map[i].wall.x -= (i % (MAPSIZE));
+                        map[i].wall.y -= (i / (MAPSIZE));
+                    }
+                }
+            }
+            else if (currentKeyStates[SDL_SCANCODE_S])
+            {
+                if (map[0].wall.w < windowWidth)
+                {
+                    for (int i = 0; i < MAPSIZE * MAPSIZE; i++)
+                    {
+                        map[i].wall.w++;
+                        map[i].wall.h++;
+                        map[i].wall.x += (i % (MAPSIZE));
+                        map[i].wall.y += (i / (MAPSIZE));
+                    }
+                }
+            }
+            else if (currentKeyStates[SDL_SCANCODE_D])
+            {
+                for (int i = 0; i < MAPSIZE * MAPSIZE; i++)
+                {
+                    // map[i].wall.x++;
+                }
+            }
+            else if (currentKeyStates[SDL_SCANCODE_A])
+            {
+                for (int i = 0; i < MAPSIZE * MAPSIZE; i++)
+                {
+                    // map[i].wall.x--;
+                }
+            }
+
+            //float scale = ((float)map[0].wall.w / TILESIZE);
 
             if (buttons & SDL_BUTTON(SDL_BUTTON_LEFT))
             {
-                if (mouseY < (TILESIZE * MAPSIZE) && mouseX < (TILESIZE * MAPSIZE))
-                    map[((mouseY / TILESIZE * MAPSIZE) + (mouseX / TILESIZE))].type = 1;
+                if (mouseY < (map[0].wall.w * MAPSIZE) && mouseX < (map[0].wall.w * MAPSIZE))
+                    map[((mouseY / map[0].wall.w * MAPSIZE) + (mouseX / map[0].wall.w))].type = 1;
             }
 
             if (buttons & SDL_BUTTON(SDL_BUTTON_RIGHT))
             {
-                if (mouseY < (TILESIZE * MAPSIZE) && mouseX < (TILESIZE * MAPSIZE))
-                    map[((mouseY / TILESIZE * MAPSIZE) + (mouseX / TILESIZE))].type = 0;
+                if (mouseY < (map[0].wall.w * MAPSIZE) && mouseX < (map[0].wall.w * MAPSIZE))
+                    map[((mouseY / map[0].wall.w * MAPSIZE) + (mouseX / map[0].wall.w))].type = 0;
             }
 
             SDL_SetRenderDrawColor(pRenderer, red, green, blue, 255);
@@ -164,20 +223,23 @@ int main(int argv, char **args)
             }
             // Draw grid
             SDL_SetRenderDrawColor(pRenderer, 100, 100, 100, 255);
-            for (int line = 0; line < TILESIZE * MAPSIZE; line += TILESIZE)
+            for (int line = 0; line < TILESIZE * MAPSIZE; line += map[0].wall.w)
             {
-                SDL_RenderDrawLine(pRenderer, 0, line, TILESIZE * MAPSIZE, line);
-                SDL_RenderDrawLine(pRenderer, line, 0, line, TILESIZE * MAPSIZE);
+                SDL_RenderDrawLine(pRenderer, map[0].wall.x, line, map[MAPSIZE - 1].wall.x + map[0].wall.w, line);
+                SDL_RenderDrawLine(pRenderer, line, map[0].wall.y, line, map[MAPSIZE * MAPSIZE - 1].wall.y + map[0].wall.w);
             }
-            if ((mouseY < (TILESIZE * MAPSIZE)) && (mouseX < (TILESIZE * MAPSIZE)))
+
+            if ((mouseY < (map[0].wall.w * MAPSIZE)) && (mouseX < (map[0].wall.w * MAPSIZE)))
             {
                 SDL_SetRenderDrawColor(pRenderer, 255, 0, 0, 255);
-                SDL_RenderDrawRect(pRenderer, &map[((mouseY / TILESIZE * MAPSIZE) + (mouseX / TILESIZE))].wall);
+                SDL_RenderDrawRect(pRenderer, &map[(((mouseY) / map[0].wall.w * MAPSIZE) + ((mouseX) / map[0].wall.w))].wall);
             }
 
+            SDL_SetRenderDrawColor(pRenderer, 0, 255, 0, 255);
+            SDL_RenderFillRect(pRenderer, &saveButton);
 
-            SDL_SetRenderDrawColor(pRenderer, 255, 0, 0, 255);
-            //SDL_RenderDrawRect(pRenderer, &map[((mouseY / TILESIZE * MAPSIZE) + (mouseX / TILESIZE))].wall);
+            SDL_SetRenderDrawColor(pRenderer, 0, 0, 255, 255);
+            SDL_RenderFillRect(pRenderer, &openButton);
 
             SDL_RenderPresent(pRenderer);
         }
