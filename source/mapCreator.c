@@ -83,6 +83,37 @@ int main(int argv, char **args)
             {
                 if (event.type == SDL_QUIT)
                     running = 0;
+                else if (event.type == SDL_MOUSEWHEEL)
+                {
+                    if (event.wheel.y > 0) // scroll up
+                    {
+                        if (map[0].wall.w >= 5)
+                        {
+                            int zoomAmount = 2 * ((float)map[0].wall.w / TILESIZE);
+                            for (int i = 0; i < MAPSIZE * MAPSIZE; i++)
+                            {
+                                map[i].wall.w -= zoomAmount;
+                                map[i].wall.h -= zoomAmount;
+                                map[i].wall.x -= ((i % (MAPSIZE)) * zoomAmount);
+                                map[i].wall.y -= ((i / (MAPSIZE)) * zoomAmount);
+                            }
+                        }
+                    }
+                    else if (event.wheel.y < 0) // scroll down
+                    {
+                        if (map[0].wall.w < windowWidth)
+                        {
+                            int zoomAmount = 2 * ((float)map[0].wall.w / TILESIZE);
+                            for (int i = 0; i < MAPSIZE * MAPSIZE; i++)
+                            {
+                                map[i].wall.w += zoomAmount;
+                                map[i].wall.h += zoomAmount;
+                                map[i].wall.x += ((i % (MAPSIZE)) * zoomAmount);
+                                map[i].wall.y += ((i / (MAPSIZE)) * zoomAmount);
+                            }
+                        }
+                    }
+                }
             }
 
             int mouseX, mouseY;
@@ -138,29 +169,9 @@ int main(int argv, char **args)
             }
             else if (currentKeyStates[SDL_SCANCODE_W])
             {
-                if (map[0].wall.w >= 5)
-                {
-                    for (int i = 0; i < MAPSIZE * MAPSIZE; i++)
-                    {
-                        map[i].wall.w--;
-                        map[i].wall.h--;
-                        map[i].wall.x -= (i % (MAPSIZE));
-                        map[i].wall.y -= (i / (MAPSIZE));
-                    }
-                }
             }
             else if (currentKeyStates[SDL_SCANCODE_S])
             {
-                if (map[0].wall.w < windowWidth)
-                {
-                    for (int i = 0; i < MAPSIZE * MAPSIZE; i++)
-                    {
-                        map[i].wall.w++;
-                        map[i].wall.h++;
-                        map[i].wall.x += (i % (MAPSIZE));
-                        map[i].wall.y += (i / (MAPSIZE));
-                    }
-                }
             }
             else if (currentKeyStates[SDL_SCANCODE_D])
             {
@@ -177,7 +188,7 @@ int main(int argv, char **args)
                 }
             }
 
-            //float scale = ((float)map[0].wall.w / TILESIZE);
+            // float scale = ((float)map[0].wall.w / TILESIZE);
 
             if (buttons & SDL_BUTTON(SDL_BUTTON_LEFT))
             {
