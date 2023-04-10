@@ -27,7 +27,7 @@ int main(int argv, char **args)
             sprintf(location, "%s%s", SAVE_MAP_PATH, fileName);
         else
             sprintf(location, "%s%s.txt", SAVE_MAP_PATH, fileName);
-            
+
     } while (initMap(map, location) == -1);
 
     SDL_Window *pWindow = SDL_CreateWindow(WINDOW_NAME, SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, windowWidth, windowHeight, 0);
@@ -169,12 +169,16 @@ int main(int argv, char **args)
                 SDL_RenderDrawLine(pRenderer, 0, line, TILESIZE * MAPSIZE, line);
                 SDL_RenderDrawLine(pRenderer, line, 0, line, TILESIZE * MAPSIZE);
             }
-            if (((mouseY / TILESIZE * MAPSIZE) + (mouseX / TILESIZE)) < (MAPSIZE * MAPSIZE))
+            if ((mouseY < (TILESIZE * MAPSIZE)) && (mouseX < (TILESIZE * MAPSIZE)))
             {
                 SDL_SetRenderDrawColor(pRenderer, 255, 0, 0, 255);
                 SDL_RenderDrawRect(pRenderer, &map[((mouseY / TILESIZE * MAPSIZE) + (mouseX / TILESIZE))].wall);
             }
+
+
             SDL_SetRenderDrawColor(pRenderer, 255, 0, 0, 255);
+            //SDL_RenderDrawRect(pRenderer, &map[((mouseY / TILESIZE * MAPSIZE) + (mouseX / TILESIZE))].wall);
+
             SDL_RenderPresent(pRenderer);
         }
     }
