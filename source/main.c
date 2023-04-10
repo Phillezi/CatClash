@@ -10,18 +10,24 @@ int main(int argv, char **args)
 
     SDL_Init(SDL_INIT_EVERYTHING);
     TTF_Init();
-    
+
     int fullScreen = 0;
     int collision = 0;
     int movementPrevTime = 0;
     int prevTime = 0;
-    int movementAmount = 1;
+
     int windowWidth = DEFAULT_WIDTH, windowHeight = DEFAULT_HEIGHT;
     int red = 255, green = 255, blue = 255;
     Tile map[MAPSIZE * MAPSIZE];
     Player player;
+    char fileName[31];
+    do
+    {
+        printf("map name?\n: ");
+        scanf(" %30s", fileName);
+    } while (initMap(map, fileName) == -1);
 
-    initMap(map, "");
+    // initMap(map, "");
 
     SDL_Window *pWindow = SDL_CreateWindow(WINDOW_NAME, SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, windowWidth, windowHeight, 0);
     if (!pWindow)
@@ -31,7 +37,7 @@ int main(int argv, char **args)
         return 1;
     }
 
-    SDL_Renderer *pRenderer = SDL_CreateRenderer(pWindow, -1, SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC);
+    SDL_Renderer *pRenderer = SDL_CreateRenderer(pWindow, -1, SDL_RENDERER_ACCELERATED);// | SDL_RENDERER_PRESENTVSYNC);
     if (!pRenderer)
     {
         printf("Error: %s\n", SDL_GetError());
@@ -40,7 +46,7 @@ int main(int argv, char **args)
         return 1;
     }
 
-    menu(pWindow, pRenderer);
+    // menu(pWindow, pRenderer);
 
     char tileTextures[TILES][20] = {"resources/Tile1.png", "resources/Tile2.png", "resources/Tile3.png", "resources/Tile4.png"};
     SDL_Texture *pTextureTiles[TILES];
@@ -101,11 +107,13 @@ int main(int argv, char **args)
     SDL_Texture *pFpsTexture = SDL_CreateTextureFromSurface(pRenderer, pFpsSurface);
     SDL_FreeSurface(pFpsSurface);
 
+    int movementAmount = (((float)map[0].wall.w / TILESIZE));
     while (running)
     {
         if (SDL_GetTicks() - oneSecTimer >= 1000) // Performance monitor
         {
             oneSecTimer = SDL_GetTicks();
+            
             // printf("FPS: %d\n", frameCounter);
             char buffer[50];
             SDL_DestroyTexture(pFpsTexture);
@@ -116,7 +124,7 @@ int main(int argv, char **args)
             frameCounter = 0;
         }
         int deltaTime = SDL_GetTicks() - prevTime;
-        if (deltaTime >= 1000 / FPS) // updates at a frequency of FPS
+        if (deltaTime >= (1000 / FPS)) // updates at a frequency of FPS
         {
             prevTime = SDL_GetTicks();
 
@@ -137,7 +145,7 @@ int main(int argv, char **args)
                 {
                     if (charge < 8 * TILESIZE)
                     {
-                        charge++;
+                        charge += 2;
                     }
                     chargeBar.w = charge;
                 }
@@ -146,30 +154,36 @@ int main(int argv, char **args)
                     if (charge > 0)
                     {
                         collision = 0;
-                        if (map[(((player.rect.y - (2 * movementAmount)) / TILESIZE) * MAPSIZE) + (player.rect.x / TILESIZE)].type != 0)
+                        for (int i = 0; i < 10; i++)
                         {
-                            map[(((player.rect.y - (2 * movementAmount)) / TILESIZE) * MAPSIZE) + (player.rect.x / TILESIZE)].type = 2;
-                            collision = 1;
-                        }
-                        else if (map[(((player.rect.y - (2 * movementAmount)) / TILESIZE) * MAPSIZE) + ((player.rect.x + (TILESIZE - 1)) / TILESIZE)].type != 0)
-                        {
-                            map[(((player.rect.y - (2 * movementAmount)) / TILESIZE) * MAPSIZE) + ((player.rect.x + (TILESIZE - 1)) / TILESIZE)].type = 2;
-                            collision = 1;
+                            if (map[(((player.rect.y - (movementAmount)) / TILESIZE) * MAPSIZE) + (player.rect.x / TILESIZE)].type != 0)
+                            {
+                                map[(((player.rect.y - (movementAmount)) / TILESIZE) * MAPSIZE) + (player.rect.x / TILESIZE)].type = 2;
+                                collision = 1;
+                            }
+                            else if (map[(((player.rect.y - (movementAmount)) / TILESIZE) * MAPSIZE) + ((player.rect.x + (TILESIZE - 1)) / TILESIZE)].type != 0)
+                            {
+                                map[(((player.rect.y - (movementAmount)) / TILESIZE) * MAPSIZE) + ((player.rect.x + (TILESIZE - 1)) / TILESIZE)].type = 2;
+                                collision = 1;
+                            }
+
+                            if (!collision)
+                            {
+                                if (1) // playerRect.y >= windowHeight / 4)
+                                {
+                                    player.rect.y -= (movementAmount);
+                                }
+                            }
+                            else
+                            {
+                                player.hp -= (movementAmount * charge);
+                                healthBar.w = player.hp;
+                                charge = 0;
+                                break;
+                            }
+                            charge -= (movementAmount);
                         }
 
-                        if (!collision)
-                        {
-                            if (1) // playerRect.y >= windowHeight / 4)
-                            {
-                                player.rect.y -= (2 * movementAmount);
-                            }
-                        }
-                        else
-                        {
-                            player.hp -= (2 * movementAmount);
-                            healthBar.w = player.hp;
-                        }
-                        charge -= (2 * movementAmount);
                         if (charge < 0)
                         {
                             charge = 0;
@@ -178,7 +192,8 @@ int main(int argv, char **args)
                     }
                     if ((currentKeyStates[SDL_SCANCODE_R] || currentKeyStates[SDL_SCANCODE_DELETE]) || (player.hp <= 0))
                     {
-                        initMap(map, "");
+                        initMap(map, fileName);
+                        // initMap(map, "");
                         player.rect.x = windowWidth / 2;
                         player.rect.y = windowHeight / 2;
                         player.hp = 8 * TILESIZE;
