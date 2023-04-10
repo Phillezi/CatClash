@@ -17,18 +17,11 @@ int main(int argv, char **args)
     int red = 255, green = 255, blue = 255;
     Tile map[MAPSIZE * MAPSIZE];
     char fileName[31];
-    char location[100];
     do
     {
         printf("map name?\n: ");
         scanf(" %30s", fileName);
-
-        if (strstr(fileName, ".txt"))
-            sprintf(location, "%s%s", SAVE_MAP_PATH, fileName);
-        else
-            sprintf(location, "%s%s.txt", SAVE_MAP_PATH, fileName);
-
-    } while (initMap(map, location) == -1);
+    } while (initMap(map, fileName) == -1);
 
     SDL_Window *pWindow = SDL_CreateWindow(WINDOW_NAME, SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, windowWidth, windowHeight, 0);
     if (!pWindow)
@@ -59,16 +52,16 @@ int main(int argv, char **args)
     }
 
     SDL_Rect saveButton;
-    saveButton.x = (TILESIZE * MAPSIZE);
+    saveButton.x = (map[0].wall.w * MAPSIZE);
     saveButton.y = 0;
-    saveButton.w = windowWidth - (TILESIZE * MAPSIZE);
-    saveButton.h = windowWidth - (TILESIZE * MAPSIZE);
+    saveButton.w = windowWidth - (map[0].wall.w * MAPSIZE);
+    saveButton.h = windowWidth - (map[0].wall.w * MAPSIZE);
 
     SDL_Rect openButton;
-    openButton.x = (TILESIZE * MAPSIZE);
+    openButton.x = (map[0].wall.w * MAPSIZE);
     openButton.y = saveButton.h;
-    openButton.w = windowWidth - (TILESIZE * MAPSIZE);
-    openButton.h = windowWidth - (TILESIZE * MAPSIZE);
+    openButton.w = windowWidth - (map[0].wall.w * MAPSIZE);
+    openButton.h = windowWidth - (map[0].wall.w * MAPSIZE);
 
     int running = 1;
 
@@ -116,6 +109,15 @@ int main(int argv, char **args)
                 }
             }
 
+            // toolbar
+            saveButton.x = (map[0].wall.w * MAPSIZE);
+            saveButton.w = windowWidth - (map[0].wall.w * MAPSIZE);
+            saveButton.h = windowWidth - (map[0].wall.w * MAPSIZE);
+            openButton.x = (map[0].wall.w * MAPSIZE);
+            openButton.y = saveButton.h;
+            openButton.w = windowWidth - (map[0].wall.w * MAPSIZE);
+            openButton.h = windowWidth - (map[0].wall.w * MAPSIZE);
+
             int mouseX, mouseY;
             int buttons = SDL_GetMouseState(&mouseX, &mouseY);
 
@@ -153,7 +155,7 @@ int main(int argv, char **args)
                 printf("What would you like to name the file?\n: ");
                 scanf(" %30s", fileName);
                 saveToFile(map, fileName);
-                printf("saved file");
+                printf("saved file\n");
             }
             else if (currentKeyStates[SDL_SCANCODE_DELETE])
             {
@@ -204,6 +206,17 @@ int main(int argv, char **args)
             {
                 if ((mouseY - map[0].wall.y) < (map[0].wall.w * MAPSIZE) && (mouseX - map[0].wall.x) < (map[0].wall.w * MAPSIZE))
                     map[(((mouseY - map[0].wall.y) / map[0].wall.w * MAPSIZE) + ((mouseX - map[0].wall.x) / map[0].wall.w))].type = 1;
+                else if ((mouseY >= saveButton.y && mouseX >= saveButton.x) && (mouseY <= (saveButton.y + saveButton.h) && mouseX <= (saveButton.x + saveButton.w)))
+                {
+                    printf("What would you like to name the file?\n: ");
+                    scanf(" %30s", fileName);
+                    saveToFile(map, fileName);
+                    printf("saved file\n");
+                }
+                else if ((mouseY >= openButton.y && mouseX >= openButton.x) && (mouseY <= (openButton.y + openButton.h) && mouseX <= (openButton.x + openButton.w)))
+                {
+                    printf("You pressed the OPEN button!\n");
+                }
             }
 
             if (buttons & SDL_BUTTON(SDL_BUTTON_RIGHT))

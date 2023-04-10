@@ -1,4 +1,5 @@
 #include "init.h"
+#include <string.h>
 
 /*
     initTextureTiles:
@@ -11,7 +12,7 @@ int initTextureTiles(SDL_Renderer *pRenderer, SDL_Window *pWindow, SDL_Texture *
 
     for (int tile = 0; tile < nrOfTiles; tile++)
     {
-        //DEBUG printf("TEXTURE %d\n", tile);
+        // DEBUG printf("TEXTURE %d\n", tile);
         SDL_Surface *pSurface1 = IMG_Load(tileTextures[tile]);
         if (!pSurface1)
         {
@@ -34,8 +35,9 @@ int initTextureTiles(SDL_Renderer *pRenderer, SDL_Window *pWindow, SDL_Texture *
     Expected in-parameters: pRenderer, pWindow, &pTexturePlayer
     Returns -1 if it fails
 */
-int initTexturePlayer(SDL_Renderer *pRenderer, SDL_Window *pWindow, SDL_Texture **pTexturePlayer){
-    
+int initTexturePlayer(SDL_Renderer *pRenderer, SDL_Window *pWindow, SDL_Texture **pTexturePlayer)
+{
+
     SDL_Surface *pSurface = IMG_Load("resources/cat3.png");
     if (!pSurface)
     {
@@ -58,17 +60,25 @@ int initTexturePlayer(SDL_Renderer *pRenderer, SDL_Window *pWindow, SDL_Texture 
 int initMap(Tile map[], char filepath[])
 {
     int type = 0;
-
+    char location[100];
     FILE *fp;
-    if(!filepath[0]){
+
+    if (strstr(filepath, ".txt"))
+        sprintf(location, "%s%s", SAVE_MAP_PATH, filepath);
+    else
+        sprintf(location, "%s%s.txt", SAVE_MAP_PATH, filepath);
+
+    if (!filepath[0])
+    {
         // READ FROM map.txt
         fp = fopen(MAP_FILEPATH, "r");
         printf("Reading fromn map.txt\n");
     }
-    else{
-        fp = fopen(filepath, "r");
+    else
+    {
+        fp = fopen(location, "r");
     }
-    
+
     if (fp != NULL)
     {
         for (int row = 0; row < MAPSIZE; row++)
