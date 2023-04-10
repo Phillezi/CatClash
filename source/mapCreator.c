@@ -89,7 +89,7 @@ int main(int argv, char **args)
                     {
                         if (map[0].wall.w >= 5)
                         {
-                            int zoomAmount = 2 * ((float)map[0].wall.w / TILESIZE);
+                            int zoomAmount = (2 * ((float)map[0].wall.w / TILESIZE)) + 1;
                             for (int i = 0; i < MAPSIZE * MAPSIZE; i++)
                             {
                                 map[i].wall.w -= zoomAmount;
@@ -103,7 +103,7 @@ int main(int argv, char **args)
                     {
                         if (map[0].wall.w < windowWidth)
                         {
-                            int zoomAmount = 2 * ((float)map[0].wall.w / TILESIZE);
+                            int zoomAmount = (2 * ((float)map[0].wall.w / TILESIZE)) + 1;
                             for (int i = 0; i < MAPSIZE * MAPSIZE; i++)
                             {
                                 map[i].wall.w += zoomAmount;
@@ -119,31 +119,33 @@ int main(int argv, char **args)
             int mouseX, mouseY;
             int buttons = SDL_GetMouseState(&mouseX, &mouseY);
 
+            int movementAmount = (2 * ((float)map[0].wall.w / TILESIZE)) + 1;
+
             const Uint8 *currentKeyStates = SDL_GetKeyboardState(NULL);
             if (currentKeyStates[SDL_SCANCODE_0])
             {
-                if (mouseY < (TILESIZE * MAPSIZE) && mouseX < (TILESIZE * MAPSIZE))
-                    map[((mouseY / TILESIZE * MAPSIZE) + (mouseX / TILESIZE))].type = 0;
+                if ((mouseY - map[0].wall.y) < (map[0].wall.w * MAPSIZE) && (mouseX - map[0].wall.x) < (map[0].wall.w * MAPSIZE))
+                    map[(((mouseY - map[0].wall.y) / map[0].wall.w * MAPSIZE) + ((mouseX - map[0].wall.x) / map[0].wall.w))].type = 0;
             }
             if (currentKeyStates[SDL_SCANCODE_1])
             {
-                if (mouseY < (TILESIZE * MAPSIZE) && mouseX < (TILESIZE * MAPSIZE))
-                    map[((mouseY / TILESIZE * MAPSIZE) + (mouseX / TILESIZE))].type = 1;
+                if ((mouseY - map[0].wall.y) < (map[0].wall.w * MAPSIZE) && (mouseX - map[0].wall.x) < (map[0].wall.w * MAPSIZE))
+                    map[(((mouseY - map[0].wall.y) / map[0].wall.w * MAPSIZE) + ((mouseX - map[0].wall.x) / map[0].wall.w))].type = 1;
             }
             else if (currentKeyStates[SDL_SCANCODE_2])
             {
-                if (mouseY < (TILESIZE * MAPSIZE) && mouseX < (TILESIZE * MAPSIZE))
-                    map[((mouseY / TILESIZE * MAPSIZE) + (mouseX / TILESIZE))].type = 2;
+                if ((mouseY - map[0].wall.y) < (map[0].wall.w * MAPSIZE) && (mouseX - map[0].wall.x) < (map[0].wall.w * MAPSIZE))
+                    map[(((mouseY - map[0].wall.y) / map[0].wall.w * MAPSIZE) + ((mouseX - map[0].wall.x) / map[0].wall.w))].type = 2;
             }
             else if (currentKeyStates[SDL_SCANCODE_3])
             {
-                if (mouseY < (TILESIZE * MAPSIZE) && mouseX < (TILESIZE * MAPSIZE))
-                    map[((mouseY / TILESIZE * MAPSIZE) + (mouseX / TILESIZE))].type = 3;
+                if ((mouseY - map[0].wall.y) < (map[0].wall.w * MAPSIZE) && (mouseX - map[0].wall.x) < (map[0].wall.w * MAPSIZE))
+                    map[(((mouseY - map[0].wall.y) / map[0].wall.w * MAPSIZE) + ((mouseX - map[0].wall.x) / map[0].wall.w))].type = 3;
             }
             else if (currentKeyStates[SDL_SCANCODE_4])
             {
-                if (mouseY < (TILESIZE * MAPSIZE) && mouseX < (TILESIZE * MAPSIZE))
-                    map[((mouseY / TILESIZE * MAPSIZE) + (mouseX / TILESIZE))].type = 4;
+                if ((mouseY - map[0].wall.y) < (map[0].wall.w * MAPSIZE) && (mouseX - map[0].wall.x) < (map[0].wall.w * MAPSIZE))
+                    map[(((mouseY - map[0].wall.y) / map[0].wall.w * MAPSIZE) + ((mouseX - map[0].wall.x) / map[0].wall.w))].type = 4;
             }
             else if (currentKeyStates[SDL_SCANCODE_S] && currentKeyStates[SDL_SCANCODE_LCTRL])
             {
@@ -169,22 +171,30 @@ int main(int argv, char **args)
             }
             else if (currentKeyStates[SDL_SCANCODE_W])
             {
+                for (int i = 0; i < MAPSIZE * MAPSIZE; i++)
+                {
+                    map[i].wall.y += movementAmount;
+                }
             }
             else if (currentKeyStates[SDL_SCANCODE_S])
             {
+                for (int i = 0; i < MAPSIZE * MAPSIZE; i++)
+                {
+                    map[i].wall.y -= movementAmount;
+                }
             }
             else if (currentKeyStates[SDL_SCANCODE_D])
             {
                 for (int i = 0; i < MAPSIZE * MAPSIZE; i++)
                 {
-                    // map[i].wall.x++;
+                    map[i].wall.x -= movementAmount;
                 }
             }
             else if (currentKeyStates[SDL_SCANCODE_A])
             {
                 for (int i = 0; i < MAPSIZE * MAPSIZE; i++)
                 {
-                    // map[i].wall.x--;
+                    map[i].wall.x += movementAmount;
                 }
             }
 
@@ -192,14 +202,14 @@ int main(int argv, char **args)
 
             if (buttons & SDL_BUTTON(SDL_BUTTON_LEFT))
             {
-                if (mouseY < (map[0].wall.w * MAPSIZE) && mouseX < (map[0].wall.w * MAPSIZE))
-                    map[((mouseY / map[0].wall.w * MAPSIZE) + (mouseX / map[0].wall.w))].type = 1;
+                if ((mouseY - map[0].wall.y) < (map[0].wall.w * MAPSIZE) && (mouseX - map[0].wall.x) < (map[0].wall.w * MAPSIZE))
+                    map[(((mouseY - map[0].wall.y) / map[0].wall.w * MAPSIZE) + ((mouseX - map[0].wall.x) / map[0].wall.w))].type = 1;
             }
 
             if (buttons & SDL_BUTTON(SDL_BUTTON_RIGHT))
             {
-                if (mouseY < (map[0].wall.w * MAPSIZE) && mouseX < (map[0].wall.w * MAPSIZE))
-                    map[((mouseY / map[0].wall.w * MAPSIZE) + (mouseX / map[0].wall.w))].type = 0;
+                if ((mouseY - map[0].wall.y) < (map[0].wall.w * MAPSIZE) && (mouseX - map[0].wall.x) < (map[0].wall.w * MAPSIZE))
+                    map[(((mouseY - map[0].wall.y) / map[0].wall.w * MAPSIZE) + ((mouseX - map[0].wall.x) / map[0].wall.w))].type = 0;
             }
 
             SDL_SetRenderDrawColor(pRenderer, red, green, blue, 255);
@@ -236,14 +246,14 @@ int main(int argv, char **args)
             SDL_SetRenderDrawColor(pRenderer, 100, 100, 100, 255);
             for (int line = 0; line < map[0].wall.w * MAPSIZE; line += map[0].wall.w)
             {
-                SDL_RenderDrawLine(pRenderer, map[0].wall.x, line, map[MAPSIZE - 1].wall.x + map[0].wall.w, line);
-                SDL_RenderDrawLine(pRenderer, line, map[0].wall.y, line, map[MAPSIZE * MAPSIZE - 1].wall.y + map[0].wall.w);
+                SDL_RenderDrawLine(pRenderer, map[0].wall.x, (line + map[0].wall.y), map[MAPSIZE - 1].wall.x + map[0].wall.w, (line + map[0].wall.y));
+                SDL_RenderDrawLine(pRenderer, (line + map[0].wall.x), map[0].wall.y, (line + map[0].wall.x), map[MAPSIZE * MAPSIZE - 1].wall.y + map[0].wall.w);
             }
 
-            if ((mouseY < (map[0].wall.w * MAPSIZE)) && (mouseX < (map[0].wall.w * MAPSIZE)))
+            if (((mouseY - map[0].wall.y) < (map[0].wall.w * MAPSIZE)) && ((mouseX - map[0].wall.x) < (map[0].wall.w * MAPSIZE)))
             {
                 SDL_SetRenderDrawColor(pRenderer, 255, 0, 0, 255);
-                SDL_RenderDrawRect(pRenderer, &map[(((mouseY) / map[0].wall.w * MAPSIZE) + ((mouseX) / map[0].wall.w))].wall);
+                SDL_RenderDrawRect(pRenderer, &map[(((mouseY - map[0].wall.y) / map[0].wall.w * MAPSIZE) + ((mouseX - map[0].wall.x) / map[0].wall.w))].wall);
             }
 
             SDL_SetRenderDrawColor(pRenderer, 0, 255, 0, 255);
