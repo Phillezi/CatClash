@@ -223,7 +223,7 @@ int main(int argv, char **args)
             }
             // Draw grid
             SDL_SetRenderDrawColor(pRenderer, 100, 100, 100, 255);
-            for (int line = 0; line < TILESIZE * MAPSIZE; line += map[0].wall.w)
+            for (int line = 0; line < map[0].wall.w * MAPSIZE; line += map[0].wall.w)
             {
                 SDL_RenderDrawLine(pRenderer, map[0].wall.x, line, map[MAPSIZE - 1].wall.x + map[0].wall.w, line);
                 SDL_RenderDrawLine(pRenderer, line, map[0].wall.y, line, map[MAPSIZE * MAPSIZE - 1].wall.y + map[0].wall.w);
