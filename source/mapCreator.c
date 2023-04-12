@@ -16,12 +16,27 @@ int main(int argv, char **args)
     int windowWidth = DEFAULT_WIDTH + 100, windowHeight = DEFAULT_HEIGHT;
     int red = 255, green = 255, blue = 255;
     Tile map[MAPSIZE * MAPSIZE];
+
+    SDL_Init(SDL_INIT_EVERYTHING);
+
+    SDL_DisplayMode dm;
+
+    if (SDL_GetDesktopDisplayMode(0, &dm) != 0)
+    {
+        printf("SDL_GetDesktopDisplayMode failed: %s", SDL_GetError());
+    }
+    else
+    {
+        windowWidth = dm.h, windowHeight = dm.h - 100;
+    }
+
+    int tileSize = (windowHeight / MAPSIZE);
     char fileName[31];
     do
     {
         printf("map name?\n: ");
         scanf(" %30s", fileName);
-    } while (initMap(map, fileName) == -1);
+    } while (initMap(map, fileName, tileSize) == -1);
 
     SDL_Window *pWindow = SDL_CreateWindow(WINDOW_NAME, SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, windowWidth, windowHeight, 0);
     if (!pWindow)
@@ -54,14 +69,14 @@ int main(int argv, char **args)
     SDL_Rect saveButton;
     saveButton.x = (map[0].wall.w * MAPSIZE);
     saveButton.y = 0;
-    saveButton.w = windowWidth - (map[0].wall.w * MAPSIZE);
-    saveButton.h = windowWidth - (map[0].wall.w * MAPSIZE);
+    saveButton.w = 100; // windowWidth - (map[0].wall.w * MAPSIZE);
+    saveButton.h = 100; // windowWidth - (map[0].wall.w * MAPSIZE);
 
     SDL_Rect openButton;
     openButton.x = (map[0].wall.w * MAPSIZE);
     openButton.y = saveButton.h;
-    openButton.w = windowWidth - (map[0].wall.w * MAPSIZE);
-    openButton.h = windowWidth - (map[0].wall.w * MAPSIZE);
+    openButton.w = 100; // windowWidth - (map[0].wall.w * MAPSIZE);
+    openButton.h = 100; // windowWidth - (map[0].wall.w * MAPSIZE);
 
     int running = 1;
 
@@ -108,7 +123,7 @@ int main(int argv, char **args)
                     }
                 }
             }
-
+            /*
             // toolbar
             saveButton.x = (map[0].wall.w * MAPSIZE);
             saveButton.w = windowWidth - (map[0].wall.w * MAPSIZE);
@@ -117,7 +132,7 @@ int main(int argv, char **args)
             openButton.y = saveButton.h;
             openButton.w = windowWidth - (map[0].wall.w * MAPSIZE);
             openButton.h = windowWidth - (map[0].wall.w * MAPSIZE);
-
+            */
             int mouseX, mouseY;
             int buttons = SDL_GetMouseState(&mouseX, &mouseY);
 

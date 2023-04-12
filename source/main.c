@@ -24,7 +24,7 @@ int main(int argv, char **args)
 
     SDL_Init(SDL_INIT_EVERYTHING);
     SDL_DisplayMode dm;
-
+    
     if (SDL_GetDesktopDisplayMode(0, &dm) != 0)
     {
         printf("SDL_GetDesktopDisplayMode failed: %s", SDL_GetError());
@@ -33,7 +33,7 @@ int main(int argv, char **args)
     {
         windowWidth = dm.h - 100, windowHeight = dm.h - 100;
     }
-
+    
     int tileSize = (windowHeight / MAPSIZE);
 
     char fileName[31];
@@ -83,7 +83,7 @@ int main(int argv, char **args)
     }
 
     SDL_QueryTexture(pTexturePlayer, NULL, NULL, &pPlayer->rect.w, &pPlayer->rect.h);
-    SDL_Rect spawnTile = findEmptyTile(map);
+    SDL_Rect spawnTile = findEmptyTile(map); // this function returns a valid spawn tile
     pPlayer->rect.x = spawnTile.x; // windowWidth / 2;
     pPlayer->rect.y = spawnTile.y; // windowHeight / 2;
 
