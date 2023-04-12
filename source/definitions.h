@@ -10,7 +10,7 @@
 #define WINDOW_NAME "Test"
 #define FPS 165
 #define MAPSIZE 32
-#define TILESIZE 32
+#define TILESIZE 16
 #define TILES 4
 #define MAX_NAME_LEN 21
 
