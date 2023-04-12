@@ -8,8 +8,14 @@
 
 #define MAX_CHARGE 100
 
-void updateScreen(SDL_Renderer *pRenderer, Player player, Tile map[], SDL_Texture *pTextureTiles[], SDL_Texture *pTexturePlayer);
-int handleInput(Player *pPlayer, Tile map[], int movementAmount, int *pCharge);
+struct uiElements{
+    SDL_Rect chargebar;
+    SDL_Rect healthbar;
+};
+typedef struct uiElements UiE;
+
+void updateScreen(SDL_Renderer *pRenderer, Player player, Tile map[], SDL_Texture *pTextureTiles[], SDL_Texture *pTexturePlayer, UiE ui);
+int handleInput(Player *pPlayer, Tile map[], int movementAmount, int *pCharge, char *pPrevKeyPressed);
 void movePlayer(Player *pPlayer, char direction);
 int checkCollision(Player player, Tile map[], char direction);
 SDL_Rect findEmptyTile(Tile map[]);
@@ -21,10 +27,12 @@ int main(int argv, char **args)
     Player *pPlayer;
     Tile map[MAPSIZE * MAPSIZE];
     int windowWidth = DEFAULT_WIDTH, windowHeight = DEFAULT_HEIGHT;
+    char prevKeyPressed;
+    UiE ui;
 
     SDL_Init(SDL_INIT_EVERYTHING);
     SDL_DisplayMode dm;
-    
+
     if (SDL_GetDesktopDisplayMode(0, &dm) != 0)
     {
         printf("SDL_GetDesktopDisplayMode failed: %s", SDL_GetError());
@@ -33,7 +41,7 @@ int main(int argv, char **args)
     {
         windowWidth = dm.h - 100, windowHeight = dm.h - 100;
     }
-    
+
     int tileSize = (windowHeight / MAPSIZE);
 
     char fileName[31];
@@ -84,11 +92,23 @@ int main(int argv, char **args)
 
     SDL_QueryTexture(pTexturePlayer, NULL, NULL, &pPlayer->rect.w, &pPlayer->rect.h);
     SDL_Rect spawnTile = findEmptyTile(map); // this function returns a valid spawn tile
-    pPlayer->rect.x = spawnTile.x; // windowWidth / 2;
-    pPlayer->rect.y = spawnTile.y; // windowHeight / 2;
+    pPlayer->rect.x = spawnTile.x;           // windowWidth / 2;
+    pPlayer->rect.y = spawnTile.y;           // windowHeight / 2;
 
     pPlayer->rect.w = map[0].wall.w;
     pPlayer->rect.h = map[0].wall.w;
+
+    pPlayer->hp = 255;
+
+    ui.chargebar.x = ((windowWidth/2)-(MAX_CHARGE/2));
+    ui.chargebar.y = ((3*windowHeight)/4);
+    ui.chargebar.w = charge;
+    ui.chargebar.h = map[0].wall.w;
+
+    ui.healthbar.x = ((windowWidth/2)+(MAX_CHARGE/2) + 5);
+    ui.healthbar.y = ((3*windowHeight)/4);
+    ui.healthbar.w = pPlayer->hp;
+    ui.healthbar.h = map[0].wall.w;
 
     while (run)
     {
@@ -96,7 +116,15 @@ int main(int argv, char **args)
         if (movementDeltaTime >= (1000 / 60))
         {
             movementPreviousTime = SDL_GetTicks();
-            handleInput(pPlayer, map, 5, &charge);
+            handleInput(pPlayer, map, 5, &charge, &prevKeyPressed);
+
+            if(pPlayer->hp<=0){
+                printf("You Died\n");
+                pPlayer->hp = 255;
+            }
+
+            ui.healthbar.w = pPlayer->hp;
+            ui.chargebar.w = charge;
 
             SDL_Event event;
             while (SDL_PollEvent(&event))
@@ -109,7 +137,7 @@ int main(int argv, char **args)
         if (deltaTime >= (1000 / FPS))
         {
             previousTime = SDL_GetTicks();
-            updateScreen(pRenderer, *pPlayer, map, pTextureTiles, pTexturePlayer);
+            updateScreen(pRenderer, *pPlayer, map, pTextureTiles, pTexturePlayer, ui);
         }
     }
     // DESTROY EVERYTHING
@@ -124,7 +152,7 @@ int main(int argv, char **args)
     SDL_Quit();
     return 0;
 }
-void updateScreen(SDL_Renderer *pRenderer, Player player, Tile map[], SDL_Texture *pTextureTiles[], SDL_Texture *pTexturePlayer)
+void updateScreen(SDL_Renderer *pRenderer, Player player, Tile map[], SDL_Texture *pTextureTiles[], SDL_Texture *pTexturePlayer, UiE ui)
 {
     SDL_SetRenderDrawColor(pRenderer, 255, 255, 255, 255);
     SDL_RenderClear(pRenderer);
@@ -153,9 +181,16 @@ void updateScreen(SDL_Renderer *pRenderer, Player player, Tile map[], SDL_Textur
     SDL_SetRenderDrawColor(pRenderer, 0, 0, 0, 255);
     SDL_RenderDrawRect(pRenderer, &player.rect);
     SDL_RenderCopy(pRenderer, pTexturePlayer, NULL, &player.rect);
+
+    SDL_SetRenderDrawColor(pRenderer, 0, 255, 0, 255);
+    SDL_RenderFillRect(pRenderer, &ui.healthbar);
+
+    SDL_SetRenderDrawColor(pRenderer, 0, 0, 255, 255);
+    SDL_RenderFillRect(pRenderer, &ui.chargebar);
+
     SDL_RenderPresent(pRenderer);
 }
-int handleInput(Player *pPlayer, Tile map[], int movementAmount, int *pCharge)
+int handleInput(Player *pPlayer, Tile map[], int movementAmount, int *pCharge, char *pPrevKeypressed)
 {
     const Uint8 *currentKeyStates = SDL_GetKeyboardState(NULL);
     if (currentKeyStates[SDL_SCANCODE_SPACE])
@@ -173,9 +208,9 @@ int handleInput(Player *pPlayer, Tile map[], int movementAmount, int *pCharge)
     {
         for (int i = 0; i < 10; i++)
         {
-            if (!checkCollision(*pPlayer, map, 'W'))
+            if (!checkCollision(*pPlayer, map, *pPrevKeypressed))
             {
-                movePlayer(pPlayer, 'W');
+                movePlayer(pPlayer, *pPrevKeypressed);
             }
             else
             {
@@ -190,6 +225,7 @@ int handleInput(Player *pPlayer, Tile map[], int movementAmount, int *pCharge)
         {
             if (currentKeyStates[SDL_SCANCODE_W])
             {
+                *pPrevKeypressed = 'W';
                 if (!checkCollision(*pPlayer, map, 'W'))
                 {
                     movePlayer(pPlayer, 'W');
@@ -201,6 +237,7 @@ int handleInput(Player *pPlayer, Tile map[], int movementAmount, int *pCharge)
             }
             if (currentKeyStates[SDL_SCANCODE_A])
             {
+                *pPrevKeypressed = 'A';
                 if (!checkCollision(*pPlayer, map, 'A'))
                 {
                     movePlayer(pPlayer, 'A');
@@ -212,6 +249,7 @@ int handleInput(Player *pPlayer, Tile map[], int movementAmount, int *pCharge)
             }
             if (currentKeyStates[SDL_SCANCODE_S])
             {
+                *pPrevKeypressed = 'S';
                 if (!checkCollision(*pPlayer, map, 'S'))
                 {
                     movePlayer(pPlayer, 'S');
@@ -223,6 +261,7 @@ int handleInput(Player *pPlayer, Tile map[], int movementAmount, int *pCharge)
             }
             if (currentKeyStates[SDL_SCANCODE_D])
             {
+                *pPrevKeypressed = 'D';
                 if (!checkCollision(*pPlayer, map, 'D'))
                 {
                     movePlayer(pPlayer, 'D');
