@@ -9,8 +9,8 @@ int initTextureTiles(SDL_Renderer *pRenderer, SDL_Window *pWindow, SDL_Texture *
 
 int initTexturePlayer(SDL_Renderer *pRenderer, SDL_Window *pWindow, SDL_Texture **pTexturePlayer);
 
-int initMap(Tile map[], char filepath[]);
+int initMap(Tile map[], char filepath[], int tileSize);
 
-Tile createTile(int x, int y, int type);
+Tile createTile(int x, int y, int type, int tileSize);
 
 #endif
