@@ -1,20 +1,24 @@
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_image.h>
+#include <SDL2/SDL_ttf.h>
 #include <stdio.h>
 #include <stdbool.h>
+#include <stdlib.h>
 #include "init.h"
 #include "definitions.h"
-#include "menu.h"
+// #include "menu.h"
 
 #define MAX_CHARGE 100
 
-struct uiElements{
+struct uiElements
+{
     SDL_Rect chargebar;
     SDL_Rect healthbar;
+    SDL_Rect fpsFrame;
 };
 typedef struct uiElements UiE;
 
-void updateScreen(SDL_Renderer *pRenderer, Player player, Tile map[], SDL_Texture *pTextureTiles[], SDL_Texture *pTexturePlayer, UiE ui);
+void updateScreen(SDL_Renderer *pRenderer, Player player, Tile map[], SDL_Texture *pTextureTiles[], SDL_Texture *pTexturePlayer, UiE ui, SDL_Texture *pFpsTexture);
 int handleInput(Player *pPlayer, Tile map[], int movementAmount, int *pCharge, char *pPrevKeyPressed);
 void movePlayer(Player *pPlayer, char direction);
 int checkCollision(Player player, Tile map[], char direction);
@@ -24,13 +28,21 @@ int main(int argv, char **args)
 {
     bool run = true;
     int previousTime = 0, movementPreviousTime = 0, charge = 0;
-    Player *pPlayer;
+    Player *pPlayer = malloc(sizeof(Player));
+    if (pPlayer == NULL)
+    {
+        printf("Error: Failed to allocate memory for pPlayer\n");
+        return 1;
+    }
+
     Tile map[MAPSIZE * MAPSIZE];
     int windowWidth = DEFAULT_WIDTH, windowHeight = DEFAULT_HEIGHT;
     char prevKeyPressed;
     UiE ui;
 
     SDL_Init(SDL_INIT_EVERYTHING);
+    TTF_Init();
+
     SDL_DisplayMode dm;
 
     if (SDL_GetDesktopDisplayMode(0, &dm) != 0)
@@ -90,7 +102,15 @@ int main(int argv, char **args)
         return 1;
     }
 
-    SDL_QueryTexture(pTexturePlayer, NULL, NULL, &pPlayer->rect.w, &pPlayer->rect.h);
+    if (SDL_QueryTexture(pTexturePlayer, NULL, NULL, &pPlayer->rect.w, &pPlayer->rect.h) < 0)
+    {
+        printf("Error: %s\n", SDL_GetError());
+        SDL_DestroyRenderer(pRenderer);
+        SDL_DestroyWindow(pWindow);
+        SDL_Quit();
+        return 1;
+    }
+
     SDL_Rect spawnTile = findEmptyTile(map); // this function returns a valid spawn tile
     pPlayer->rect.x = spawnTile.x;           // windowWidth / 2;
     pPlayer->rect.y = spawnTile.y;           // windowHeight / 2;
@@ -100,59 +120,90 @@ int main(int argv, char **args)
 
     pPlayer->hp = 255;
 
-    ui.chargebar.x = ((windowWidth/2)-(MAX_CHARGE/2));
-    ui.chargebar.y = ((3*windowHeight)/4);
+    ui.chargebar.x = ((windowWidth / 2) - (MAX_CHARGE / 2));
+    ui.chargebar.y = ((3 * windowHeight) / 4);
     ui.chargebar.w = charge;
     ui.chargebar.h = map[0].wall.w;
 
-    ui.healthbar.x = ((windowWidth/2)+(MAX_CHARGE/2) + 5);
-    ui.healthbar.y = ((3*windowHeight)/4);
+    ui.healthbar.x = ((windowWidth / 2) + (MAX_CHARGE / 2) + 5);
+    ui.healthbar.y = ((3 * windowHeight) / 4);
     ui.healthbar.w = pPlayer->hp;
     ui.healthbar.h = map[0].wall.w;
 
+    // PERFORMANCE monitor
+    int oneSecTimer = 0, frameCounter = 0;
+    ui.fpsFrame.w = 40;
+    ui.fpsFrame.h = 40;
+    ui.fpsFrame.x = windowWidth - ui.fpsFrame.w;
+    ui.fpsFrame.y = 0;
+
+    TTF_Font *pFont = TTF_OpenFont("resources/fonts/Pixelletters.ttf", 20);
+    SDL_Color colGreen = {0, 255, 0};
+    SDL_Surface *pFpsSurface = TTF_RenderText_Solid(pFont, "FPS", colGreen);
+    SDL_Texture *pFpsTexture = SDL_CreateTextureFromSurface(pRenderer, pFpsSurface);
+    SDL_FreeSurface(pFpsSurface);
+
     while (run)
     {
-        int movementDeltaTime = SDL_GetTicks() - movementPreviousTime;
-        if (movementDeltaTime >= (1000 / 60))
+        if (SDL_GetTicks() - oneSecTimer >= 1000) // Performance monitor
         {
-            movementPreviousTime = SDL_GetTicks();
-            handleInput(pPlayer, map, 5, &charge, &prevKeyPressed);
-
-            if(pPlayer->hp<=0){
-                printf("You Died\n");
-                pPlayer->hp = 255;
-            }
-
-            ui.healthbar.w = pPlayer->hp;
-            ui.chargebar.w = charge;
-
+            oneSecTimer = SDL_GetTicks();
+            char buffer[50];
+            SDL_DestroyTexture(pFpsTexture);
+            sprintf(buffer, "%d", frameCounter);
+            SDL_Surface *pFpsSurface = TTF_RenderText_Solid(pFont, buffer, colGreen);
+            SDL_Texture *pFpsTexture = SDL_CreateTextureFromSurface(pRenderer, pFpsSurface);
+            SDL_FreeSurface(pFpsSurface);
+            frameCounter = 0;
+        }
+        int deltaTime = SDL_GetTicks() - previousTime;
+        if (deltaTime >= (1000 / FPS))
+        {
             SDL_Event event;
             while (SDL_PollEvent(&event))
             {
                 if (event.type == SDL_QUIT)
                     run = false;
             }
-        }
-        int deltaTime = SDL_GetTicks() - previousTime;
-        if (deltaTime >= (1000 / FPS))
-        {
+
+            int movementDeltaTime = SDL_GetTicks() - movementPreviousTime;
+            if (movementDeltaTime >= (1000 / 60))
+            {
+
+                movementPreviousTime = SDL_GetTicks();
+                handleInput(pPlayer, map, 5, &charge, &prevKeyPressed);
+
+                if (pPlayer->hp <= 0)
+                {
+                    printf("You Died\n");
+                    pPlayer->hp = 255;
+                }
+
+                ui.healthbar.w = pPlayer->hp;
+                ui.chargebar.w = charge;
+            }
             previousTime = SDL_GetTicks();
-            updateScreen(pRenderer, *pPlayer, map, pTextureTiles, pTexturePlayer, ui);
+            updateScreen(pRenderer, *pPlayer, map, pTextureTiles, pTexturePlayer, ui, pFpsTexture);
+            frameCounter++;
         }
     }
     // DESTROY EVERYTHING
+    free(pPlayer);
     SDL_DestroyTexture(pTextureTiles[0]);
     SDL_DestroyTexture(pTextureTiles[1]);
     SDL_DestroyTexture(pTextureTiles[2]);
     SDL_DestroyTexture(pTextureTiles[3]);
     SDL_DestroyTexture(pTexturePlayer);
+    SDL_DestroyTexture(pFpsTexture);
 
     SDL_DestroyRenderer(pRenderer);
     SDL_DestroyWindow(pWindow);
+    TTF_CloseFont(pFont);
+    TTF_Quit();
     SDL_Quit();
     return 0;
 }
-void updateScreen(SDL_Renderer *pRenderer, Player player, Tile map[], SDL_Texture *pTextureTiles[], SDL_Texture *pTexturePlayer, UiE ui)
+void updateScreen(SDL_Renderer *pRenderer, Player player, Tile map[], SDL_Texture *pTextureTiles[], SDL_Texture *pTexturePlayer, UiE ui, SDL_Texture *pFpsTexture)
 {
     SDL_SetRenderDrawColor(pRenderer, 255, 255, 255, 255);
     SDL_RenderClear(pRenderer);
@@ -187,6 +238,8 @@ void updateScreen(SDL_Renderer *pRenderer, Player player, Tile map[], SDL_Textur
 
     SDL_SetRenderDrawColor(pRenderer, 0, 0, 255, 255);
     SDL_RenderFillRect(pRenderer, &ui.chargebar);
+
+    SDL_RenderCopy(pRenderer, pFpsTexture, NULL, &ui.fpsFrame);
 
     SDL_RenderPresent(pRenderer);
 }
@@ -271,6 +324,16 @@ int handleInput(Player *pPlayer, Tile map[], int movementAmount, int *pCharge, c
                     printf("COLLISION D\n");
                 }
             }
+            /*
+            if (!checkCollision(*pPlayer, map, *pPrevKeypressed))
+                {
+                    movePlayer(pPlayer, *pPrevKeypressed);
+                }
+                else
+                {
+                    printf("COLLISION %c\n", *pPrevKeypressed);
+                }
+                */
         }
     }
     return 0;
