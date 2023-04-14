@@ -12,10 +12,10 @@ typedef struct playerInfo {
     Uint32 ip;
     Uint32 port;
     int id;
-} Player;
+} PlayerInfo;
 
 /* \returns ID of new player, -1 on already connected player */
-int newAddress(Player player[], UDPpacket *pRecieve);
+int newAddress(PlayerInfo player[], UDPpacket *pRecieve);
 
 int main(int argc, char **argv) {
     UDPsocket socketDesc;   // Socket descriptor
@@ -24,7 +24,8 @@ int main(int argc, char **argv) {
     
     int quit = 0, players = 0, id;
     char a[20];
-    Player player[MAX_PLAYERS] = {0,0,0};
+    PlayerInfo player[MAX_PLAYERS] = {0,0,0};
+    Player udpData;
 
     // Error checking and initiliaziation
 
@@ -84,12 +85,16 @@ int main(int argc, char **argv) {
                         pSent->address.host = player[i].ip;       // Set destination host
                         pSent->address.port = player[i].port;     // Set destination port
 
-                        // Print data on server as well
-                        sscanf((char * )pRecieve->data, "%s\n", &a);
+                        //sscanf((char * )pRecieve->data, "%s\n", &a);
                         //printf("%s\n", a);
 
-                        sprintf((char *)pSent->data, "%s", a);
-                        pSent->len = strlen((char *)pSent->data) + 1;
+                        // Copy recieved data to another package and print for error handling
+                        memcpy(&udpData, (char *)pRecieve->data, sizeof(Player));
+                        printf("UDP Packet data: %d %d", udpData.x, udpData.y);
+                        memcpy((char *)pSent->data, &udpData, sizeof(Player)+1);
+
+                        //sprintf((char *)pSent->data, "%s", a);
+                        pSent->len = sizeof(Player) + 1;
                         SDLNet_UDP_Send(socketDesc, -1, pSent);
                     }
                 }
@@ -108,7 +113,7 @@ int main(int argc, char **argv) {
 	return EXIT_SUCCESS;
 }
 
-int newAddress(Player player[], UDPpacket *pRecieve) {
+int newAddress(PlayerInfo player[], UDPpacket *pRecieve) {
     for (int i = 0; i < MAX_PLAYERS; i++) {
         if (pRecieve->address.port == player[i].port)   // known user?
             return -1;                                  // yes return -1
