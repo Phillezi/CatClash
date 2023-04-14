@@ -212,7 +212,7 @@ void updateScreen(SDL_Renderer *pRenderer, Player player, Tile map[], SDL_Textur
     SDL_SetRenderDrawColor(pRenderer, 255, 255, 255, 255);
     SDL_RenderClear(pRenderer);
     SDL_Rect temp;
-    for (int i = 0; i < (((player.y) / map[0].wall.w) * MAPSIZE) + ((player.x - 1) / map[0].wall.w)+2; i++)
+    for (int i = 0; i < (((player.y) / map[0].wall.w) * MAPSIZE) + ((player.x - 1) / map[0].wall.w) + 2; i++)
     {
         switch (map[i].type)
         {
@@ -223,7 +223,9 @@ void updateScreen(SDL_Renderer *pRenderer, Player player, Tile map[], SDL_Textur
                 {
                     temp = map[i].wall;
                     temp.h = ((float)tileSize * angle);
+                    SDL_SetTextureColorMod(pTextureTiles[(map[i - MAPSIZE].type - 1)], 150, 150, 150);
                     SDL_RenderCopy(pRenderer, pTextureTiles[(map[i - MAPSIZE].type - 1)], NULL, &temp);
+                    SDL_SetTextureColorMod(pTextureTiles[(map[i - MAPSIZE].type - 1)], 255, 255, 255);
                 }
             }
             break;
@@ -258,7 +260,9 @@ void updateScreen(SDL_Renderer *pRenderer, Player player, Tile map[], SDL_Textur
                 {
                     temp = map[i].wall;
                     temp.h = ((float)tileSize * angle);
+                    SDL_SetTextureColorMod(pTextureTiles[(map[i - MAPSIZE].type - 1)], 150, 150, 150);
                     SDL_RenderCopy(pRenderer, pTextureTiles[(map[i - MAPSIZE].type - 1)], NULL, &temp);
+                    SDL_SetTextureColorMod(pTextureTiles[(map[i - MAPSIZE].type - 1)], 255, 255, 255);
                 }
             }
             break;
