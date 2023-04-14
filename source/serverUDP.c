@@ -3,15 +3,10 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
+#include "definitions.h"
 
 #define MAX_PLAYERS 5
 #define PORT 1234
-
-typedef struct data {
-   int x;
-   int y;
-   int status;
-} Data;
 
 typedef struct playerInfo {
     Uint32 ip;
@@ -72,24 +67,6 @@ int main(int argc, char **argv) {
             for (int i = 0; i < players; i++)
                 if (pRecieve->address.port == player[i].port) { id = player[i].id; printf("Recieved data from player %d\n", id); }
 
-            // Mirror packet to other players
-            for (int i = 0; i < players; i++){
-                if (id != player[i].id) {  
-                    printf("Send to client %d\n", player[i].id);
-
-                    pSent->address.host = player[i].ip;       // Set destination host
-                    pSent->address.port = player[i].port;     // Set destination port
-
-                    // Print data on server as well
-                    sscanf((char * )pRecieve->data, "%s\n", &a);
-                    //printf("%s\n", a);
-
-                    sprintf((char *)pSent->data, "%s", a);
-                    pSent->len = strlen((char *)pSent->data) + 1;
-                    SDLNet_UDP_Send(socketDesc, -1, pSent);
-                }
-            }
-
             // Remove player if packet contains "exit" and adjust other players
             if (!strcmp((char *)pRecieve->data, "exit")) {
                 printf("Player %d has exited\n", id);
@@ -99,8 +76,25 @@ int main(int argc, char **argv) {
                     printf("- Player %d is now player %d\n", i+2, player[i].id);
                 }
                 players--;
+            } else {    // Mirror packet to other players
+                for (int i = 0; i < players; i++){
+                    if (id != player[i].id) {  
+                        printf("Send to client %d\n", player[i].id);
+
+                        pSent->address.host = player[i].ip;       // Set destination host
+                        pSent->address.port = player[i].port;     // Set destination port
+
+                        // Print data on server as well
+                        sscanf((char * )pRecieve->data, "%s\n", &a);
+                        //printf("%s\n", a);
+
+                        sprintf((char *)pSent->data, "%s", a);
+                        pSent->len = strlen((char *)pSent->data) + 1;
+                        SDLNet_UDP_Send(socketDesc, -1, pSent);
+                    }
+                }
             }
-            
+
             // Quit main loop if packet contains "quit"
             if (!strcmp((char *)pRecieve->data, "quit")) quit = 1;
         }
