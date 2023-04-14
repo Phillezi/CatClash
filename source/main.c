@@ -169,7 +169,6 @@ int main(int argv, char **args)
             int movementDeltaTime = SDL_GetTicks() - movementPreviousTime;
             if (movementDeltaTime >= (1000 / 60))
             {
-
                 movementPreviousTime = SDL_GetTicks();
                 handleInput(pPlayer, map, 5, &charge, &prevKeyPressed);
 
@@ -276,7 +275,7 @@ int handleInput(Player *pPlayer, Tile map[], int movementAmount, int *pCharge, c
     {
         for (int i = 0; i < movementAmount; i++)
         {
-            if (currentKeyStates[SDL_SCANCODE_W])
+            if (currentKeyStates[SDL_SCANCODE_W] || currentKeyStates[SDL_SCANCODE_UP])
             {
                 *pPrevKeypressed = 'W';
                 if (!checkCollision(*pPlayer, map, 'W'))
@@ -288,7 +287,7 @@ int handleInput(Player *pPlayer, Tile map[], int movementAmount, int *pCharge, c
                     printf("COLLISION W\n");
                 }
             }
-            if (currentKeyStates[SDL_SCANCODE_A])
+            if (currentKeyStates[SDL_SCANCODE_A] || currentKeyStates[SDL_SCANCODE_LEFT])
             {
                 *pPrevKeypressed = 'A';
                 if (!checkCollision(*pPlayer, map, 'A'))
@@ -300,7 +299,7 @@ int handleInput(Player *pPlayer, Tile map[], int movementAmount, int *pCharge, c
                     printf("COLLISION A\n");
                 }
             }
-            if (currentKeyStates[SDL_SCANCODE_S])
+            if (currentKeyStates[SDL_SCANCODE_S] || currentKeyStates[SDL_SCANCODE_DOWN])
             {
                 *pPrevKeypressed = 'S';
                 if (!checkCollision(*pPlayer, map, 'S'))
@@ -312,7 +311,7 @@ int handleInput(Player *pPlayer, Tile map[], int movementAmount, int *pCharge, c
                     printf("COLLISION S\n");
                 }
             }
-            if (currentKeyStates[SDL_SCANCODE_D])
+            if (currentKeyStates[SDL_SCANCODE_D] || currentKeyStates[SDL_SCANCODE_RIGHT])
             {
                 *pPrevKeypressed = 'D';
                 if (!checkCollision(*pPlayer, map, 'D'))
