@@ -18,8 +18,8 @@ struct uiElements
 };
 typedef struct uiElements UiE;
 
-void updateScreen(SDL_Renderer *pRenderer, Player player, Tile map[], SDL_Texture *pTextureTiles[], SDL_Texture *pTexturePlayer, UiE ui, SDL_Texture *pFpsTexture);
-int handleInput(Player *pPlayer, Tile map[], int movementAmount, int *pCharge, char *pPrevKeyPressed);
+void updateScreen(SDL_Renderer *pRenderer, Player player, Tile map[], SDL_Texture *pTextureTiles[], SDL_Texture *pTexturePlayer, UiE ui, SDL_Texture *pFpsTexture, float angle, int tileSize);
+int handleInput(Player *pPlayer, Tile map[], int movementAmount, int *pCharge, char *pPrevKeyPressed, float *pAngle, int tileSize);
 void movePlayer(Player *pPlayer, char direction);
 int checkCollision(Player player, Tile map[], char direction);
 SDL_Rect findEmptyTile(Tile map[]);
@@ -112,8 +112,10 @@ int main(int argv, char **args)
     }
 
     SDL_Rect spawnTile = findEmptyTile(map); // this function returns a valid spawn tile
-    pPlayer->rect.x = spawnTile.x;           // windowWidth / 2;
-    pPlayer->rect.y = spawnTile.y;           // windowHeight / 2;
+    pPlayer->x = spawnTile.x;
+    pPlayer->y = spawnTile.y;
+    pPlayer->rect.x = spawnTile.x; // windowWidth / 2;
+    pPlayer->rect.y = spawnTile.y; // windowHeight / 2;
 
     pPlayer->rect.w = map[0].wall.w;
     pPlayer->rect.h = map[0].wall.w;
@@ -142,6 +144,7 @@ int main(int argv, char **args)
     SDL_Surface *pFpsSurface = TTF_RenderText_Solid(pFont, "FPS", colGreen);
     SDL_Texture *pFpsTexture = SDL_CreateTextureFromSurface(pRenderer, pFpsSurface);
     SDL_FreeSurface(pFpsSurface);
+    float angle = 0;
 
     while (run)
     {
@@ -154,6 +157,7 @@ int main(int argv, char **args)
             SDL_Surface *pFpsSurface = TTF_RenderText_Solid(pFont, buffer, colGreen);
             SDL_Texture *pFpsTexture = SDL_CreateTextureFromSurface(pRenderer, pFpsSurface);
             SDL_FreeSurface(pFpsSurface);
+            printf("%s\n", buffer);
             frameCounter = 0;
         }
         int deltaTime = SDL_GetTicks() - previousTime;
@@ -170,7 +174,8 @@ int main(int argv, char **args)
             if (movementDeltaTime >= (1000 / 60))
             {
                 movementPreviousTime = SDL_GetTicks();
-                handleInput(pPlayer, map, 5, &charge, &prevKeyPressed);
+                handleInput(pPlayer, map, 5, &charge, &prevKeyPressed, &angle, tileSize);
+                // printf("ANGLE: %f\n", angle);
 
                 if (pPlayer->hp <= 0)
                 {
@@ -182,7 +187,7 @@ int main(int argv, char **args)
                 ui.chargebar.w = charge;
             }
             previousTime = SDL_GetTicks();
-            updateScreen(pRenderer, *pPlayer, map, pTextureTiles, pTexturePlayer, ui, pFpsTexture);
+            updateScreen(pRenderer, *pPlayer, map, pTextureTiles, pTexturePlayer, ui, pFpsTexture, angle, tileSize);
             frameCounter++;
         }
     }
@@ -202,15 +207,25 @@ int main(int argv, char **args)
     SDL_Quit();
     return 0;
 }
-void updateScreen(SDL_Renderer *pRenderer, Player player, Tile map[], SDL_Texture *pTextureTiles[], SDL_Texture *pTexturePlayer, UiE ui, SDL_Texture *pFpsTexture)
+void updateScreen(SDL_Renderer *pRenderer, Player player, Tile map[], SDL_Texture *pTextureTiles[], SDL_Texture *pTexturePlayer, UiE ui, SDL_Texture *pFpsTexture, float angle, int tileSize)
 {
     SDL_SetRenderDrawColor(pRenderer, 255, 255, 255, 255);
     SDL_RenderClear(pRenderer);
-    for (int i = 0; i < MAPSIZE * MAPSIZE; i++)
+    SDL_Rect temp;
+    for (int i = 0; i < (((player.y) / map[0].wall.w) * MAPSIZE) + ((player.x - 1) / map[0].wall.w)+2; i++)
     {
         switch (map[i].type)
         {
         case 0:
+            if (i > MAPSIZE - 1)
+            {
+                if (map[i - MAPSIZE].type)
+                {
+                    temp = map[i].wall;
+                    temp.h = ((float)tileSize * angle);
+                    SDL_RenderCopy(pRenderer, pTextureTiles[(map[i - MAPSIZE].type - 1)], NULL, &temp);
+                }
+            }
             break;
         case 1:
             SDL_RenderCopy(pRenderer, pTextureTiles[0], NULL, &map[i].wall);
@@ -232,6 +247,38 @@ void updateScreen(SDL_Renderer *pRenderer, Player player, Tile map[], SDL_Textur
     SDL_RenderDrawRect(pRenderer, &player.rect);
     SDL_RenderCopy(pRenderer, pTexturePlayer, NULL, &player.rect);
 
+    for (int i = (((player.y) / map[0].wall.w) * MAPSIZE) + ((player.x - 1) / map[0].wall.w) + 2; i < MAPSIZE * MAPSIZE; i++)
+    {
+        switch (map[i].type)
+        {
+        case 0:
+            if (i > MAPSIZE - 1)
+            {
+                if (map[i - MAPSIZE].type)
+                {
+                    temp = map[i].wall;
+                    temp.h = ((float)tileSize * angle);
+                    SDL_RenderCopy(pRenderer, pTextureTiles[(map[i - MAPSIZE].type - 1)], NULL, &temp);
+                }
+            }
+            break;
+        case 1:
+            SDL_RenderCopy(pRenderer, pTextureTiles[0], NULL, &map[i].wall);
+            break;
+        case 2:
+            SDL_RenderCopy(pRenderer, pTextureTiles[1], NULL, &map[i].wall);
+            break;
+        case 3:
+            SDL_RenderCopy(pRenderer, pTextureTiles[2], NULL, &map[i].wall);
+            break;
+        case 4:
+            SDL_RenderCopy(pRenderer, pTextureTiles[3], NULL, &map[i].wall);
+            break;
+        default:
+            break;
+        }
+    }
+
     SDL_SetRenderDrawColor(pRenderer, 0, 255, 0, 255);
     SDL_RenderFillRect(pRenderer, &ui.healthbar);
 
@@ -242,9 +289,44 @@ void updateScreen(SDL_Renderer *pRenderer, Player player, Tile map[], SDL_Textur
 
     SDL_RenderPresent(pRenderer);
 }
-int handleInput(Player *pPlayer, Tile map[], int movementAmount, int *pCharge, char *pPrevKeypressed)
+int handleInput(Player *pPlayer, Tile map[], int movementAmount, int *pCharge, char *pPrevKeypressed, float *pAngle, int tileSize)
 {
     const Uint8 *currentKeyStates = SDL_GetKeyboardState(NULL);
+    float scale = (float)map[0].wall.h / tileSize;
+    if (currentKeyStates[SDL_SCANCODE_Q])
+    {
+        if (*pAngle >= 0.01)
+        {
+            *pAngle -= 0.01;
+            for (int i = 0; i < MAPSIZE * MAPSIZE; i++)
+            {
+                map[i].wall.h = ((float)tileSize * (1 - *pAngle));
+
+                if (i > (MAPSIZE - 1))
+                {
+                    map[i].wall.y = map[i - MAPSIZE].wall.y + map[i].wall.h;
+                }
+            }
+            pPlayer->rect.y = (float)pPlayer->y * (float)map[0].wall.h / tileSize;
+        }
+    }
+    if (currentKeyStates[SDL_SCANCODE_E])
+    {
+        if (*pAngle < 1)
+        {
+            *pAngle += 0.01;
+            for (int i = 0; i < MAPSIZE * MAPSIZE; i++)
+            {
+                map[i].wall.h = ((float)tileSize * (1 - *pAngle));
+
+                if (i > (MAPSIZE - 1))
+                {
+                    map[i].wall.y = map[i - MAPSIZE].wall.y + map[i].wall.h;
+                }
+            }
+            pPlayer->rect.y = (float)pPlayer->y * (float)map[0].wall.h / tileSize;
+        }
+    }
     if (currentKeyStates[SDL_SCANCODE_SPACE])
     {
         if (*pCharge < MAX_CHARGE)
@@ -258,17 +340,23 @@ int handleInput(Player *pPlayer, Tile map[], int movementAmount, int *pCharge, c
     }
     else if (*pCharge > 0)
     {
-        for (int i = 0; i < 10; i++)
+        int damage = 0;
+
+        for (int i = 0; i < 2 * (*pCharge / 2); i++)
         {
             if (!checkCollision(*pPlayer, map, *pPrevKeypressed))
             {
                 movePlayer(pPlayer, *pPrevKeypressed);
+                pPlayer->rect.y = (float)pPlayer->y * scale;
             }
             else
             {
-                pPlayer->hp -= 1;
+                damage = *pCharge * 2;
+                *pCharge = 0;
+                break;
             }
         }
+        pPlayer->hp -= damage;
         *pCharge -= 1;
     }
     else
@@ -281,6 +369,7 @@ int handleInput(Player *pPlayer, Tile map[], int movementAmount, int *pCharge, c
                 if (!checkCollision(*pPlayer, map, 'W'))
                 {
                     movePlayer(pPlayer, 'W');
+                    pPlayer->rect.y = (float)pPlayer->y * scale;
                 }
                 else
                 {
@@ -293,6 +382,7 @@ int handleInput(Player *pPlayer, Tile map[], int movementAmount, int *pCharge, c
                 if (!checkCollision(*pPlayer, map, 'A'))
                 {
                     movePlayer(pPlayer, 'A');
+                    // pPlayer->rect.y = (float)pPlayer->y * scale;
                 }
                 else
                 {
@@ -305,6 +395,7 @@ int handleInput(Player *pPlayer, Tile map[], int movementAmount, int *pCharge, c
                 if (!checkCollision(*pPlayer, map, 'S'))
                 {
                     movePlayer(pPlayer, 'S');
+                    pPlayer->rect.y = (float)pPlayer->y * scale;
                 }
                 else
                 {
@@ -317,6 +408,7 @@ int handleInput(Player *pPlayer, Tile map[], int movementAmount, int *pCharge, c
                 if (!checkCollision(*pPlayer, map, 'D'))
                 {
                     movePlayer(pPlayer, 'D');
+                    // pPlayer->rect.y = pPlayer->y * scale;
                 }
                 else
                 {
@@ -342,16 +434,20 @@ void movePlayer(Player *pPlayer, char direction)
     switch (direction)
     {
     case 'W':
-        pPlayer->rect.y--;
+        // pPlayer->rect.y--;
+        pPlayer->y--;
         break;
     case 'A':
         pPlayer->rect.x--;
+        pPlayer->x--;
         break;
     case 'S':
-        pPlayer->rect.y++;
+        // pPlayer->rect.y++;
+        pPlayer->y++;
         break;
     case 'D':
         pPlayer->rect.x++;
+        pPlayer->x++;
         break;
     default:
         break;
@@ -362,28 +458,28 @@ int checkCollision(Player player, Tile map[], char direction)
     switch (direction)
     {
     case 'W':
-        if (map[(((player.rect.y - 1) / map[0].wall.w) * MAPSIZE) + (player.rect.x / map[0].wall.w)].type)
-            return map[(((player.rect.y - 1) / map[0].wall.w) * MAPSIZE) + (player.rect.x / map[0].wall.w)].type;
-        else if (map[(((player.rect.y - 1) / map[0].wall.w) * MAPSIZE) + ((player.rect.x + (map[0].wall.w - 1)) / map[0].wall.w)].type)
-            return map[(((player.rect.y - 1) / map[0].wall.w) * MAPSIZE) + ((player.rect.x + (map[0].wall.w - 1)) / map[0].wall.w)].type;
+        if (map[(((player.y - 1) / map[0].wall.w) * MAPSIZE) + (player.x / map[0].wall.w)].type)
+            return map[(((player.y - 1) / map[0].wall.w) * MAPSIZE) + (player.x / map[0].wall.w)].type;
+        else if (map[(((player.y - 1) / map[0].wall.w) * MAPSIZE) + ((player.x + (map[0].wall.w - 1)) / map[0].wall.w)].type)
+            return map[(((player.y - 1) / map[0].wall.w) * MAPSIZE) + ((player.x + (map[0].wall.w - 1)) / map[0].wall.w)].type;
         break;
     case 'A':
-        if (map[(((player.rect.y) / map[0].wall.w) * MAPSIZE) + ((player.rect.x - 1) / map[0].wall.w)].type)
-            return map[(((player.rect.y) / map[0].wall.w) * MAPSIZE) + ((player.rect.x - 1) / map[0].wall.w)].type;
-        else if (map[(((player.rect.y + (map[0].wall.w - 1)) / map[0].wall.w) * MAPSIZE) + ((player.rect.x - 1) / map[0].wall.w)].type)
-            return map[(((player.rect.y + (map[0].wall.w - 1)) / map[0].wall.w) * MAPSIZE) + ((player.rect.x - 1) / map[0].wall.w)].type;
+        if (map[(((player.y) / map[0].wall.w) * MAPSIZE) + ((player.x - 1) / map[0].wall.w)].type)
+            return map[(((player.y) / map[0].wall.w) * MAPSIZE) + ((player.x - 1) / map[0].wall.w)].type;
+        else if (map[(((player.y + (map[0].wall.w - 1)) / map[0].wall.w) * MAPSIZE) + ((player.x - 1) / map[0].wall.w)].type)
+            return map[(((player.y + (map[0].wall.w - 1)) / map[0].wall.w) * MAPSIZE) + ((player.x - 1) / map[0].wall.w)].type;
         break;
     case 'S':
-        if (map[(((player.rect.y + map[0].wall.w) / map[0].wall.w) * MAPSIZE) + (player.rect.x / map[0].wall.w)].type)
-            return map[(((player.rect.y + map[0].wall.w) / map[0].wall.w) * MAPSIZE) + (player.rect.x / map[0].wall.w)].type;
-        else if (map[(((player.rect.y + map[0].wall.w) / map[0].wall.w) * MAPSIZE) + ((player.rect.x + (map[0].wall.w - 1)) / map[0].wall.w)].type)
-            return map[(((player.rect.y + map[0].wall.w) / map[0].wall.w) * MAPSIZE) + ((player.rect.x + (map[0].wall.w - 1)) / map[0].wall.w)].type;
+        if (map[(((player.y + map[0].wall.w) / map[0].wall.w) * MAPSIZE) + (player.x / map[0].wall.w)].type)
+            return map[(((player.y + map[0].wall.w) / map[0].wall.w) * MAPSIZE) + (player.x / map[0].wall.w)].type;
+        else if (map[(((player.y + map[0].wall.w) / map[0].wall.w) * MAPSIZE) + ((player.x + (map[0].wall.w - 1)) / map[0].wall.w)].type)
+            return map[(((player.y + map[0].wall.w) / map[0].wall.w) * MAPSIZE) + ((player.x + (map[0].wall.w - 1)) / map[0].wall.w)].type;
         break;
     case 'D':
-        if (map[(((player.rect.y) / map[0].wall.w) * MAPSIZE) + ((player.rect.x + map[0].wall.w) / map[0].wall.w)].type)
-            return map[(((player.rect.y) / map[0].wall.w) * MAPSIZE) + ((player.rect.x + map[0].wall.w) / map[0].wall.w)].type;
-        else if (map[(((player.rect.y + (map[0].wall.w - 1)) / map[0].wall.w) * MAPSIZE) + ((player.rect.x + map[0].wall.w) / map[0].wall.w)].type)
-            return map[(((player.rect.y + (map[0].wall.w - 1)) / map[0].wall.w) * MAPSIZE) + ((player.rect.x + map[0].wall.w) / map[0].wall.w)].type;
+        if (map[(((player.y) / map[0].wall.w) * MAPSIZE) + ((player.x + map[0].wall.w) / map[0].wall.w)].type)
+            return map[(((player.y) / map[0].wall.w) * MAPSIZE) + ((player.x + map[0].wall.w) / map[0].wall.w)].type;
+        else if (map[(((player.y + (map[0].wall.w - 1)) / map[0].wall.w) * MAPSIZE) + ((player.x + map[0].wall.w) / map[0].wall.w)].type)
+            return map[(((player.y + (map[0].wall.w - 1)) / map[0].wall.w) * MAPSIZE) + ((player.x + map[0].wall.w) / map[0].wall.w)].type;
         break;
     default:
         break;
