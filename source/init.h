@@ -13,4 +13,6 @@ int initMap(Tile map[], char filepath[], int tileSize);
 
 Tile createTile(int x, int y, int type, int tileSize);
 
+int readConfig(Config *pConfig);
+
 #endif

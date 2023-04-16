@@ -10,6 +10,12 @@ all:
 	$(CC) $(CFLAGS) $(SRCDIR)/init.c 
 	$(CC) main.o init.o -o main.exe $(LDFLAGS)
 
+demo:
+	@echo "Building demo"
+	$(CC) $(CFLAGS) $(SRCDIR)/demo.c 
+	$(CC) $(CFLAGS) $(SRCDIR)/init.c 
+	$(CC) demo.o init.o -o demo.exe $(LDFLAGS)
+
 net:
 	@echo "Building Networking"
 	$(CC) $(CFLAGS) $(SRCDIR)/udpClient.c 

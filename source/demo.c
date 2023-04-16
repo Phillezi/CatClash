@@ -1,0 +1,541 @@
+#include "definitions.h"
+#include <stdbool.h>
+#include <SDL2/SDL.h>
+#include <SDL2/SDL_image.h>
+#include <SDL2/SDL_ttf.h>
+#include "init.h"
+
+int init(Game *pGame);
+void run(Game *pGame);
+void close(Game *pGame);
+
+void updateScreen(SDL_Renderer *pRenderer, Player player, Tile map[], SDL_Texture *pTextureTiles[], SDL_Texture *pTexturePlayer, UiE ui, SDL_Texture *pFpsTexture, float angle, int tileSize);
+int handleInput(Game *pGame);
+void movePlayer(Player *pPlayer, char direction);
+int checkCollision(Player player, Tile map[], char direction, int tileSize);
+SDL_Rect findEmptyTile(Tile map[]);
+
+int main(int argv, char **args)
+{
+    Game game;
+    if (init(&game))
+        return 1;
+    run(&game);
+    close(&game);
+    return 0;
+}
+
+int init(Game *pGame)
+{
+    SDL_Init(SDL_INIT_EVERYTHING);
+    // TTF_Init();
+
+    SDL_DisplayMode displayMode;
+    if (SDL_GetDesktopDisplayMode(0, &displayMode) < 0)
+    {
+        printf("SDL_GetDesktopDisplayMode failed: %s\n", SDL_GetError());
+        SDL_Quit();
+        return -1;
+    }
+
+    pGame->windowWidth = (float)displayMode.w * 0.7; // 70% of avaliable space
+    pGame->windowHeight = (float)displayMode.h * 0.7;
+
+    pGame->world.tileSize = (pGame->windowHeight / MAPSIZE) * 4;
+
+    char fileName[31];
+    do
+    {
+        printf("map name: ");
+        scanf(" %30s", fileName);
+    } while (initMap(pGame->map, fileName, pGame->world.tileSize) == -1);
+
+    pGame->pWindow = SDL_CreateWindow(WINDOW_NAME, SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, pGame->windowWidth, pGame->windowHeight, 0);
+    if (!pGame->pWindow)
+    {
+        printf("Error: %s\n", SDL_GetError());
+        SDL_Quit();
+        return -1;
+    }
+
+    if (pGame->config.vSync)
+    {
+        pGame->pRenderer = SDL_CreateRenderer(pGame->pWindow, -1, SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC);
+        printf("Vsync is enabled\n");
+    }
+    else
+    {
+        pGame->pRenderer = SDL_CreateRenderer(pGame->pWindow, -1, SDL_RENDERER_ACCELERATED);
+        printf("Vsync is not enabled\n");
+    }
+
+    if (!pGame->pRenderer)
+    {
+        printf("Error: %s\n", SDL_GetError());
+        SDL_DestroyWindow(pGame->pWindow);
+        SDL_Quit();
+        return 1;
+    }
+
+    char tileTextures[TILES][20] = {"resources/Tile1.png", "resources/Tile2.png", "resources/Tile3.png", "resources/Tile4.png"};
+    if (initTextureTiles(pGame->pRenderer, pGame->pWindow, pGame->pTileTextures, tileTextures, TILES) == -1)
+    {
+        printf("Error: %s\n", SDL_GetError());
+        SDL_DestroyRenderer(pGame->pRenderer);
+        SDL_DestroyWindow(pGame->pWindow);
+        SDL_Quit();
+        return 1;
+    }
+
+    if (initTexturePlayer(pGame->pRenderer, pGame->pWindow, &pGame->pPlayerTexture) == -1)
+    {
+        printf("Error: %s\n", SDL_GetError());
+        SDL_DestroyRenderer(pGame->pRenderer);
+        SDL_DestroyWindow(pGame->pWindow);
+        SDL_Quit();
+        return 1;
+    }
+
+    if (SDL_QueryTexture(pGame->pPlayerTexture, NULL, NULL, &pGame->player.rect.w, &pGame->player.rect.h) < 0)
+    {
+        printf("Error: %s\n", SDL_GetError());
+        SDL_DestroyRenderer(pGame->pRenderer);
+        SDL_DestroyWindow(pGame->pWindow);
+        SDL_Quit();
+        return 1;
+    }
+
+    SDL_Rect spawnTile = findEmptyTile(pGame->map); // this function returns a valid spawn tile
+    pGame->player.x = spawnTile.x;
+    pGame->player.y = spawnTile.y;
+    pGame->player.rect.x = spawnTile.x; // windowWidth / 2;
+    pGame->player.rect.y = spawnTile.y; // windowHeight / 2;
+
+    pGame->player.rect.w = pGame->world.tileSize;
+    pGame->player.rect.h = pGame->world.tileSize;
+
+    pGame->player.hp = 255;
+
+    pGame->ui.chargebar.x = ((pGame->windowWidth / 2) - (MAX_CHARGE / 2));
+    pGame->ui.chargebar.y = ((3 * pGame->windowHeight) / 4);
+    pGame->ui.chargebar.w = pGame->player.charge;
+    pGame->ui.chargebar.h = pGame->world.tileSize;
+
+    pGame->ui.healthbar.x = ((pGame->windowWidth / 2) + (MAX_CHARGE / 2) + 5);
+    pGame->ui.healthbar.y = ((3 * pGame->windowHeight) / 4);
+    pGame->ui.healthbar.w = pGame->player.hp;
+    pGame->ui.healthbar.h = pGame->world.tileSize;
+
+    pGame->movementAmount = (float)pGame->world.tileSize / TILESIZE;
+
+    return 0;
+}
+void run(Game *pGame)
+{
+    bool exit = false;
+    pGame->config.fps = 60;
+    int oneSecTimer = 0, previousTime = 0, movementPreviousTime = 0;
+    while (!exit)
+    {
+        /*
+        if (SDL_GetTicks() - oneSecTimer >= 1000) // Performance monitor
+        {
+            oneSecTimer = SDL_GetTicks();
+            char buffer[50];
+            SDL_DestroyTexture(pFpsTexture);
+            sprintf(buffer, "%d", frameCounter);
+            SDL_Surface *pFpsSurface = TTF_RenderText_Solid(pFont, buffer, colGreen);
+            SDL_Texture *pFpsTexture = SDL_CreateTextureFromSurface(pRenderer, pFpsSurface);
+            SDL_FreeSurface(pFpsSurface);
+            printf("%s\n", buffer);
+            frameCounter = 0;
+        }
+        */
+        int deltaTime = SDL_GetTicks() - previousTime;
+        if (deltaTime >= (1000 / FPS))
+        {
+            SDL_Event event;
+            while (SDL_PollEvent(&event))
+            {
+                if (event.type == SDL_QUIT)
+                    exit = true;
+            }
+
+            int movementDeltaTime = SDL_GetTicks() - movementPreviousTime;
+            if (movementDeltaTime >= (1000 / 60))
+            {
+                movementPreviousTime = SDL_GetTicks();
+                handleInput(pGame);
+
+                if (pGame->player.hp <= 0)
+                {
+                    printf("You Died\n");
+                    pGame->player.hp = 255;
+                }
+
+                pGame->ui.healthbar.w = pGame->player.hp;
+                pGame->ui.chargebar.w = pGame->player.charge;
+            }
+            previousTime = SDL_GetTicks();
+            updateScreen(pGame->pRenderer, pGame->player, pGame->map, pGame->pTileTextures, pGame->pPlayerTexture, pGame->ui, NULL, pGame->world.angle, pGame->world.tileSize);
+            // frameCounter++;
+        }
+    }
+}
+void close(Game *pGame)
+{
+    SDL_DestroyTexture(pGame->pTileTextures[0]);
+    SDL_DestroyTexture(pGame->pTileTextures[1]);
+    SDL_DestroyTexture(pGame->pTileTextures[2]);
+    SDL_DestroyTexture(pGame->pTileTextures[3]);
+    SDL_DestroyTexture(pGame->pPlayerTexture);
+
+    SDL_DestroyRenderer(pGame->pRenderer);
+    SDL_DestroyWindow(pGame->pWindow);
+    SDL_Quit();
+}
+
+// FUNKTIONER INOM RUN
+void updateScreen(SDL_Renderer *pRenderer, Player player, Tile map[], SDL_Texture *pTextureTiles[], SDL_Texture *pTexturePlayer, UiE ui, SDL_Texture *pFpsTexture, float angle, int tileSize)
+{
+    SDL_SetRenderDrawColor(pRenderer, 255, 255, 255, 255);
+    SDL_RenderClear(pRenderer);
+    SDL_Rect temp;
+    for (int i = 0; i < (((player.y) / map[0].wall.w) * MAPSIZE) + ((player.x - 1) / map[0].wall.w) + 2; i++)
+    {
+        switch (map[i].type)
+        {
+        case 0:
+            if (i > MAPSIZE - 1)
+            {
+                if (map[i - MAPSIZE].type)
+                {
+                    temp = map[i].wall;
+                    temp.h = ((float)tileSize * angle);
+                    SDL_SetTextureColorMod(pTextureTiles[(map[i - MAPSIZE].type - 1)], 150, 150, 150);
+                    SDL_RenderCopy(pRenderer, pTextureTiles[(map[i - MAPSIZE].type - 1)], NULL, &temp);
+                    SDL_SetTextureColorMod(pTextureTiles[(map[i - MAPSIZE].type - 1)], 255, 255, 255);
+                }
+            }
+            break;
+        case 1:
+            SDL_RenderCopy(pRenderer, pTextureTiles[0], NULL, &map[i].wall);
+            break;
+        case 2:
+            SDL_RenderCopy(pRenderer, pTextureTiles[1], NULL, &map[i].wall);
+            break;
+        case 3:
+            SDL_RenderCopy(pRenderer, pTextureTiles[2], NULL, &map[i].wall);
+            break;
+        case 4:
+            SDL_RenderCopy(pRenderer, pTextureTiles[3], NULL, &map[i].wall);
+            break;
+        default:
+            break;
+        }
+    }
+    SDL_SetRenderDrawColor(pRenderer, 0, 0, 0, 255);
+    SDL_RenderDrawRect(pRenderer, &player.rect);
+    SDL_RenderCopy(pRenderer, pTexturePlayer, NULL, &player.rect);
+
+    for (int i = (((player.y) / map[0].wall.w) * MAPSIZE) + ((player.x - 1) / map[0].wall.w) + 2; i < MAPSIZE * MAPSIZE; i++)
+    {
+        switch (map[i].type)
+        {
+        case 0:
+            if (i > MAPSIZE - 1)
+            {
+                if (map[i - MAPSIZE].type)
+                {
+                    temp = map[i].wall;
+                    temp.h = ((float)tileSize * angle);
+                    SDL_SetTextureColorMod(pTextureTiles[(map[i - MAPSIZE].type - 1)], 150, 150, 150);
+                    SDL_RenderCopy(pRenderer, pTextureTiles[(map[i - MAPSIZE].type - 1)], NULL, &temp);
+                    SDL_SetTextureColorMod(pTextureTiles[(map[i - MAPSIZE].type - 1)], 255, 255, 255);
+                }
+            }
+            break;
+        case 1:
+            SDL_RenderCopy(pRenderer, pTextureTiles[0], NULL, &map[i].wall);
+            break;
+        case 2:
+            SDL_RenderCopy(pRenderer, pTextureTiles[1], NULL, &map[i].wall);
+            break;
+        case 3:
+            SDL_RenderCopy(pRenderer, pTextureTiles[2], NULL, &map[i].wall);
+            break;
+        case 4:
+            SDL_RenderCopy(pRenderer, pTextureTiles[3], NULL, &map[i].wall);
+            break;
+        default:
+            break;
+        }
+    }
+
+    SDL_SetRenderDrawColor(pRenderer, 0, 255, 0, 255);
+    SDL_RenderFillRect(pRenderer, &ui.healthbar);
+
+    SDL_SetRenderDrawColor(pRenderer, 0, 0, 255, 255);
+    SDL_RenderFillRect(pRenderer, &ui.chargebar);
+
+    // SDL_RenderCopy(pRenderer, pFpsTexture, NULL, &ui.fpsFrame);
+
+    SDL_RenderPresent(pRenderer);
+}
+
+int handleInput(Game *pGame)
+{
+    const Uint8 *currentKeyStates = SDL_GetKeyboardState(NULL);
+    float scaleY = (float)pGame->map[0].wall.h / pGame->world.tileSize;
+    float scaleX = (float)pGame->map[0].wall.w / pGame->world.tileSize;
+    if (currentKeyStates[SDL_SCANCODE_Q])
+    {
+        if (pGame->world.angle >= 0.01)
+        {
+            pGame->world.angle -= 0.01;
+            for (int i = 0; i < MAPSIZE * MAPSIZE; i++)
+            {
+                pGame->map[i].wall.h = ((float)pGame->world.tileSize * (1 - pGame->world.angle));
+
+                if (i > (MAPSIZE - 1))
+                {
+                    pGame->map[i].wall.y = pGame->map[i - MAPSIZE].wall.y + pGame->map[i].wall.h;
+                }
+            }
+            // pPlayer->rect.y = (float)pPlayer->y * (float)map[0].wall.h /pGame->world.tileSize;
+        }
+    }
+    if (currentKeyStates[SDL_SCANCODE_E])
+    {
+        if (pGame->world.angle < 1)
+        {
+            pGame->world.angle += 0.01;
+            for (int i = 0; i < MAPSIZE * MAPSIZE; i++)
+            {
+                pGame->map[i].wall.h = ((float)pGame->world.tileSize * (1 - pGame->world.angle));
+
+                if (i > (MAPSIZE - 1))
+                {
+                    pGame->map[i].wall.y = pGame->map[i - MAPSIZE].wall.y + pGame->map[i].wall.h;
+                }
+            }
+            // pPlayer->rect.y = (float)pPlayer->y * (float)map[0].wall.h /pGame->world.tileSize;
+        }
+    }
+    if (currentKeyStates[SDL_SCANCODE_SPACE])
+    {
+        if (pGame->player.charge < MAX_CHARGE)
+        {
+            pGame->player.charge += 1;
+        }
+        else
+        {
+            printf("FULLY CHARGED\n");
+        }
+    }
+    else if (pGame->player.charge > 0)
+    {
+        int damage = 0;
+
+        for (int i = 0; i < 2 * (pGame->player.charge / 2); i++)
+        {
+            if (!checkCollision(pGame->player, pGame->map, pGame->player.prevKeyPressed, pGame->world.tileSize))
+            {
+                movePlayer(&pGame->player, pGame->player.prevKeyPressed);
+            }
+            else
+            {
+                damage = pGame->player.charge * 2;
+                pGame->player.charge = 0;
+                break;
+            }
+        }
+        pGame->player.hp -= damage;
+        pGame->player.charge -= 1;
+    }
+    else
+    {
+        for (int i = 0; i < pGame->movementAmount; i++)
+        {
+            if (currentKeyStates[SDL_SCANCODE_W] || currentKeyStates[SDL_SCANCODE_UP])
+            {
+                pGame->player.prevKeyPressed = 'W';
+                if (!checkCollision(pGame->player, pGame->map, 'W', pGame->world.tileSize))
+                {
+                    movePlayer(&pGame->player, 'W');
+                }
+                else
+                {
+                    printf("COLLISION W\n");
+                }
+            }
+            if (currentKeyStates[SDL_SCANCODE_A] || currentKeyStates[SDL_SCANCODE_LEFT])
+            {
+                pGame->player.prevKeyPressed = 'A';
+                if (!checkCollision(pGame->player, pGame->map, 'A', pGame->world.tileSize))
+                {
+                    movePlayer(&pGame->player, 'A');
+                }
+                else
+                {
+                    printf("COLLISION A\n");
+                }
+            }
+            if (currentKeyStates[SDL_SCANCODE_S] || currentKeyStates[SDL_SCANCODE_DOWN])
+            {
+                pGame->player.prevKeyPressed = 'S';
+                if (!checkCollision(pGame->player, pGame->map, 'S', pGame->world.tileSize))
+                {
+                    movePlayer(&pGame->player, 'S');
+                }
+                else
+                {
+                    printf("COLLISION S\n");
+                }
+            }
+            if (currentKeyStates[SDL_SCANCODE_D] || currentKeyStates[SDL_SCANCODE_RIGHT])
+            {
+                pGame->player.prevKeyPressed = 'D';
+                if (!checkCollision(pGame->player, pGame->map, 'D', pGame->world.tileSize))
+                {
+                    movePlayer(&pGame->player, 'D');
+                }
+                else
+                {
+                    printf("COLLISION D\n");
+                }
+            }
+
+            /*
+            if (!checkCollision(*pPlayer, map, *pPrevKeypressed))
+                {
+                    movePlayer(pPlayer, *pPrevKeypressed);
+                }
+                else
+                {
+                    printf("COLLISION %c\n", *pPrevKeypressed);
+                }
+                */
+        }
+    }
+    // CENTER PLAYER
+    int screenShiftAmount = pGame->movementAmount;
+    if (pGame->player.rect.x >= (4 * pGame->windowWidth) / 5 || pGame->player.rect.x <= pGame->windowWidth / 5)
+    {
+        screenShiftAmount = pGame->movementAmount * 2;
+    }
+    if (pGame->player.rect.y >= (4 * pGame->windowHeight) / 5 || pGame->player.rect.y <= pGame->windowHeight / 5)
+    {
+        screenShiftAmount = pGame->movementAmount * 2;
+    }
+    if (pGame->player.rect.x >= pGame->windowWidth || pGame->player.rect.x <= 0)
+    {
+        screenShiftAmount = pGame->movementAmount * 10;
+    }
+    if (pGame->player.rect.y >= pGame->windowHeight || pGame->player.rect.y <= 0)
+    {
+        screenShiftAmount = pGame->movementAmount * 10;
+    }
+    if (pGame->player.rect.y < (2 * pGame->windowHeight) / 5)
+    {
+        for (int i = 0; i < MAPSIZE * MAPSIZE; i++)
+        {
+            pGame->map[i].wall.y += screenShiftAmount;
+        }
+    }
+    if (pGame->player.rect.y > (3 * pGame->windowHeight) / 5)
+    {
+        for (int i = 0; i < MAPSIZE * MAPSIZE; i++)
+        {
+            pGame->map[i].wall.y -= screenShiftAmount;
+        }
+    }
+    if (pGame->player.rect.x < (2 * pGame->windowWidth) / 5)
+    {
+        for (int i = 0; i < MAPSIZE * MAPSIZE; i++)
+        {
+            pGame->map[i].wall.x += screenShiftAmount;
+        }
+    }
+    if (pGame->player.rect.x > (3 * pGame->windowWidth) / 5)
+    {
+        for (int i = 0; i < MAPSIZE * MAPSIZE; i++)
+        {
+            pGame->map[i].wall.x -= screenShiftAmount;
+        }
+    }
+
+    int offsetX = pGame->map[0].wall.x - pGame->map[0].x;
+    int offsetY = pGame->map[0].wall.y - pGame->map[0].y;
+    pGame->player.rect.x = ((float)pGame->player.x * scaleX) + offsetX;
+    pGame->player.rect.y = ((float)pGame->player.y * scaleY) + offsetY;
+    return 0;
+}
+void movePlayer(Player *pPlayer, char direction)
+{
+    switch (direction)
+    {
+    case 'W':
+        // pPlayer->rect.y--;
+        pPlayer->y--;
+        break;
+    case 'A':
+        // pPlayer->rect.x--;
+        pPlayer->x--;
+        break;
+    case 'S':
+        // pPlayer->rect.y++;
+        pPlayer->y++;
+        break;
+    case 'D':
+        // pPlayer->rect.x++;
+        pPlayer->x++;
+        break;
+    default:
+        break;
+    }
+}
+int checkCollision(Player player, Tile map[], char direction, int tileSize)
+{
+    switch (direction)
+    {
+    case 'W':
+        if (map[(((player.y - 1) / tileSize) * MAPSIZE) + (player.x / tileSize)].type)
+            return map[(((player.y - 1) / tileSize) * MAPSIZE) + (player.x / tileSize)].type;
+        else if (map[(((player.y - 1) / tileSize) * MAPSIZE) + ((player.x + (tileSize - 1)) / tileSize)].type)
+            return map[(((player.y - 1) / tileSize) * MAPSIZE) + ((player.x + (tileSize - 1)) / tileSize)].type;
+        break;
+    case 'A':
+        if (map[(((player.y) / tileSize) * MAPSIZE) + ((player.x - 1) / tileSize)].type)
+            return map[(((player.y) / tileSize) * MAPSIZE) + ((player.x - 1) / tileSize)].type;
+        else if (map[(((player.y + (tileSize - 1)) / tileSize) * MAPSIZE) + ((player.x - 1) / tileSize)].type)
+            return map[(((player.y + (tileSize - 1)) / tileSize) * MAPSIZE) + ((player.x - 1) / tileSize)].type;
+        break;
+    case 'S':
+        if (map[(((player.y + tileSize) / tileSize) * MAPSIZE) + (player.x / tileSize)].type)
+            return map[(((player.y + tileSize) / tileSize) * MAPSIZE) + (player.x / tileSize)].type;
+        else if (map[(((player.y + tileSize) / tileSize) * MAPSIZE) + ((player.x + (tileSize - 1)) / tileSize)].type)
+            return map[(((player.y + tileSize) / tileSize) * MAPSIZE) + ((player.x + (tileSize - 1)) / tileSize)].type;
+        break;
+    case 'D':
+        if (map[(((player.y) / tileSize) * MAPSIZE) + ((player.x + tileSize) / tileSize)].type)
+            return map[(((player.y) / tileSize) * MAPSIZE) + ((player.x + tileSize) / tileSize)].type;
+        else if (map[(((player.y + (tileSize - 1)) / tileSize) * MAPSIZE) + ((player.x + tileSize) / tileSize)].type)
+            return map[(((player.y + (tileSize - 1)) / tileSize) * MAPSIZE) + ((player.x + tileSize) / tileSize)].type;
+        break;
+    default:
+        break;
+    }
+
+    return 0;
+}
+SDL_Rect findEmptyTile(Tile map[])
+{
+    for (int i = 0; i < MAPSIZE * MAPSIZE; i++)
+    {
+        if (!map[i].type)
+        {
+            return map[i].wall;
+        }
+    }
+}

@@ -88,6 +88,8 @@ int initMap(Tile map[], char filepath[], int tileSize)
                 type = 0;
                 fscanf(fp, "%d", &type);
                 map[row * MAPSIZE + col] = createTile(col, row, type, tileSize);
+                map[row * MAPSIZE + col].x = map[row * MAPSIZE + col].wall.x;
+                map[row * MAPSIZE + col].y = map[row * MAPSIZE + col].wall.y;
             }
         }
         fclose(fp);
@@ -113,4 +115,23 @@ Tile createTile(int col, int row, int type, int tileSize)
     i.wall.h = tileSize;
     i.type = type;
     return i;
+}
+
+int readConfig(Config *pConfig){
+
+    FILE *fp;
+
+    fp = fopen("resources/config.txt", "r");
+
+    if (fp != NULL)
+    {
+        //kod som kollar igenom config.txt och uppdaterar config structen därefter
+        fclose(fp);
+    }
+    else
+    {
+        printf("ERROR READING CONFIG FILE\n");
+        return -1;
+    }
+    return 0;
 }

@@ -1,6 +1,8 @@
 #ifndef DEFINITIONS_H
 #define DEFINITIONS_H
 #include <SDL2/SDL.h>
+#include <stdlib.h>
+#include <stdbool.h>
 
 // DEFINITIONS
 #define MAP_FILEPATH "resources/map.txt"
@@ -13,8 +15,10 @@
 #define TILESIZE 16
 #define TILES 4
 #define MAX_NAME_LEN 21
+#define MAX_CHARGE 100
 
 // ADTS
+
 struct tile
 {
     int x, y;
@@ -30,6 +34,8 @@ typedef struct tile Tile;
 */
 struct player
 {
+    char prevKeyPressed;
+    int charge;
     int id;                      // The id of the player (Multiplayer purposes)
     char name[MAX_NAME_LEN + 1]; // The name of the player (Multiplayer purposes)
     int hp;                      // Health-points
@@ -37,5 +43,52 @@ struct player
     SDL_Rect rect;               // Screen position and size
 };
 typedef struct player Player;
+
+struct world
+{
+    int tileSize;
+    float angle;
+};
+typedef struct world World;
+
+struct config
+{
+    bool vSync;
+    int fps;
+};
+typedef struct config Config;
+
+struct uiElements
+{
+    SDL_Rect chargebar;
+    SDL_Rect healthbar;
+    SDL_Rect fpsFrame;
+};
+typedef struct uiElements UiE;
+
+enum gameState{START, ONGOING, OVER};
+typedef enum gameState GameState;
+
+struct game
+{
+    UiE ui;
+    SDL_Window *pWindow;
+    SDL_Renderer *pRenderer;
+
+    SDL_Texture *pTileTextures[TILES];
+    SDL_Texture *pPlayerTexture;
+
+    int windowWidth, windowHeight;
+    int movementAmount;
+
+    Player player;
+    Tile map[MAPSIZE*MAPSIZE];
+    World world;
+    GameState state;
+
+    Config config;
+
+};
+typedef struct game Game;
 
 #endif
