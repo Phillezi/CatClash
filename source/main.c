@@ -4,6 +4,7 @@
 #include <stdio.h>
 #include <stdbool.h>
 #include <stdlib.h>
+#include "text.h"
 #include "init.h"
 #include "definitions.h"
 // #include "menu.h"
