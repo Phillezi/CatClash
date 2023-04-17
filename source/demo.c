@@ -26,11 +26,26 @@ int main(int argv, char **args)
         close(&game);
         return 1;
     }
-
-    levelEditor(&game);
-    run(&game);
-    close(&game);
-    return 0;
+    int choice=0;
+    while(1){
+        printf("pick ur choice: ");
+        scanf("%1d", &choice);
+        switch (choice)
+        {
+        case 0:
+            run(&game);
+            break;
+        case 1:
+            levelEditor(&game);
+            break;
+        case 2:
+            close(&game);
+            return 0;
+            break;
+        default:
+            break;
+        }
+    }
 }
 
 int init(Game *pGame)
