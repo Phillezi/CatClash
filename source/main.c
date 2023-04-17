@@ -255,27 +255,40 @@ int menu(Game *pGame)
             switch (rand() % 3 + 1)
             {
             case 1:
-                if (r < 255 && r >= 0)
-                    r += rAdd;
-                else
+                r += rAdd;
+                switch (r)
                 {
-                    r = 0;
+                case 255:
+                    rAdd = -1;
+                    break;
+                case 0:
+                    rAdd = 1;
+                    break;
                 }
+
                 break;
             case 2:
-                if (g < 255 && g >= 0)
-                    g++;
-                else
+                g += gAdd;
+                switch (g)
                 {
-                    g = 0;
+                case 255:
+                    gAdd = -1;
+                    break;
+                case 0:
+                    gAdd = 1;
+                    break;
                 }
                 break;
             case 3:
-                if (b < 255 && b >= 0)
-                    b += bAdd;
-                else
+                b += bAdd;
+                switch (b)
                 {
-                    b = 0;
+                case 255:
+                    bAdd = -1;
+                    break;
+                case 0:
+                    bAdd = 1;
+                    break;
                 }
                 break;
             }
