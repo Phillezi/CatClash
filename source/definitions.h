@@ -1,6 +1,7 @@
 #ifndef DEFINITIONS_H
 #define DEFINITIONS_H
 #include <SDL2/SDL.h>
+#include <SDL2/SDL_ttf.h>
 #include <stdlib.h>
 #include <stdbool.h>
 
@@ -58,13 +59,23 @@ struct config
 };
 typedef struct config Config;
 
+struct text{
+    SDL_Rect rect;
+    SDL_Texture *pTexture;
+    SDL_Renderer *pRenderer;
+};
+typedef struct text Text;
+
 struct uiElements
 {
     SDL_Rect chargebar;
     SDL_Rect healthbar;
     SDL_Rect fpsFrame;
+    Text *pMenuText, *pOverText;
+    TTF_Font *pGameFont;
 };
 typedef struct uiElements UiE;
+
 
 enum gameState{START, ONGOING, OVER};
 typedef enum gameState GameState;
@@ -74,6 +85,7 @@ struct game
     UiE ui;
     SDL_Window *pWindow;
     SDL_Renderer *pRenderer;
+
 
     SDL_Texture *pTileTextures[TILES];
     SDL_Texture *pPlayerTexture;
@@ -90,5 +102,6 @@ struct game
 
 };
 typedef struct game Game;
+
 
 #endif

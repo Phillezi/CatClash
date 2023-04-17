@@ -13,8 +13,9 @@ all:
 demo:
 	@echo "Building demo"
 	$(CC) $(CFLAGS) $(SRCDIR)/demo.c 
-	$(CC) $(CFLAGS) $(SRCDIR)/init.c 
-	$(CC) demo.o init.o -o demo.exe $(LDFLAGS)
+	$(CC) $(CFLAGS) $(SRCDIR)/init.c
+	$(CC) $(CFLAGS) $(SRCDIR)/text.c  
+	$(CC) demo.o init.o text.o -o demo.exe $(LDFLAGS)
 
 net:
 	@echo "Building Networking"
