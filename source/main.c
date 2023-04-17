@@ -163,6 +163,7 @@ int menu(Game *pGame)
 {
     int selectedMode = 0, previousTime = 0;
     int r = 0, g = 0, b = 0;
+    int rAdd = 1, gAdd = 1, bAdd = 1;
     Text *pPlay = malloc(sizeof(Text)), *pLvlEdit = malloc(sizeof(Text)), *pQuit = malloc(sizeof(Text));
     while (true)
     {
@@ -204,38 +205,53 @@ int menu(Game *pGame)
             switch (rand() % 3 + 1)
             {
             case 1:
-                if (r < 255)
-                    r++;
+                if (r < 255 && r >= 0)
+                    r += rAdd;
                 else
+                {
                     r = 0;
+                }
                 break;
             case 2:
-                if (g < 255)
+                if (g < 255 && g >= 0)
                     g++;
                 else
+                {
                     g = 0;
+                }
                 break;
             case 3:
-                if (b < 255)
-                    b++;
+                if (b < 255 && b >= 0)
+                    b += bAdd;
                 else
+                {
                     b = 0;
+                }
                 break;
             }
         }
         switch (selectedMode)
         {
         case 0:
+            freeText(pPlay);
+            freeText(pLvlEdit);
+            freeText(pQuit);
             pPlay = createText(pGame->pRenderer, r, g, b, pGame->ui.pFpsFont, "Play", pGame->windowWidth / 2, pGame->windowHeight / 4);
             pLvlEdit = createText(pGame->pRenderer, 200, 200, 200, pGame->ui.pFpsFont, "Edit level", pGame->windowWidth / 2, (pGame->windowHeight / 4) + pGame->world.tileSize);
             pQuit = createText(pGame->pRenderer, 200, 200, 200, pGame->ui.pFpsFont, "QUIT", pGame->windowWidth / 2, (pGame->windowHeight / 4) + (2 * pGame->world.tileSize));
             break;
         case 1:
+            freeText(pPlay);
+            freeText(pLvlEdit);
+            freeText(pQuit);
             pPlay = createText(pGame->pRenderer, 200, 200, 200, pGame->ui.pFpsFont, "Play", pGame->windowWidth / 2, pGame->windowHeight / 4);
             pLvlEdit = createText(pGame->pRenderer, r, g, b, pGame->ui.pFpsFont, "Edit level", pGame->windowWidth / 2, (pGame->windowHeight / 4) + pGame->world.tileSize);
             pQuit = createText(pGame->pRenderer, 200, 200, 200, pGame->ui.pFpsFont, "QUIT", pGame->windowWidth / 2, (pGame->windowHeight / 4) + (2 * pGame->world.tileSize));
             break;
         case 2:
+            freeText(pPlay);
+            freeText(pLvlEdit);
+            freeText(pQuit);
             pPlay = createText(pGame->pRenderer, 200, 200, 200, pGame->ui.pFpsFont, "Play", pGame->windowWidth / 2, pGame->windowHeight / 4);
             pLvlEdit = createText(pGame->pRenderer, 200, 200, 200, pGame->ui.pFpsFont, "Edit level", pGame->windowWidth / 2, (pGame->windowHeight / 4) + pGame->world.tileSize);
             pQuit = createText(pGame->pRenderer, r, g, b, pGame->ui.pFpsFont, "QUIT", pGame->windowWidth / 2, (pGame->windowHeight / 4) + (2 * pGame->world.tileSize));
@@ -289,8 +305,11 @@ int mapSelection(Game *pGame)
                 }
             else
             {
-                if (text[0])
+                if (text[0]){
+                    freeText(pMap);
                     pMap = createText(pGame->pRenderer, 0, 0, 0, pGame->ui.pFpsFont, text, pGame->windowWidth / 2, pGame->windowHeight / 2);
+                }
+                    
             }
         }
         if (SDL_GetTicks() - previousTime >= 1000 / 60)
@@ -760,7 +779,8 @@ int getStringFromUser(char text[], SDL_Event event)
     {
         if (event.key.keysym.sym == SDLK_RETURN)
         {
-            if(strCounter){
+            if (strCounter)
+            {
                 strEnd = 1;
             }
         }
