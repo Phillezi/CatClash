@@ -9,6 +9,7 @@
 
 int init(Game *pGame);
 int menu(Game *pGame);
+void mapSelection(Game *pGame);
 void run(Game *pGame);
 void close(Game *pGame);
 
@@ -18,6 +19,7 @@ int handleInput(Game *pGame);
 void movePlayer(Player *pPlayer, char direction);
 int checkCollision(Player player, Tile map[], char direction, int tileSize);
 SDL_Rect findEmptyTile(Tile map[]);
+void getPlayerSpawnPos(Game *pGame);
 
 int main(int argv, char **args)
 {
@@ -35,9 +37,11 @@ int main(int argv, char **args)
         switch (menu(&game))
         {
         case 0:
+            mapSelection(&game);
             run(&game);
             break;
         case 1:
+            mapSelection(&game);
             levelEditor(&game);
             break;
         case 2:
@@ -69,13 +73,6 @@ int init(Game *pGame)
     pGame->windowHeight = (float)displayMode.h * 0.7;
 
     pGame->world.tileSize = (pGame->windowHeight / MAPSIZE) * 4;
-
-    char fileName[31];
-    do
-    {
-        printf("map name: ");
-        scanf(" %30s", fileName);
-    } while (initMap(pGame->map, fileName, pGame->world.tileSize) == -1);
 
     pGame->pWindow = SDL_CreateWindow(WINDOW_NAME, SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, pGame->windowWidth, pGame->windowHeight, 0);
     if (!pGame->pWindow)
@@ -141,12 +138,7 @@ int init(Game *pGame)
         printf("Error: %s\n", SDL_GetError());
         return 1;
     }
-
-    SDL_Rect spawnTile = findEmptyTile(pGame->map); // this function returns a valid spawn tile
-    pGame->player.x = spawnTile.x;
-    pGame->player.y = spawnTile.y;
-    pGame->player.rect.x = spawnTile.x; // windowWidth / 2;
-    pGame->player.rect.y = spawnTile.y; // windowHeight / 2;
+    getPlayerSpawnPos(pGame);
 
     pGame->player.rect.w = pGame->world.tileSize;
     pGame->player.rect.h = pGame->world.tileSize;
@@ -171,7 +163,7 @@ int menu(Game *pGame)
 {
     int selectedMode = 0, previousTime = 0;
     int r = 0, g = 0, b = 0;
-    Text *pPlay, *pLvlEdit, *pQuit;
+    Text *pPlay = malloc(sizeof(Text)), *pLvlEdit = malloc(sizeof(Text)), *pQuit = malloc(sizeof(Text));
     while (true)
     {
         SDL_Event event;
@@ -190,7 +182,7 @@ int menu(Game *pGame)
                 }
                 else if (event.key.keysym.sym == SDLK_DOWN)
                 {
-                    
+
                     if (selectedMode < 2)
                         selectedMode++;
                     else
@@ -198,20 +190,38 @@ int menu(Game *pGame)
                 }
                 else if (event.key.keysym.sym == SDLK_RETURN)
                 {
+                    free(pPlay);
+                    free(pLvlEdit);
+                    free(pQuit);
                     return selectedMode;
                 }
             }
         }
-        
+
         if (SDL_GetTicks() - previousTime >= 1000 / 60)
         {
             previousTime = SDL_GetTicks();
-            switch(rand() % 3 + 1){
-                case 1 : if(r<255)r++;else r=0; break;
-                case 2 : if(g<255)g++;else g=0; break;
-                case 3 : if(b<255)b++;else b=0; break;
+            switch (rand() % 3 + 1)
+            {
+            case 1:
+                if (r < 255)
+                    r++;
+                else
+                    r = 0;
+                break;
+            case 2:
+                if (g < 255)
+                    g++;
+                else
+                    g = 0;
+                break;
+            case 3:
+                if (b < 255)
+                    b++;
+                else
+                    b = 0;
+                break;
             }
-
         }
         switch (selectedMode)
         {
@@ -232,7 +242,6 @@ int menu(Game *pGame)
             break;
         }
 
-
         SDL_SetRenderDrawColor(pGame->pRenderer, 255, 255, 255, 255);
         SDL_RenderClear(pGame->pRenderer);
         drawText(pPlay, pGame->pRenderer);
@@ -240,7 +249,78 @@ int menu(Game *pGame)
         drawText(pQuit, pGame->pRenderer);
         SDL_RenderPresent(pGame->pRenderer);
     }
+    free(pPlay);
+    free(pLvlEdit);
+    free(pQuit);
     return 0;
+}
+void mapSelection(Game *pGame)
+{
+    int previousTime = 0;
+    bool exit = false;
+    Text *pMap = malloc(sizeof(Text));
+
+    int counter = 0;
+    char text[31];
+    while (!exit)
+    {
+        SDL_Event event;
+        while (SDL_PollEvent(&event))
+        {
+            if (event.type == SDL_QUIT)
+                exit = true;
+            else if (event.type == SDL_KEYDOWN)
+            {
+                if (event.key.keysym.sym == SDLK_RETURN)
+                {
+                    if (initMap(pGame->map, text, pGame->world.tileSize) != -1)
+                    {
+                        getPlayerSpawnPos(pGame);
+                        exit = true;
+                    }
+                    else
+                    {
+                        for (int i = 0; i < 31; i++)
+                        {
+                            text[i] == 0;
+                            pMap = createText(pGame->pRenderer, 0, 0, 0, pGame->ui.pFpsFont, text, pGame->windowWidth / 2, pGame->windowHeight / 2);
+                        }
+                    }
+                }
+                else if (event.key.keysym.sym == SDLK_BACKSPACE)
+                {
+                    if (counter > 0)
+                    {
+                        text[counter] = 0;
+                        counter--;
+                        pMap = createText(pGame->pRenderer, 0, 0, 0, pGame->ui.pFpsFont, text, pGame->windowWidth / 2, pGame->windowHeight / 2);
+                    }
+                }
+                else
+                {
+                    if (counter < 31)
+                    {
+                        text[counter] = event.key.keysym.sym;
+                        counter++;
+                        pMap = createText(pGame->pRenderer, 0, 0, 0, pGame->ui.pFpsFont, text, pGame->windowWidth / 2, pGame->windowHeight / 2);
+                    }
+                }
+            }
+        }
+        if (SDL_GetTicks() - previousTime >= 1000 / 60)
+        {
+            previousTime = SDL_GetTicks();
+
+            SDL_SetRenderDrawColor(pGame->pRenderer, 255, 255, 255, 255);
+            SDL_RenderClear(pGame->pRenderer);
+            if (text[0])
+            {
+                drawText(pMap, pGame->pRenderer);
+            }
+            SDL_RenderPresent(pGame->pRenderer);
+        }
+    }
+    free(pMap);
 }
 void run(Game *pGame)
 {
@@ -670,4 +750,12 @@ SDL_Rect findEmptyTile(Tile map[])
             return map[i].wall;
         }
     }
+}
+void getPlayerSpawnPos(Game *pGame)
+{
+    SDL_Rect spawnTile = findEmptyTile(pGame->map); // this function returns a valid spawn tile
+    pGame->player.x = spawnTile.x;
+    pGame->player.y = spawnTile.y;
+    pGame->player.rect.x = spawnTile.x; // windowWidth / 2;
+    pGame->player.rect.y = spawnTile.y; // windowHeight / 2;
 }
