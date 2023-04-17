@@ -21,7 +21,11 @@ int main(int argv, char **args)
 {
     Game game;
     if (init(&game))
+    {
+        close(&game);
         return 1;
+    }
+
     levelEditor(&game);
     run(&game);
     close(&game);
@@ -57,7 +61,6 @@ int init(Game *pGame)
     if (!pGame->pWindow)
     {
         printf("Error: %s\n", SDL_GetError());
-        SDL_Quit();
         return -1;
     }
 
@@ -75,8 +78,6 @@ int init(Game *pGame)
     if (!pGame->pRenderer)
     {
         printf("Error: %s\n", SDL_GetError());
-        SDL_DestroyWindow(pGame->pWindow);
-        SDL_Quit();
         return 1;
     }
 
@@ -84,42 +85,33 @@ int init(Game *pGame)
     if (initTextureTiles(pGame->pRenderer, pGame->pWindow, pGame->pTileTextures, tileTextures, TILES) == -1)
     {
         printf("Error: %s\n", SDL_GetError());
-        SDL_DestroyRenderer(pGame->pRenderer);
-        SDL_DestroyWindow(pGame->pWindow);
-        SDL_Quit();
         return 1;
     }
 
     if (initTexturePlayer(pGame->pRenderer, pGame->pWindow, &pGame->pPlayerTexture) == -1)
     {
         printf("Error: %s\n", SDL_GetError());
-        SDL_DestroyRenderer(pGame->pRenderer);
-        SDL_DestroyWindow(pGame->pWindow);
-        SDL_Quit();
         return 1;
     }
 
-    pGame->ui.pGameFont = TTF_OpenFont("resources/fonts/RetroGaming.ttf", 100);   
-    if(!pGame->ui.pGameFont){
+    pGame->ui.pGameFont = TTF_OpenFont("resources/fonts/RetroGaming.ttf", 100);
+    if (!pGame->ui.pGameFont)
+    {
         printf("Error: %s\n", TTF_GetError());
-        TTF_CloseFont(pGame->ui.pGameFont);
-    } 
-
-    pGame->ui.pMenuText = createText(pGame->pRenderer, 97, 181, 97, pGame->ui.pGameFont, "Press Space to play!", pGame->windowWidth/2, pGame->windowHeight/2);
-    pGame->ui.pOverText = createText(pGame->pRenderer, 20, 197, 204, pGame->ui.pGameFont, "You Died!", pGame->windowWidth/2, pGame->windowHeight/2);
-    if(!pGame->ui.pMenuText || !pGame->ui.pOverText){
-        printf("Error: %s\n", SDL_GetError());
-        freeText(pGame->ui.pMenuText);
-        freeText(pGame->ui.pOverText);
+        return 1;
     }
 
+    pGame->ui.pMenuText = createText(pGame->pRenderer, 97, 181, 97, pGame->ui.pGameFont, "Press Space to play!", pGame->windowWidth / 2, pGame->windowHeight / 2);
+    pGame->ui.pOverText = createText(pGame->pRenderer, 20, 197, 204, pGame->ui.pGameFont, "You Died!", pGame->windowWidth / 2, pGame->windowHeight / 2);
+    if (!pGame->ui.pMenuText || !pGame->ui.pOverText)
+    {
+        printf("Error: %s\n", SDL_GetError());
+        return 1;
+    }
 
     if (SDL_QueryTexture(pGame->pPlayerTexture, NULL, NULL, &pGame->player.rect.w, &pGame->player.rect.h) < 0)
     {
         printf("Error: %s\n", SDL_GetError());
-        SDL_DestroyRenderer(pGame->pRenderer);
-        SDL_DestroyWindow(pGame->pWindow);
-        SDL_Quit();
         return 1;
     }
 
@@ -170,7 +162,6 @@ void run(Game *pGame)
         }
         */
 
-
         int deltaTime = SDL_GetTicks() - previousTime;
         if (deltaTime >= (1000 / FPS))
         {
@@ -216,6 +207,12 @@ void close(Game *pGame)
         SDL_DestroyTexture(pGame->pTileTextures[3]);
     if (pGame->pPlayerTexture)
         SDL_DestroyTexture(pGame->pPlayerTexture);
+    if (pGame->ui.pGameFont)
+        TTF_CloseFont(pGame->ui.pGameFont);
+    if (pGame->ui.pMenuText)
+        freeText(pGame->ui.pMenuText);
+    if (pGame->ui.pOverText)
+        freeText(pGame->ui.pOverText);
 
     if (pGame->pRenderer)
         SDL_DestroyRenderer(pGame->pRenderer);
