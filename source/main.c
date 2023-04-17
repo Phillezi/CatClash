@@ -72,6 +72,22 @@ int init(Game *pGame)
         return 1;
     }
 
+    // NET INIT
+        if (!(pGame->socketDesc = SDLNet_UDP_Open(0))) {
+            fprintf(stderr, "SDLNet_UDP_Open: %s\n", SDLNet_GetError());
+            exit(EXIT_FAILURE);
+        }
+        if (SDLNet_ResolveHost(&pGame->serverAddress, "localhost", 1234)) {
+            fprintf(stderr, "SDLNet_ResolveHost: %s\n", SDLNet_GetError());
+            exit(EXIT_FAILURE);
+        }
+        if (!(pGame->pPacket = SDLNet_AllocPacket(512))) {
+            fprintf(stderr, "SDLNet_AllocPacket: %s\n", SDLNet_GetError());
+            exit(EXIT_FAILURE);
+        }
+        pGame->pPacket->address.host = pGame->serverAddress.host;
+        pGame->pPacket->address.port = pGame->serverAddress.port;
+
     pGame->config.vSync = true; // Hårdkodad
 
     SDL_DisplayMode displayMode;
