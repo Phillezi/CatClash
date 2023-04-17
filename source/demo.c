@@ -35,16 +35,12 @@ int main(int argv, char **args)
         {
         case 0:
             if (mapSelection(&game))
-            {
                 break;
-            }
             run(&game);
             break;
         case 1:
             if (mapSelection(&game))
-            {
                 break;
-            }
             levelEditor(&game);
             break;
         case 2:
@@ -311,7 +307,7 @@ int mapSelection(Game *pGame)
                 }
                 else
                 {
-                    //printf("KEY VALUE: %d\n", event.key.keysym.sym);
+                    // printf("KEY VALUE: %d\n", event.key.keysym.sym);
                     if ((event.key.keysym.sym > 96 && event.key.keysym.sym < 127) || (event.key.keysym.sym >= 48 && event.key.keysym.sym <= 57))
                     {
 
@@ -392,7 +388,8 @@ void run(Game *pGame)
 
                 if (pGame->player.hp <= 0)
                 {
-                    printf("You Died\n");
+                    pGame->state = OVER;
+                    //printf("You Died\n");
                     pGame->player.hp = 255;
                 }
 
@@ -511,9 +508,9 @@ void updateScreen(Game *pGame)
             break;
         }
     }
-    if (!pGame->state)
+    if (pGame->state == OVER)
     {
-        drawText(pGame->ui.pMenuText, pGame->pRenderer);
+        drawText(pGame->ui.pOverText, pGame->pRenderer);
     }
     drawText(pGame->ui.pFpsText, pGame->pRenderer);
 
@@ -614,7 +611,7 @@ int handleInput(Game *pGame)
     }
     if (currentKeyStates[SDL_SCANCODE_SPACE])
     {
-        pGame->state = 1;
+        pGame->state = START;
         if (pGame->player.charge < MAX_CHARGE)
         {
             pGame->player.charge += 1;
