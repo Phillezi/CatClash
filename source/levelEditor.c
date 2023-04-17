@@ -27,6 +27,15 @@ int levelEditor(Game *pGame)
             lvlupdateScreen(pGame, mouseX, mouseY);
         }
     }
+    // Reset zoom
+    while (pGame->map[0].wall.w > pGame->world.tileSize)
+    {
+        lvlhandleZoom(pGame, 1);
+    }
+    while (pGame->map[0].wall.w < pGame->world.tileSize)
+    {
+        lvlhandleZoom(pGame, -1);
+    }
     return 0;
 }
 void lvlhandleZoom(Game *pGame, int mouseWheelY)
