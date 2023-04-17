@@ -927,6 +927,8 @@ int getStringFromUser(char text[], SDL_Event event)
                     const Uint8 *currentKeyStates = SDL_GetKeyboardState(NULL);
                     if (((event.key.keysym.sym > 96 && event.key.keysym.sym < 127)) && (currentKeyStates[SDL_SCANCODE_LSHIFT] || currentKeyStates[SDL_SCANCODE_RSHIFT]))
                         text[strCounter] = event.key.keysym.sym - 32;
+                    else if (event.key.keysym.sym == '.' && (currentKeyStates[SDL_SCANCODE_LSHIFT] || currentKeyStates[SDL_SCANCODE_RSHIFT]))
+                        text[strCounter] = ':';
                     else
                     {
                         text[strCounter] = event.key.keysym.sym;
