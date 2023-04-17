@@ -4,6 +4,7 @@
 #include <SDL2/SDL_image.h>
 #include <SDL2/SDL_ttf.h>
 #include "init.h"
+#include "levelEditor.h"
 
 int init(Game *pGame);
 void run(Game *pGame);
@@ -20,6 +21,7 @@ int main(int argv, char **args)
     Game game;
     if (init(&game))
         return 1;
+    levelEditor(&game);
     run(&game);
     close(&game);
     return 0;
@@ -166,6 +168,8 @@ void run(Game *pGame)
             {
                 movementPreviousTime = SDL_GetTicks();
                 handleInput(pGame);
+                pGame->player.rect.h = (pGame->world.tileSize / 2) + ((pGame->world.tileSize / 2) * (1 - (float)pGame->player.charge / MAX_CHARGE));
+                pGame->player.rect.y += pGame->world.tileSize - pGame->player.rect.h;
 
                 if (pGame->player.hp <= 0)
                 {
@@ -184,14 +188,21 @@ void run(Game *pGame)
 }
 void close(Game *pGame)
 {
-    SDL_DestroyTexture(pGame->pTileTextures[0]);
-    SDL_DestroyTexture(pGame->pTileTextures[1]);
-    SDL_DestroyTexture(pGame->pTileTextures[2]);
-    SDL_DestroyTexture(pGame->pTileTextures[3]);
-    SDL_DestroyTexture(pGame->pPlayerTexture);
+    if (pGame->pTileTextures[0])
+        SDL_DestroyTexture(pGame->pTileTextures[0]);
+    if (pGame->pTileTextures[1])
+        SDL_DestroyTexture(pGame->pTileTextures[1]);
+    if (pGame->pTileTextures[2])
+        SDL_DestroyTexture(pGame->pTileTextures[2]);
+    if (pGame->pTileTextures[3])
+        SDL_DestroyTexture(pGame->pTileTextures[3]);
+    if (pGame->pPlayerTexture)
+        SDL_DestroyTexture(pGame->pPlayerTexture);
 
-    SDL_DestroyRenderer(pGame->pRenderer);
-    SDL_DestroyWindow(pGame->pWindow);
+    if (pGame->pRenderer)
+        SDL_DestroyRenderer(pGame->pRenderer);
+    if (pGame->pWindow)
+        SDL_DestroyWindow(pGame->pWindow);
     SDL_Quit();
 }
 
