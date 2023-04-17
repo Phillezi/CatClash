@@ -20,6 +20,7 @@ void movePlayer(Player *pPlayer, char direction);
 int checkCollision(Player player, Tile map[], char direction, int tileSize);
 SDL_Rect findEmptyTile(Tile map[]);
 void getPlayerSpawnPos(Game *pGame);
+int getStringFromUser(char text[], SDL_Event event);
 
 int main(int argv, char **args)
 {
@@ -276,56 +277,20 @@ int mapSelection(Game *pGame)
                 freeText(pPrompt2);
                 return 1;
             }
-
-            else if (event.type == SDL_KEYDOWN)
-            {
-                if (event.key.keysym.sym == SDLK_RETURN)
+            else if (getStringFromUser(text, event))
+                if (initMap(pGame->map, text, pGame->world.tileSize))
                 {
-                    if (initMap(pGame->map, text, pGame->world.tileSize) != -1)
-                    {
-                        getPlayerSpawnPos(pGame);
-                        exit = true;
-                    }
-                    else
-                    {
-                        for (int i = 0; i < 31; i++)
-                        {
-                            text[i] == 0;
-                            pMap = createText(pGame->pRenderer, 0, 0, 0, pGame->ui.pFpsFont, text, pGame->windowWidth / 2, pGame->windowHeight / 2);
-                        }
-                    }
-                }
-                else if (event.key.keysym.sym == SDLK_BACKSPACE)
-                {
-                    if (counter > 0)
-                    {
-                        text[counter - 1] = 0;
-                        counter--;
-                        if (counter)
-                            pMap = createText(pGame->pRenderer, 0, 0, 0, pGame->ui.pFpsFont, text, pGame->windowWidth / 2, pGame->windowHeight / 2);
-                    }
+                    printf("No file found\n");
                 }
                 else
                 {
-                    // printf("KEY VALUE: %d\n", event.key.keysym.sym);
-                    if ((event.key.keysym.sym > 96 && event.key.keysym.sym < 127) || (event.key.keysym.sym >= 48 && event.key.keysym.sym <= 57))
-                    {
-
-                        if (counter < 31)
-                        {
-                            const Uint8 *currentKeyStates = SDL_GetKeyboardState(NULL);
-                            if (((event.key.keysym.sym > 96 && event.key.keysym.sym < 127)) && (currentKeyStates[SDL_SCANCODE_LSHIFT] || currentKeyStates[SDL_SCANCODE_RSHIFT]))
-                                text[counter] = event.key.keysym.sym - 32;
-                            else
-                            {
-                                text[counter] = event.key.keysym.sym;
-                            }
-
-                            counter++;
-                            pMap = createText(pGame->pRenderer, 0, 0, 0, pGame->ui.pFpsFont, text, pGame->windowWidth / 2, pGame->windowHeight / 2);
-                        }
-                    }
+                    getPlayerSpawnPos(pGame);
+                    exit = true;
                 }
+            else
+            {
+                if (text[0])
+                    pMap = createText(pGame->pRenderer, 0, 0, 0, pGame->ui.pFpsFont, text, pGame->windowWidth / 2, pGame->windowHeight / 2);
             }
         }
         if (SDL_GetTicks() - previousTime >= 1000 / 60)
@@ -389,7 +354,7 @@ void run(Game *pGame)
                 if (pGame->player.hp <= 0)
                 {
                     pGame->state = OVER;
-                    //printf("You Died\n");
+                    // printf("You Died\n");
                     pGame->player.hp = 255;
                 }
 
@@ -786,4 +751,46 @@ void getPlayerSpawnPos(Game *pGame)
     pGame->player.y = spawnTile.y;
     pGame->player.rect.x = spawnTile.x; // windowWidth / 2;
     pGame->player.rect.y = spawnTile.y; // windowHeight / 2;
+}
+
+int getStringFromUser(char text[], SDL_Event event)
+{
+    int strCounter = strlen(text), strEnd = 0;
+    if (event.type == SDL_KEYDOWN)
+    {
+        if (event.key.keysym.sym == SDLK_RETURN)
+        {
+            if(strCounter){
+                strEnd = 1;
+            }
+        }
+        if (event.key.keysym.sym == SDLK_BACKSPACE)
+        {
+            if (strCounter > 0)
+            {
+                text[strCounter - 1] = 0;
+                strCounter--;
+            }
+        }
+        else
+        {
+            if ((event.key.keysym.sym >= 'a' && event.key.keysym.sym <= '~') || (event.key.keysym.sym >= ' ' && event.key.keysym.sym <= '9'))
+            {
+
+                if (strCounter < 31)
+                {
+                    const Uint8 *currentKeyStates = SDL_GetKeyboardState(NULL);
+                    if (((event.key.keysym.sym > 96 && event.key.keysym.sym < 127)) && (currentKeyStates[SDL_SCANCODE_LSHIFT] || currentKeyStates[SDL_SCANCODE_RSHIFT]))
+                        text[strCounter] = event.key.keysym.sym - 32;
+                    else
+                    {
+                        text[strCounter] = event.key.keysym.sym;
+                    }
+
+                    strCounter++;
+                }
+            }
+        }
+    }
+    return strEnd;
 }
