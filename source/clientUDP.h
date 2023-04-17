@@ -1,10 +1,10 @@
 #ifndef CLIENTUDP_H
 #define CLIENTUDP_H
 
-#include <SDL2/SDL_net.h>
 #include "definitions.h"
+#include <SDL2/SDL_net.h>
 
-void sendData(Player udpData, UDPpacket *p, IPaddress srvadd, UDPsocket sd);
-void retrieveData(Player players[], UDPpacket *p);
+void sendData(Game *pGame);
+void retrieveData(Game *pGame);
 
 #endif
