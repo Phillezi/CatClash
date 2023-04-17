@@ -4,13 +4,14 @@
 #include <SDL2/SDL_image.h>
 #include <SDL2/SDL_ttf.h>
 #include "init.h"
+#include "text.h"
 #include "levelEditor.h"
 
 int init(Game *pGame);
 void run(Game *pGame);
 void close(Game *pGame);
 
-void updateScreen(SDL_Renderer *pRenderer, Player player, Tile map[], SDL_Texture *pTextureTiles[], SDL_Texture *pTexturePlayer, UiE ui, SDL_Texture *pFpsTexture, float angle, int tileSize);
+void updateScreen(Game *pGame);
 int handleInput(Game *pGame);
 void movePlayer(Player *pPlayer, char direction);
 int checkCollision(Player player, Tile map[], char direction, int tileSize);
@@ -20,7 +21,11 @@ int main(int argv, char **args)
 {
     Game game;
     if (init(&game))
+    {
+        close(&game);
         return 1;
+    }
+
     levelEditor(&game);
     run(&game);
     close(&game);
@@ -30,7 +35,7 @@ int main(int argv, char **args)
 int init(Game *pGame)
 {
     SDL_Init(SDL_INIT_EVERYTHING);
-    // TTF_Init();
+    TTF_Init();
 
     SDL_DisplayMode displayMode;
     if (SDL_GetDesktopDisplayMode(0, &displayMode) < 0)
@@ -56,7 +61,6 @@ int init(Game *pGame)
     if (!pGame->pWindow)
     {
         printf("Error: %s\n", SDL_GetError());
-        SDL_Quit();
         return -1;
     }
 
@@ -74,8 +78,6 @@ int init(Game *pGame)
     if (!pGame->pRenderer)
     {
         printf("Error: %s\n", SDL_GetError());
-        SDL_DestroyWindow(pGame->pWindow);
-        SDL_Quit();
         return 1;
     }
 
@@ -83,27 +85,33 @@ int init(Game *pGame)
     if (initTextureTiles(pGame->pRenderer, pGame->pWindow, pGame->pTileTextures, tileTextures, TILES) == -1)
     {
         printf("Error: %s\n", SDL_GetError());
-        SDL_DestroyRenderer(pGame->pRenderer);
-        SDL_DestroyWindow(pGame->pWindow);
-        SDL_Quit();
         return 1;
     }
 
     if (initTexturePlayer(pGame->pRenderer, pGame->pWindow, &pGame->pPlayerTexture) == -1)
     {
         printf("Error: %s\n", SDL_GetError());
-        SDL_DestroyRenderer(pGame->pRenderer);
-        SDL_DestroyWindow(pGame->pWindow);
-        SDL_Quit();
+        return 1;
+    }
+
+    pGame->ui.pGameFont = TTF_OpenFont("resources/fonts/RetroGaming.ttf", 100);
+    if (!pGame->ui.pGameFont)
+    {
+        printf("Error: %s\n", TTF_GetError());
+        return 1;
+    }
+
+    pGame->ui.pMenuText = createText(pGame->pRenderer, 97, 181, 97, pGame->ui.pGameFont, "Press Space to play!", pGame->windowWidth / 2, pGame->windowHeight / 2);
+    pGame->ui.pOverText = createText(pGame->pRenderer, 20, 197, 204, pGame->ui.pGameFont, "You Died!", pGame->windowWidth / 2, pGame->windowHeight / 2);
+    if (!pGame->ui.pMenuText || !pGame->ui.pOverText)
+    {
+        printf("Error: %s\n", SDL_GetError());
         return 1;
     }
 
     if (SDL_QueryTexture(pGame->pPlayerTexture, NULL, NULL, &pGame->player.rect.w, &pGame->player.rect.h) < 0)
     {
         printf("Error: %s\n", SDL_GetError());
-        SDL_DestroyRenderer(pGame->pRenderer);
-        SDL_DestroyWindow(pGame->pWindow);
-        SDL_Quit();
         return 1;
     }
 
@@ -153,6 +161,7 @@ void run(Game *pGame)
             frameCounter = 0;
         }
         */
+
         int deltaTime = SDL_GetTicks() - previousTime;
         if (deltaTime >= (1000 / FPS))
         {
@@ -181,7 +190,7 @@ void run(Game *pGame)
                 pGame->ui.chargebar.w = pGame->player.charge;
             }
             previousTime = SDL_GetTicks();
-            updateScreen(pGame->pRenderer, pGame->player, pGame->map, pGame->pTileTextures, pGame->pPlayerTexture, pGame->ui, NULL, pGame->world.angle, pGame->world.tileSize);
+            updateScreen(pGame);
             // frameCounter++;
         }
     }
@@ -198,6 +207,12 @@ void close(Game *pGame)
         SDL_DestroyTexture(pGame->pTileTextures[3]);
     if (pGame->pPlayerTexture)
         SDL_DestroyTexture(pGame->pPlayerTexture);
+    if (pGame->ui.pGameFont)
+        TTF_CloseFont(pGame->ui.pGameFont);
+    if (pGame->ui.pMenuText)
+        freeText(pGame->ui.pMenuText);
+    if (pGame->ui.pOverText)
+        freeText(pGame->ui.pOverText);
 
     if (pGame->pRenderer)
         SDL_DestroyRenderer(pGame->pRenderer);
@@ -207,91 +222,92 @@ void close(Game *pGame)
 }
 
 // FUNKTIONER INOM RUN
-void updateScreen(SDL_Renderer *pRenderer, Player player, Tile map[], SDL_Texture *pTextureTiles[], SDL_Texture *pTexturePlayer, UiE ui, SDL_Texture *pFpsTexture, float angle, int tileSize)
+void updateScreen(Game *pGame)
 {
-    SDL_SetRenderDrawColor(pRenderer, 255, 255, 255, 255);
-    SDL_RenderClear(pRenderer);
+    SDL_SetRenderDrawColor(pGame->pRenderer, 255, 255, 255, 255);
+    SDL_RenderClear(pGame->pRenderer);
     SDL_Rect temp;
-    for (int i = 0; i < (((player.y) / map[0].wall.w) * MAPSIZE) + ((player.x - 1) / map[0].wall.w) + 2; i++)
+    for (int i = 0; i < (((pGame->player.y) / pGame->map[0].wall.w) * MAPSIZE) + ((pGame->player.x - 1) / pGame->map[0].wall.w) + 2; i++)
     {
-        switch (map[i].type)
+        switch (pGame->map[i].type)
         {
         case 0:
             if (i > MAPSIZE - 1)
             {
-                if (map[i - MAPSIZE].type)
+                if (pGame->map[i - MAPSIZE].type)
                 {
-                    temp = map[i].wall;
-                    temp.h = ((float)tileSize * angle);
-                    SDL_SetTextureColorMod(pTextureTiles[(map[i - MAPSIZE].type - 1)], 150, 150, 150);
-                    SDL_RenderCopy(pRenderer, pTextureTiles[(map[i - MAPSIZE].type - 1)], NULL, &temp);
-                    SDL_SetTextureColorMod(pTextureTiles[(map[i - MAPSIZE].type - 1)], 255, 255, 255);
+                    temp = pGame->map[i].wall;
+                    temp.h = ((float)pGame->world.tileSize * pGame->world.angle);
+                    SDL_SetTextureColorMod(pGame->pTileTextures[(pGame->map[i - MAPSIZE].type - 1)], 150, 150, 150);
+                    SDL_RenderCopy(pGame->pRenderer, pGame->pTileTextures[(pGame->map[i - MAPSIZE].type - 1)], NULL, &temp);
+                    SDL_SetTextureColorMod(pGame->pTileTextures[(pGame->map[i - MAPSIZE].type - 1)], 255, 255, 255);
                 }
             }
             break;
         case 1:
-            SDL_RenderCopy(pRenderer, pTextureTiles[0], NULL, &map[i].wall);
+            SDL_RenderCopy(pGame->pRenderer, pGame->pTileTextures[0], NULL, &pGame->map[i].wall);
             break;
         case 2:
-            SDL_RenderCopy(pRenderer, pTextureTiles[1], NULL, &map[i].wall);
+            SDL_RenderCopy(pGame->pRenderer, pGame->pTileTextures[1], NULL, &pGame->map[i].wall);
             break;
         case 3:
-            SDL_RenderCopy(pRenderer, pTextureTiles[2], NULL, &map[i].wall);
+            SDL_RenderCopy(pGame->pRenderer, pGame->pTileTextures[2], NULL, &pGame->map[i].wall);
             break;
         case 4:
-            SDL_RenderCopy(pRenderer, pTextureTiles[3], NULL, &map[i].wall);
+            SDL_RenderCopy(pGame->pRenderer, pGame->pTileTextures[3], NULL, &pGame->map[i].wall);
             break;
         default:
             break;
         }
     }
-    SDL_SetRenderDrawColor(pRenderer, 0, 0, 0, 255);
-    SDL_RenderDrawRect(pRenderer, &player.rect);
-    SDL_RenderCopy(pRenderer, pTexturePlayer, NULL, &player.rect);
+    SDL_SetRenderDrawColor(pGame->pRenderer, 0, 0, 0, 255);
+    SDL_RenderDrawRect(pGame->pRenderer, &pGame->player.rect);
+    SDL_RenderCopy(pGame->pRenderer, pGame->pPlayerTexture, NULL, &pGame->player.rect);
 
-    for (int i = (((player.y) / map[0].wall.w) * MAPSIZE) + ((player.x - 1) / map[0].wall.w) + 2; i < MAPSIZE * MAPSIZE; i++)
+    for (int i = (((pGame->player.y) / pGame->map[0].wall.w) * MAPSIZE) + ((pGame->player.x - 1) / pGame->map[0].wall.w) + 2; i < MAPSIZE * MAPSIZE; i++)
     {
-        switch (map[i].type)
+        switch (pGame->map[i].type)
         {
         case 0:
             if (i > MAPSIZE - 1)
             {
-                if (map[i - MAPSIZE].type)
+                if (pGame->map[i - MAPSIZE].type)
                 {
-                    temp = map[i].wall;
-                    temp.h = ((float)tileSize * angle);
-                    SDL_SetTextureColorMod(pTextureTiles[(map[i - MAPSIZE].type - 1)], 150, 150, 150);
-                    SDL_RenderCopy(pRenderer, pTextureTiles[(map[i - MAPSIZE].type - 1)], NULL, &temp);
-                    SDL_SetTextureColorMod(pTextureTiles[(map[i - MAPSIZE].type - 1)], 255, 255, 255);
+                    temp = pGame->map[i].wall;
+                    temp.h = ((float)pGame->world.tileSize * pGame->world.angle);
+                    SDL_SetTextureColorMod(pGame->pTileTextures[(pGame->map[i - MAPSIZE].type - 1)], 150, 150, 150);
+                    SDL_RenderCopy(pGame->pRenderer, pGame->pTileTextures[(pGame->map[i - MAPSIZE].type - 1)], NULL, &temp);
+                    SDL_SetTextureColorMod(pGame->pTileTextures[(pGame->map[i - MAPSIZE].type - 1)], 255, 255, 255);
                 }
             }
             break;
         case 1:
-            SDL_RenderCopy(pRenderer, pTextureTiles[0], NULL, &map[i].wall);
+            SDL_RenderCopy(pGame->pRenderer, pGame->pTileTextures[0], NULL, &pGame->map[i].wall);
             break;
         case 2:
-            SDL_RenderCopy(pRenderer, pTextureTiles[1], NULL, &map[i].wall);
+            SDL_RenderCopy(pGame->pRenderer, pGame->pTileTextures[1], NULL, &pGame->map[i].wall);
             break;
         case 3:
-            SDL_RenderCopy(pRenderer, pTextureTiles[2], NULL, &map[i].wall);
+            SDL_RenderCopy(pGame->pRenderer, pGame->pTileTextures[2], NULL, &pGame->map[i].wall);
             break;
         case 4:
-            SDL_RenderCopy(pRenderer, pTextureTiles[3], NULL, &map[i].wall);
+            SDL_RenderCopy(pGame->pRenderer, pGame->pTileTextures[3], NULL, &pGame->map[i].wall);
             break;
         default:
             break;
         }
     }
 
-    SDL_SetRenderDrawColor(pRenderer, 0, 255, 0, 255);
-    SDL_RenderFillRect(pRenderer, &ui.healthbar);
+    drawText(pGame->ui.pMenuText);
 
-    SDL_SetRenderDrawColor(pRenderer, 0, 0, 255, 255);
-    SDL_RenderFillRect(pRenderer, &ui.chargebar);
+    SDL_SetRenderDrawColor(pGame->pRenderer, 0, 255, 0, 255);
+    SDL_RenderFillRect(pGame->pRenderer, &pGame->ui.healthbar);
+
+    SDL_SetRenderDrawColor(pGame->pRenderer, 0, 0, 255, 255);
+    SDL_RenderFillRect(pGame->pRenderer, &pGame->ui.chargebar);
 
     // SDL_RenderCopy(pRenderer, pFpsTexture, NULL, &ui.fpsFrame);
-
-    SDL_RenderPresent(pRenderer);
+    SDL_RenderPresent(pGame->pRenderer);
 }
 
 int handleInput(Game *pGame)
