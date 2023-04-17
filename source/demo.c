@@ -266,7 +266,7 @@ int mapSelection(Game *pGame)
     Text *pMap = malloc(sizeof(Text));
 
     int counter = 0;
-    char text[31];
+    char text[31] = {0};
     while (!exit)
     {
         SDL_Event event;
@@ -303,18 +303,31 @@ int mapSelection(Game *pGame)
                 {
                     if (counter > 0)
                     {
-                        text[counter] = 0;
+                        text[counter - 1] = 0;
                         counter--;
-                        pMap = createText(pGame->pRenderer, 0, 0, 0, pGame->ui.pFpsFont, text, pGame->windowWidth / 2, pGame->windowHeight / 2);
+                        if (counter)
+                            pMap = createText(pGame->pRenderer, 0, 0, 0, pGame->ui.pFpsFont, text, pGame->windowWidth / 2, pGame->windowHeight / 2);
                     }
                 }
                 else
                 {
-                    if (counter < 31)
+                    //printf("KEY VALUE: %d\n", event.key.keysym.sym);
+                    if ((event.key.keysym.sym > 96 && event.key.keysym.sym < 127) || (event.key.keysym.sym >= 48 && event.key.keysym.sym <= 57))
                     {
-                        text[counter] = event.key.keysym.sym;
-                        counter++;
-                        pMap = createText(pGame->pRenderer, 0, 0, 0, pGame->ui.pFpsFont, text, pGame->windowWidth / 2, pGame->windowHeight / 2);
+
+                        if (counter < 31)
+                        {
+                            const Uint8 *currentKeyStates = SDL_GetKeyboardState(NULL);
+                            if (((event.key.keysym.sym > 96 && event.key.keysym.sym < 127)) && (currentKeyStates[SDL_SCANCODE_LSHIFT] || currentKeyStates[SDL_SCANCODE_RSHIFT]))
+                                text[counter] = event.key.keysym.sym - 32;
+                            else
+                            {
+                                text[counter] = event.key.keysym.sym;
+                            }
+
+                            counter++;
+                            pMap = createText(pGame->pRenderer, 0, 0, 0, pGame->ui.pFpsFont, text, pGame->windowWidth / 2, pGame->windowHeight / 2);
+                        }
                     }
                 }
             }
