@@ -12,6 +12,7 @@ void run(Game *pGame);
 void close(Game *pGame);
 
 void updateScreen(Game *pGame);
+void centerPlayer(Game *pGame);
 int handleInput(Game *pGame);
 void movePlayer(Player *pPlayer, char direction);
 int checkCollision(Player player, Tile map[], char direction, int tileSize);
@@ -156,18 +157,17 @@ void run(Game *pGame)
     int frameCounter = 0, oneSecTimer = 0, previousTime = 0, movementPreviousTime = 0;
     while (!exit)
     {
-        
+
         if (SDL_GetTicks() - oneSecTimer >= 1000) // Performance monitor
         {
             oneSecTimer = SDL_GetTicks();
             char buffer[50];
-            //SDL_DestroyTexture(&pGame->ui.pFpsText->pTexture);
+            // SDL_DestroyTexture(&pGame->ui.pFpsText->pTexture);
             sprintf(buffer, "%d", frameCounter);
-            pGame->ui.pFpsText = createText(pGame->pRenderer, 0, 255, 0, pGame->ui.pFpsFont, buffer, pGame->windowWidth-pGame->world.tileSize, pGame->world.tileSize);
+            pGame->ui.pFpsText = createText(pGame->pRenderer, 0, 255, 0, pGame->ui.pFpsFont, buffer, pGame->windowWidth - pGame->world.tileSize, pGame->world.tileSize);
             printf("%s\n", buffer);
             frameCounter = 0;
         }
-        
 
         int deltaTime = SDL_GetTicks() - previousTime;
         if (deltaTime >= (1000 / FPS))
@@ -308,7 +308,8 @@ void updateScreen(Game *pGame)
             break;
         }
     }
-    if(!pGame->state){
+    if (!pGame->state)
+    {
         drawText(pGame->ui.pMenuText, pGame->pRenderer);
     }
     drawText(pGame->ui.pFpsText, pGame->pRenderer);
@@ -319,8 +320,56 @@ void updateScreen(Game *pGame)
     SDL_SetRenderDrawColor(pGame->pRenderer, 0, 0, 255, 255);
     SDL_RenderFillRect(pGame->pRenderer, &pGame->ui.chargebar);
 
-    // SDL_RenderCopy(pRenderer, pFpsTexture, NULL, &ui.fpsFrame);
     SDL_RenderPresent(pGame->pRenderer);
+}
+
+void centerPlayer(Game *pGame)
+{
+    int screenShiftAmount = pGame->movementAmount;
+    if (pGame->player.rect.x >= (4 * pGame->windowWidth) / 5 || pGame->player.rect.x <= pGame->windowWidth / 5)
+    {
+        screenShiftAmount = pGame->movementAmount * 2;
+    }
+    if (pGame->player.rect.y >= (4 * pGame->windowHeight) / 5 || pGame->player.rect.y <= pGame->windowHeight / 5)
+    {
+        screenShiftAmount = pGame->movementAmount * 2;
+    }
+    if (pGame->player.rect.x >= pGame->windowWidth || pGame->player.rect.x <= 0)
+    {
+        screenShiftAmount = pGame->movementAmount * 10;
+    }
+    if (pGame->player.rect.y >= pGame->windowHeight || pGame->player.rect.y <= 0)
+    {
+        screenShiftAmount = pGame->movementAmount * 10;
+    }
+    if (pGame->player.rect.y < (2 * pGame->windowHeight) / 5)
+    {
+        for (int i = 0; i < MAPSIZE * MAPSIZE; i++)
+        {
+            pGame->map[i].wall.y += screenShiftAmount;
+        }
+    }
+    if (pGame->player.rect.y > (3 * pGame->windowHeight) / 5)
+    {
+        for (int i = 0; i < MAPSIZE * MAPSIZE; i++)
+        {
+            pGame->map[i].wall.y -= screenShiftAmount;
+        }
+    }
+    if (pGame->player.rect.x < (2 * pGame->windowWidth) / 5)
+    {
+        for (int i = 0; i < MAPSIZE * MAPSIZE; i++)
+        {
+            pGame->map[i].wall.x += screenShiftAmount;
+        }
+    }
+    if (pGame->player.rect.x > (3 * pGame->windowWidth) / 5)
+    {
+        for (int i = 0; i < MAPSIZE * MAPSIZE; i++)
+        {
+            pGame->map[i].wall.x -= screenShiftAmount;
+        }
+    }
 }
 
 int handleInput(Game *pGame)
@@ -342,7 +391,6 @@ int handleInput(Game *pGame)
                     pGame->map[i].wall.y = pGame->map[i - MAPSIZE].wall.y + pGame->map[i].wall.h;
                 }
             }
-            // pPlayer->rect.y = (float)pPlayer->y * (float)map[0].wall.h /pGame->world.tileSize;
         }
     }
     if (currentKeyStates[SDL_SCANCODE_E])
@@ -359,7 +407,6 @@ int handleInput(Game *pGame)
                     pGame->map[i].wall.y = pGame->map[i - MAPSIZE].wall.y + pGame->map[i].wall.h;
                 }
             }
-            // pPlayer->rect.y = (float)pPlayer->y * (float)map[0].wall.h /pGame->world.tileSize;
         }
     }
     if (currentKeyStates[SDL_SCANCODE_SPACE])
@@ -460,51 +507,7 @@ int handleInput(Game *pGame)
         }
     }
     // CENTER PLAYER
-    int screenShiftAmount = pGame->movementAmount;
-    if (pGame->player.rect.x >= (4 * pGame->windowWidth) / 5 || pGame->player.rect.x <= pGame->windowWidth / 5)
-    {
-        screenShiftAmount = pGame->movementAmount * 2;
-    }
-    if (pGame->player.rect.y >= (4 * pGame->windowHeight) / 5 || pGame->player.rect.y <= pGame->windowHeight / 5)
-    {
-        screenShiftAmount = pGame->movementAmount * 2;
-    }
-    if (pGame->player.rect.x >= pGame->windowWidth || pGame->player.rect.x <= 0)
-    {
-        screenShiftAmount = pGame->movementAmount * 10;
-    }
-    if (pGame->player.rect.y >= pGame->windowHeight || pGame->player.rect.y <= 0)
-    {
-        screenShiftAmount = pGame->movementAmount * 10;
-    }
-    if (pGame->player.rect.y < (2 * pGame->windowHeight) / 5)
-    {
-        for (int i = 0; i < MAPSIZE * MAPSIZE; i++)
-        {
-            pGame->map[i].wall.y += screenShiftAmount;
-        }
-    }
-    if (pGame->player.rect.y > (3 * pGame->windowHeight) / 5)
-    {
-        for (int i = 0; i < MAPSIZE * MAPSIZE; i++)
-        {
-            pGame->map[i].wall.y -= screenShiftAmount;
-        }
-    }
-    if (pGame->player.rect.x < (2 * pGame->windowWidth) / 5)
-    {
-        for (int i = 0; i < MAPSIZE * MAPSIZE; i++)
-        {
-            pGame->map[i].wall.x += screenShiftAmount;
-        }
-    }
-    if (pGame->player.rect.x > (3 * pGame->windowWidth) / 5)
-    {
-        for (int i = 0; i < MAPSIZE * MAPSIZE; i++)
-        {
-            pGame->map[i].wall.x -= screenShiftAmount;
-        }
-    }
+    centerPlayer(pGame);
 
     int offsetX = pGame->map[0].wall.x - pGame->map[0].x;
     int offsetY = pGame->map[0].wall.y - pGame->map[0].y;
@@ -517,19 +520,15 @@ void movePlayer(Player *pPlayer, char direction)
     switch (direction)
     {
     case 'W':
-        // pPlayer->rect.y--;
         pPlayer->y--;
         break;
     case 'A':
-        // pPlayer->rect.x--;
         pPlayer->x--;
         break;
     case 'S':
-        // pPlayer->rect.y++;
         pPlayer->y++;
         break;
     case 'D':
-        // pPlayer->rect.x++;
         pPlayer->x++;
         break;
     default:
