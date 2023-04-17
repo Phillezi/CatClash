@@ -549,35 +549,38 @@ void updateScreen(Game *pGame)
     SDL_Rect temp;
     for (int i = 0; i < (((pGame->player.y) / pGame->map[0].wall.w) * MAPSIZE) + ((pGame->player.x - 1) / pGame->map[0].wall.w) + 2; i++)
     {
-        switch (pGame->map[i].type)
+        if (((pGame->map[i].wall.x <= pGame->windowWidth) && (pGame->map[i].wall.x + pGame->world.tileSize >= 0)) && ((pGame->map[i].wall.y <= pGame->windowHeight) && (pGame->map[i].wall.y + pGame->world.tileSize >= 0)))
         {
-        case 0:
-            if (i > MAPSIZE - 1)
+            switch (pGame->map[i].type)
             {
-                if (pGame->map[i - MAPSIZE].type)
+            case 0:
+                if (i > MAPSIZE - 1)
                 {
-                    temp = pGame->map[i].wall;
-                    temp.h = ((float)pGame->world.tileSize * pGame->world.angle);
-                    SDL_SetTextureColorMod(pGame->pTileTextures[(pGame->map[i - MAPSIZE].type - 1)], 150, 150, 150);
-                    SDL_RenderCopy(pGame->pRenderer, pGame->pTileTextures[(pGame->map[i - MAPSIZE].type - 1)], NULL, &temp);
-                    SDL_SetTextureColorMod(pGame->pTileTextures[(pGame->map[i - MAPSIZE].type - 1)], 255, 255, 255);
+                    if (pGame->map[i - MAPSIZE].type)
+                    {
+                        temp = pGame->map[i].wall;
+                        temp.h = ((float)pGame->world.tileSize * pGame->world.angle);
+                        SDL_SetTextureColorMod(pGame->pTileTextures[(pGame->map[i - MAPSIZE].type - 1)], 150, 150, 150);
+                        SDL_RenderCopy(pGame->pRenderer, pGame->pTileTextures[(pGame->map[i - MAPSIZE].type - 1)], NULL, &temp);
+                        SDL_SetTextureColorMod(pGame->pTileTextures[(pGame->map[i - MAPSIZE].type - 1)], 255, 255, 255);
+                    }
                 }
+                break;
+            case 1:
+                SDL_RenderCopy(pGame->pRenderer, pGame->pTileTextures[0], NULL, &pGame->map[i].wall);
+                break;
+            case 2:
+                SDL_RenderCopy(pGame->pRenderer, pGame->pTileTextures[1], NULL, &pGame->map[i].wall);
+                break;
+            case 3:
+                SDL_RenderCopy(pGame->pRenderer, pGame->pTileTextures[2], NULL, &pGame->map[i].wall);
+                break;
+            case 4:
+                SDL_RenderCopy(pGame->pRenderer, pGame->pTileTextures[3], NULL, &pGame->map[i].wall);
+                break;
+            default:
+                break;
             }
-            break;
-        case 1:
-            SDL_RenderCopy(pGame->pRenderer, pGame->pTileTextures[0], NULL, &pGame->map[i].wall);
-            break;
-        case 2:
-            SDL_RenderCopy(pGame->pRenderer, pGame->pTileTextures[1], NULL, &pGame->map[i].wall);
-            break;
-        case 3:
-            SDL_RenderCopy(pGame->pRenderer, pGame->pTileTextures[2], NULL, &pGame->map[i].wall);
-            break;
-        case 4:
-            SDL_RenderCopy(pGame->pRenderer, pGame->pTileTextures[3], NULL, &pGame->map[i].wall);
-            break;
-        default:
-            break;
         }
     }
     SDL_SetRenderDrawColor(pGame->pRenderer, 0, 0, 0, 255);
@@ -586,35 +589,38 @@ void updateScreen(Game *pGame)
 
     for (int i = (((pGame->player.y) / pGame->map[0].wall.w) * MAPSIZE) + ((pGame->player.x - 1) / pGame->map[0].wall.w) + 2; i < MAPSIZE * MAPSIZE; i++)
     {
-        switch (pGame->map[i].type)
+        if (((pGame->map[i].wall.x <= pGame->windowWidth) && (pGame->map[i].wall.x + pGame->world.tileSize >= 0)) && ((pGame->map[i].wall.y <= pGame->windowHeight) && (pGame->map[i].wall.y + pGame->world.tileSize >= 0)))
         {
-        case 0:
-            if (i > MAPSIZE - 1)
+            switch (pGame->map[i].type)
             {
-                if (pGame->map[i - MAPSIZE].type)
+            case 0:
+                if (i > MAPSIZE - 1)
                 {
-                    temp = pGame->map[i].wall;
-                    temp.h = ((float)pGame->world.tileSize * pGame->world.angle);
-                    SDL_SetTextureColorMod(pGame->pTileTextures[(pGame->map[i - MAPSIZE].type - 1)], 150, 150, 150);
-                    SDL_RenderCopy(pGame->pRenderer, pGame->pTileTextures[(pGame->map[i - MAPSIZE].type - 1)], NULL, &temp);
-                    SDL_SetTextureColorMod(pGame->pTileTextures[(pGame->map[i - MAPSIZE].type - 1)], 255, 255, 255);
+                    if (pGame->map[i - MAPSIZE].type)
+                    {
+                        temp = pGame->map[i].wall;
+                        temp.h = ((float)pGame->world.tileSize * pGame->world.angle);
+                        SDL_SetTextureColorMod(pGame->pTileTextures[(pGame->map[i - MAPSIZE].type - 1)], 150, 150, 150);
+                        SDL_RenderCopy(pGame->pRenderer, pGame->pTileTextures[(pGame->map[i - MAPSIZE].type - 1)], NULL, &temp);
+                        SDL_SetTextureColorMod(pGame->pTileTextures[(pGame->map[i - MAPSIZE].type - 1)], 255, 255, 255);
+                    }
                 }
+                break;
+            case 1:
+                SDL_RenderCopy(pGame->pRenderer, pGame->pTileTextures[0], NULL, &pGame->map[i].wall);
+                break;
+            case 2:
+                SDL_RenderCopy(pGame->pRenderer, pGame->pTileTextures[1], NULL, &pGame->map[i].wall);
+                break;
+            case 3:
+                SDL_RenderCopy(pGame->pRenderer, pGame->pTileTextures[2], NULL, &pGame->map[i].wall);
+                break;
+            case 4:
+                SDL_RenderCopy(pGame->pRenderer, pGame->pTileTextures[3], NULL, &pGame->map[i].wall);
+                break;
+            default:
+                break;
             }
-            break;
-        case 1:
-            SDL_RenderCopy(pGame->pRenderer, pGame->pTileTextures[0], NULL, &pGame->map[i].wall);
-            break;
-        case 2:
-            SDL_RenderCopy(pGame->pRenderer, pGame->pTileTextures[1], NULL, &pGame->map[i].wall);
-            break;
-        case 3:
-            SDL_RenderCopy(pGame->pRenderer, pGame->pTileTextures[2], NULL, &pGame->map[i].wall);
-            break;
-        case 4:
-            SDL_RenderCopy(pGame->pRenderer, pGame->pTileTextures[3], NULL, &pGame->map[i].wall);
-            break;
-        default:
-            break;
         }
     }
     if (pGame->state == OVER)
