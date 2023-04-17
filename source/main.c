@@ -56,18 +56,21 @@ int main(int argv, char **args)
 
 int init(Game *pGame)
 {
-    if(SDL_Init(SDL_INIT_EVERYTHING) != 0) {
-        printf("Error: %s\n",SDL_GetError());
+    if (SDL_Init(SDL_INIT_EVERYTHING) != 0)
+    {
+        printf("Error: %s\n", SDL_GetError());
         return 1;
     }
-    if(TTF_Init() != 0) {
-        printf("Error: %s\n",TTF_GetError());
+    if (TTF_Init() != 0)
+    {
+        printf("Error: %s\n", TTF_GetError());
         return 1;
     }
-    if (SDLNet_Init()) {
-		printf("SDLNet_Init: %s\n", SDLNet_GetError());
-		return 1;
-	}
+    if (SDLNet_Init())
+    {
+        printf("SDLNet_Init: %s\n", SDLNet_GetError());
+        return 1;
+    }
 
     pGame->config.vSync = true; // Hårdkodad
 
@@ -314,11 +317,11 @@ int mapSelection(Game *pGame)
                 }
             else
             {
-                if (text[0]){
+                if (text[0])
+                {
                     freeText(pMap);
                     pMap = createText(pGame->pRenderer, 0, 0, 0, pGame->ui.pFpsFont, text, pGame->windowWidth / 2, pGame->windowHeight / 2);
                 }
-                    
             }
         }
         if (SDL_GetTicks() - previousTime >= 1000 / 60)
@@ -349,7 +352,6 @@ void run(Game *pGame)
     int frameCounter = 0, oneSecTimer = 0, previousTime = 0, movementPreviousTime = 0;
     while (!exit)
     {
-
         if (SDL_GetTicks() - oneSecTimer >= 1000) // Performance monitor
         {
             oneSecTimer = SDL_GetTicks();
@@ -364,12 +366,6 @@ void run(Game *pGame)
         int deltaTime = SDL_GetTicks() - previousTime;
         if (deltaTime >= (1000 / FPS))
         {
-            SDL_Event event;
-            while (SDL_PollEvent(&event))
-            {
-                if (event.type == SDL_QUIT)
-                    exit = true;
-            }
 
             int movementDeltaTime = SDL_GetTicks() - movementPreviousTime;
             if (movementDeltaTime >= (1000 / 60))
@@ -392,6 +388,15 @@ void run(Game *pGame)
             previousTime = SDL_GetTicks();
             updateScreen(pGame);
             frameCounter++;
+        }
+        SDL_Event event;
+        while (SDL_PollEvent(&event))
+        {
+            if (event.type == SDL_QUIT)
+            {
+                exit = true;
+                break;
+            }
         }
     }
 }

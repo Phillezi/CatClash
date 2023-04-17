@@ -11,8 +11,11 @@ int levelEditor(Game *pGame)
         SDL_Event event;
         while (SDL_PollEvent(&event))
         {
-            if (event.type == SDL_QUIT)
+            if (event.type == SDL_QUIT){
                 exit = true;
+                break;
+            }
+                
             else if (event.type == SDL_MOUSEWHEEL)
             {
                 lvlhandleZoom(pGame, event.wheel.y);
