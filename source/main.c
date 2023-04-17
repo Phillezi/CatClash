@@ -75,8 +75,7 @@ int init(Game *pGame)
     if (SDL_GetDesktopDisplayMode(0, &displayMode) < 0)
     {
         printf("SDL_GetDesktopDisplayMode failed: %s\n", SDL_GetError());
-        SDL_Quit();
-        return -1;
+        return 1;
     }
 
     pGame->windowWidth = (float)displayMode.w * 0.7; // 70% of avaliable space
@@ -88,7 +87,7 @@ int init(Game *pGame)
     if (!pGame->pWindow)
     {
         printf("Error: %s\n", SDL_GetError());
-        return -1;
+        return 1;
     }
 
     if (pGame->config.vSync)
