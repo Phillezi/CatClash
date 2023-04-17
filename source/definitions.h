@@ -1,6 +1,7 @@
 #ifndef DEFINITIONS_H
 #define DEFINITIONS_H
 #include <SDL2/SDL.h>
+#include <SDL2/SDL_net.h>
 #include <SDL2/SDL_ttf.h>
 #include <stdlib.h>
 #include <stdbool.h>
@@ -92,6 +93,10 @@ struct game
 
     int windowWidth, windowHeight;
     int movementAmount;
+
+    UDPsocket socketDesc;
+    IPaddress serverAddress;
+    UDPpacket *pPacket;
 
     Player player;
     Tile map[MAPSIZE*MAPSIZE];
