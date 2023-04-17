@@ -8,6 +8,7 @@
 #include "levelEditor.h"
 
 int init(Game *pGame);
+int menu(Game *pGame);
 void run(Game *pGame);
 void close(Game *pGame);
 
@@ -26,11 +27,12 @@ int main(int argv, char **args)
         close(&game);
         return 1;
     }
-    int choice=0;
-    while(1){
-        printf("pick ur choice: ");
-        scanf("%1d", &choice);
-        switch (choice)
+    int choice = 0;
+    while (1)
+    {
+        // printf("pick ur choice: ");
+        // scanf("%1d", &choice);
+        switch (menu(&game))
         {
         case 0:
             run(&game);
@@ -53,7 +55,7 @@ int init(Game *pGame)
     SDL_Init(SDL_INIT_EVERYTHING);
     TTF_Init();
 
-    pGame->config.vSync = false; // Hårdkodad
+    pGame->config.vSync = true; // Hårdkodad
 
     SDL_DisplayMode displayMode;
     if (SDL_GetDesktopDisplayMode(0, &displayMode) < 0)
@@ -163,6 +165,81 @@ int init(Game *pGame)
 
     pGame->movementAmount = (float)pGame->world.tileSize / TILESIZE;
 
+    return 0;
+}
+int menu(Game *pGame)
+{
+    int selectedMode = 0, previousTime = 0;
+    int r = 0, g = 0, b = 0;
+    Text *pPlay, *pLvlEdit, *pQuit;
+    while (true)
+    {
+        SDL_Event event;
+        while (SDL_PollEvent(&event))
+        {
+            if (event.type == SDL_QUIT)
+                return 2;
+            else if (event.type == SDL_KEYDOWN)
+            {
+                if (event.key.keysym.sym == SDLK_UP)
+                {
+                    if (selectedMode > 0)
+                        selectedMode--;
+                    else
+                        selectedMode = 2;
+                }
+                else if (event.key.keysym.sym == SDLK_DOWN)
+                {
+                    
+                    if (selectedMode < 2)
+                        selectedMode++;
+                    else
+                        selectedMode = 0;
+                }
+                else if (event.key.keysym.sym == SDLK_RETURN)
+                {
+                    return selectedMode;
+                }
+            }
+        }
+        
+        if (SDL_GetTicks() - previousTime >= 1000 / 60)
+        {
+            previousTime = SDL_GetTicks();
+            switch(rand() % 3 + 1){
+                case 1 : if(r<255)r++;else r=0; break;
+                case 2 : if(g<255)g++;else g=0; break;
+                case 3 : if(b<255)b++;else b=0; break;
+            }
+
+        }
+        switch (selectedMode)
+        {
+        case 0:
+            pPlay = createText(pGame->pRenderer, r, g, b, pGame->ui.pFpsFont, "Play", pGame->windowWidth / 2, pGame->windowHeight / 4);
+            pLvlEdit = createText(pGame->pRenderer, 200, 200, 200, pGame->ui.pFpsFont, "Edit level", pGame->windowWidth / 2, (pGame->windowHeight / 4) + pGame->world.tileSize);
+            pQuit = createText(pGame->pRenderer, 200, 200, 200, pGame->ui.pFpsFont, "QUIT", pGame->windowWidth / 2, (pGame->windowHeight / 4) + (2 * pGame->world.tileSize));
+            break;
+        case 1:
+            pPlay = createText(pGame->pRenderer, 200, 200, 200, pGame->ui.pFpsFont, "Play", pGame->windowWidth / 2, pGame->windowHeight / 4);
+            pLvlEdit = createText(pGame->pRenderer, r, g, b, pGame->ui.pFpsFont, "Edit level", pGame->windowWidth / 2, (pGame->windowHeight / 4) + pGame->world.tileSize);
+            pQuit = createText(pGame->pRenderer, 200, 200, 200, pGame->ui.pFpsFont, "QUIT", pGame->windowWidth / 2, (pGame->windowHeight / 4) + (2 * pGame->world.tileSize));
+            break;
+        case 2:
+            pPlay = createText(pGame->pRenderer, 200, 200, 200, pGame->ui.pFpsFont, "Play", pGame->windowWidth / 2, pGame->windowHeight / 4);
+            pLvlEdit = createText(pGame->pRenderer, 200, 200, 200, pGame->ui.pFpsFont, "Edit level", pGame->windowWidth / 2, (pGame->windowHeight / 4) + pGame->world.tileSize);
+            pQuit = createText(pGame->pRenderer, r, g, b, pGame->ui.pFpsFont, "QUIT", pGame->windowWidth / 2, (pGame->windowHeight / 4) + (2 * pGame->world.tileSize));
+            break;
+        }
+
+
+        SDL_SetRenderDrawColor(pGame->pRenderer, 255, 255, 255, 255);
+        SDL_RenderClear(pGame->pRenderer);
+        drawText(pPlay, pGame->pRenderer);
+        drawText(pLvlEdit, pGame->pRenderer);
+        drawText(pQuit, pGame->pRenderer);
+        SDL_RenderPresent(pGame->pRenderer);
+    }
     return 0;
 }
 void run(Game *pGame)
