@@ -5,6 +5,6 @@
 #include "definitions.h"
 
 void sendData(Player udpData, UDPpacket *p, IPaddress srvadd, UDPsocket sd);
-Player retrieveData(Player currentPlayers[], UDPpacket *p);
+void retrieveData(Player players[], UDPpacket *p);
 
 #endif
