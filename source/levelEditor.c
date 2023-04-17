@@ -1,4 +1,5 @@
 #include "levelEditor.h"
+#include "text.h"
 
 int levelEditor(Game *pGame)
 {
@@ -11,11 +12,12 @@ int levelEditor(Game *pGame)
         SDL_Event event;
         while (SDL_PollEvent(&event))
         {
-            if (event.type == SDL_QUIT){
+            if (event.type == SDL_QUIT)
+            {
                 exit = true;
                 break;
             }
-                
+
             else if (event.type == SDL_MOUSEWHEEL)
             {
                 lvlhandleZoom(pGame, event.wheel.y);
@@ -105,13 +107,34 @@ void lvlhandleInput(Game *pGame, int *pMouseX, int *pMouseY)
             pGame->map[(((*pMouseY - pGame->map[0].wall.y) / pGame->map[0].wall.w * MAPSIZE) + ((*pMouseX - pGame->map[0].wall.x) / pGame->map[0].wall.w))].type = 4;
     }
     else if (currentKeyStates[SDL_SCANCODE_S] && currentKeyStates[SDL_SCANCODE_LCTRL])
-    {
-        // popUp();
-        /*
-        printf("What would you like to name the file?\n: ");
-        scanf(" %30s", fileName);
-        saveToFile(map, fileName);
-        printf("saved file\n");
+    {/*
+        char text[31] = {0};
+        int done = 0;
+        Text *pSaveStr = createText(pGame->pRenderer, 0, 0, 0, pGame->ui.pFpsFont, "Write the filname", pGame->windowWidth / 2, pGame->windowHeight / 2);
+        SDL_Event event;
+        do
+        {
+            while (SDL_PollEvent(&event))
+            {
+
+                if (event.type == event.type == SDL_QUIT)
+                {
+                    break;
+                }
+                else
+                {
+                    done = lvlgetStringFromUser(text, event);
+                }
+                if (text[0])
+                {
+                    freeText(pSaveStr);
+                    pSaveStr = createText(pGame->pRenderer, 0, 0, 0, pGame->ui.pFpsFont, text, pGame->windowWidth / 2, pGame->windowHeight / 2);
+                }
+                drawText(pSaveStr, pGame->pRenderer);
+                SDL_RenderPresent(pGame->pRenderer);
+            }
+        } while (!done);
+        freeText(pSaveStr);
         */
     }
     else if (currentKeyStates[SDL_SCANCODE_DELETE])
