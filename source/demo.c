@@ -193,9 +193,9 @@ int menu(Game *pGame)
                 }
                 else if (event.key.keysym.sym == SDLK_RETURN)
                 {
-                    free(pPlay);
-                    free(pLvlEdit);
-                    free(pQuit);
+                    freeText(pPlay);
+                    freeText(pLvlEdit);
+                    freeText(pQuit);
                     return selectedMode;
                 }
             }
@@ -252,9 +252,9 @@ int menu(Game *pGame)
         drawText(pQuit, pGame->pRenderer);
         SDL_RenderPresent(pGame->pRenderer);
     }
-    free(pPlay);
-    free(pLvlEdit);
-    free(pQuit);
+    freeText(pPlay);
+    freeText(pLvlEdit);
+    freeText(pQuit);
     return 0;
 }
 int mapSelection(Game *pGame)
@@ -275,9 +275,9 @@ int mapSelection(Game *pGame)
             if (event.type == SDL_QUIT)
             {
                 exit = true;
-                free(pMap);
-                free(pPrompt);
-                free(pPrompt2);
+                freeText(pMap);
+                freeText(pPrompt);
+                freeText(pPrompt2);
                 return 1;
             }
 
@@ -335,9 +335,9 @@ int mapSelection(Game *pGame)
             SDL_RenderPresent(pGame->pRenderer);
         }
     }
-    free(pMap);
-    free(pPrompt);
-    free(pPrompt2);
+    freeText(pMap);
+    freeText(pPrompt);
+    freeText(pPrompt2);
     return 0;
 }
 void run(Game *pGame)
