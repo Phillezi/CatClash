@@ -71,8 +71,8 @@ struct uiElements
     SDL_Rect chargebar;
     SDL_Rect healthbar;
     SDL_Rect fpsFrame;
-    Text *pMenuText, *pOverText;
-    TTF_Font *pGameFont;
+    Text *pMenuText, *pOverText, *pFpsText;
+    TTF_Font *pGameFont, *pFpsFont;
 };
 typedef struct uiElements UiE;
 

@@ -37,6 +37,8 @@ int init(Game *pGame)
     SDL_Init(SDL_INIT_EVERYTHING);
     TTF_Init();
 
+    pGame->config.vSync = false; // Hårdkodad
+
     SDL_DisplayMode displayMode;
     if (SDL_GetDesktopDisplayMode(0, &displayMode) < 0)
     {
@@ -101,6 +103,13 @@ int init(Game *pGame)
         return 1;
     }
 
+    pGame->ui.pFpsFont = TTF_OpenFont("resources/fonts/RetroGaming.ttf", pGame->world.tileSize);
+    if (!pGame->ui.pFpsFont)
+    {
+        printf("Error: %s\n", TTF_GetError());
+        return 1;
+    }
+
     pGame->ui.pMenuText = createText(pGame->pRenderer, 97, 181, 97, pGame->ui.pGameFont, "Press Space to play!", pGame->windowWidth / 2, pGame->windowHeight / 2);
     pGame->ui.pOverText = createText(pGame->pRenderer, 20, 197, 204, pGame->ui.pGameFont, "You Died!", pGame->windowWidth / 2, pGame->windowHeight / 2);
     if (!pGame->ui.pMenuText || !pGame->ui.pOverText)
@@ -144,23 +153,21 @@ void run(Game *pGame)
 {
     bool exit = false;
     pGame->config.fps = 60;
-    int oneSecTimer = 0, previousTime = 0, movementPreviousTime = 0;
+    int frameCounter = 0, oneSecTimer = 0, previousTime = 0, movementPreviousTime = 0;
     while (!exit)
     {
-        /*
+        
         if (SDL_GetTicks() - oneSecTimer >= 1000) // Performance monitor
         {
             oneSecTimer = SDL_GetTicks();
             char buffer[50];
-            SDL_DestroyTexture(pFpsTexture);
+            //SDL_DestroyTexture(&pGame->ui.pFpsText->pTexture);
             sprintf(buffer, "%d", frameCounter);
-            SDL_Surface *pFpsSurface = TTF_RenderText_Solid(pFont, buffer, colGreen);
-            SDL_Texture *pFpsTexture = SDL_CreateTextureFromSurface(pRenderer, pFpsSurface);
-            SDL_FreeSurface(pFpsSurface);
+            pGame->ui.pFpsText = createText(pGame->pRenderer, 0, 255, 0, pGame->ui.pFpsFont, buffer, pGame->windowWidth-pGame->world.tileSize, pGame->world.tileSize);
             printf("%s\n", buffer);
             frameCounter = 0;
         }
-        */
+        
 
         int deltaTime = SDL_GetTicks() - previousTime;
         if (deltaTime >= (1000 / FPS))
@@ -191,7 +198,7 @@ void run(Game *pGame)
             }
             previousTime = SDL_GetTicks();
             updateScreen(pGame);
-            // frameCounter++;
+            frameCounter++;
         }
     }
 }
@@ -209,10 +216,14 @@ void close(Game *pGame)
         SDL_DestroyTexture(pGame->pPlayerTexture);
     if (pGame->ui.pGameFont)
         TTF_CloseFont(pGame->ui.pGameFont);
+    if (pGame->ui.pFpsFont)
+        TTF_CloseFont(pGame->ui.pFpsFont);
     if (pGame->ui.pMenuText)
         freeText(pGame->ui.pMenuText);
     if (pGame->ui.pOverText)
         freeText(pGame->ui.pOverText);
+    if (pGame->ui.pFpsText)
+        freeText(pGame->ui.pFpsText);
 
     if (pGame->pRenderer)
         SDL_DestroyRenderer(pGame->pRenderer);
@@ -297,8 +308,10 @@ void updateScreen(Game *pGame)
             break;
         }
     }
-
-    drawText(pGame->ui.pMenuText);
+    if(!pGame->state){
+        drawText(pGame->ui.pMenuText, pGame->pRenderer);
+    }
+    drawText(pGame->ui.pFpsText, pGame->pRenderer);
 
     SDL_SetRenderDrawColor(pGame->pRenderer, 0, 255, 0, 255);
     SDL_RenderFillRect(pGame->pRenderer, &pGame->ui.healthbar);
@@ -351,6 +364,7 @@ int handleInput(Game *pGame)
     }
     if (currentKeyStates[SDL_SCANCODE_SPACE])
     {
+        pGame->state = 1;
         if (pGame->player.charge < MAX_CHARGE)
         {
             pGame->player.charge += 1;
