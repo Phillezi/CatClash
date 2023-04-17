@@ -107,35 +107,35 @@ void lvlhandleInput(Game *pGame, int *pMouseX, int *pMouseY)
             pGame->map[(((*pMouseY - pGame->map[0].wall.y) / pGame->map[0].wall.w * MAPSIZE) + ((*pMouseX - pGame->map[0].wall.x) / pGame->map[0].wall.w))].type = 4;
     }
     else if (currentKeyStates[SDL_SCANCODE_S] && currentKeyStates[SDL_SCANCODE_LCTRL])
-    {/*
-        char text[31] = {0};
-        int done = 0;
-        Text *pSaveStr = createText(pGame->pRenderer, 0, 0, 0, pGame->ui.pFpsFont, "Write the filname", pGame->windowWidth / 2, pGame->windowHeight / 2);
-        SDL_Event event;
-        do
-        {
-            while (SDL_PollEvent(&event))
-            {
+    { /*
+         char text[31] = {0};
+         int done = 0;
+         Text *pSaveStr = createText(pGame->pRenderer, 0, 0, 0, pGame->ui.pFpsFont, "Write the filname", pGame->windowWidth / 2, pGame->windowHeight / 2);
+         SDL_Event event;
+         do
+         {
+             while (SDL_PollEvent(&event))
+             {
 
-                if (event.type == event.type == SDL_QUIT)
-                {
-                    break;
-                }
-                else
-                {
-                    done = lvlgetStringFromUser(text, event);
-                }
-                if (text[0])
-                {
-                    freeText(pSaveStr);
-                    pSaveStr = createText(pGame->pRenderer, 0, 0, 0, pGame->ui.pFpsFont, text, pGame->windowWidth / 2, pGame->windowHeight / 2);
-                }
-                drawText(pSaveStr, pGame->pRenderer);
-                SDL_RenderPresent(pGame->pRenderer);
-            }
-        } while (!done);
-        freeText(pSaveStr);
-        */
+                 if (event.type == event.type == SDL_QUIT)
+                 {
+                     break;
+                 }
+                 else
+                 {
+                     done = lvlgetStringFromUser(text, event);
+                 }
+                 if (text[0])
+                 {
+                     freeText(pSaveStr);
+                     pSaveStr = createText(pGame->pRenderer, 0, 0, 0, pGame->ui.pFpsFont, text, pGame->windowWidth / 2, pGame->windowHeight / 2);
+                 }
+                 drawText(pSaveStr, pGame->pRenderer);
+                 SDL_RenderPresent(pGame->pRenderer);
+             }
+         } while (!done);
+         freeText(pSaveStr);
+         */
     }
     else if (currentKeyStates[SDL_SCANCODE_DELETE])
     {
@@ -215,28 +215,31 @@ void lvlupdateScreen(Game *pGame, int mouseX, int mouseY)
 
     for (int i = 0; i < MAPSIZE * MAPSIZE; i++)
     {
-        switch (pGame->map[i].type)
+        if (((pGame->map[i].wall.x <= pGame->windowWidth) && (pGame->map[i].wall.x + pGame->map[i].wall.w >= 0)) && ((pGame->map[i].wall.y <= pGame->windowHeight) && (pGame->map[i].wall.y + pGame->map[i].wall.w >= 0)))
         {
-        case 0:
-            break;
-        case 1:
-            // SDL_SetRenderDrawColor(pRenderer, 0, 0, 0, 255);
-            SDL_RenderCopy(pGame->pRenderer, pGame->pTileTextures[0], NULL, &pGame->map[i].wall); // SDL_RenderFillRect(pRenderer, &map[i].wall);
-            break;
-        case 2:
-            // SDL_SetRenderDrawColor(pRenderer, 100, 0, 0, 255);
-            SDL_RenderCopy(pGame->pRenderer, pGame->pTileTextures[1], NULL, &pGame->map[i].wall); // SDL_RenderFillRect(pRenderer, &map[i].wall);
-            break;
-        case 3:
-            // SDL_SetRenderDrawColor(pRenderer, 0, 100, 0, 255);
-            SDL_RenderCopy(pGame->pRenderer, pGame->pTileTextures[2], NULL, &pGame->map[i].wall); // SDL_RenderFillRect(pRenderer, &map[i].wall);
-            break;
-        case 4:
-            // SDL_SetRenderDrawColor(pRenderer, 0, 0, 100, 255);
-            SDL_RenderCopy(pGame->pRenderer, pGame->pTileTextures[3], NULL, &pGame->map[i].wall); // SDL_RenderFillRect(pRenderer, &map[i].wall);
-            break;
-        default:
-            break;
+            switch (pGame->map[i].type)
+            {
+            case 0:
+                break;
+            case 1:
+                // SDL_SetRenderDrawColor(pRenderer, 0, 0, 0, 255);
+                SDL_RenderCopy(pGame->pRenderer, pGame->pTileTextures[0], NULL, &pGame->map[i].wall); // SDL_RenderFillRect(pRenderer, &map[i].wall);
+                break;
+            case 2:
+                // SDL_SetRenderDrawColor(pRenderer, 100, 0, 0, 255);
+                SDL_RenderCopy(pGame->pRenderer, pGame->pTileTextures[1], NULL, &pGame->map[i].wall); // SDL_RenderFillRect(pRenderer, &map[i].wall);
+                break;
+            case 3:
+                // SDL_SetRenderDrawColor(pRenderer, 0, 100, 0, 255);
+                SDL_RenderCopy(pGame->pRenderer, pGame->pTileTextures[2], NULL, &pGame->map[i].wall); // SDL_RenderFillRect(pRenderer, &map[i].wall);
+                break;
+            case 4:
+                // SDL_SetRenderDrawColor(pRenderer, 0, 0, 100, 255);
+                SDL_RenderCopy(pGame->pRenderer, pGame->pTileTextures[3], NULL, &pGame->map[i].wall); // SDL_RenderFillRect(pRenderer, &map[i].wall);
+                break;
+            default:
+                break;
+            }
         }
     }
     // Draw grid
