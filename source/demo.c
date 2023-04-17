@@ -9,7 +9,7 @@
 
 int init(Game *pGame);
 int menu(Game *pGame);
-void mapSelection(Game *pGame);
+int mapSelection(Game *pGame);
 void run(Game *pGame);
 void close(Game *pGame);
 
@@ -29,19 +29,22 @@ int main(int argv, char **args)
         close(&game);
         return 1;
     }
-    int choice = 0;
     while (1)
     {
-        // printf("pick ur choice: ");
-        // scanf("%1d", &choice);
         switch (menu(&game))
         {
         case 0:
-            mapSelection(&game);
+            if (mapSelection(&game))
+            {
+                break;
+            }
             run(&game);
             break;
         case 1:
-            mapSelection(&game);
+            if (mapSelection(&game))
+            {
+                break;
+            }
             levelEditor(&game);
             break;
         case 2:
@@ -254,10 +257,12 @@ int menu(Game *pGame)
     free(pQuit);
     return 0;
 }
-void mapSelection(Game *pGame)
+int mapSelection(Game *pGame)
 {
     int previousTime = 0;
     bool exit = false;
+    Text *pPrompt = createText(pGame->pRenderer, 0, 0, 0, pGame->ui.pFpsFont, "Type the name", pGame->windowWidth / 2, (pGame->windowHeight / 2) - (2 * pGame->world.tileSize));
+    Text *pPrompt2 = createText(pGame->pRenderer, 0, 0, 0, pGame->ui.pFpsFont, "of the map:", pGame->windowWidth / 2, (pGame->windowHeight / 2) - pGame->world.tileSize);
     Text *pMap = malloc(sizeof(Text));
 
     int counter = 0;
@@ -268,7 +273,14 @@ void mapSelection(Game *pGame)
         while (SDL_PollEvent(&event))
         {
             if (event.type == SDL_QUIT)
+            {
                 exit = true;
+                free(pMap);
+                free(pPrompt);
+                free(pPrompt2);
+                return 1;
+            }
+
             else if (event.type == SDL_KEYDOWN)
             {
                 if (event.key.keysym.sym == SDLK_RETURN)
@@ -313,14 +325,20 @@ void mapSelection(Game *pGame)
 
             SDL_SetRenderDrawColor(pGame->pRenderer, 255, 255, 255, 255);
             SDL_RenderClear(pGame->pRenderer);
+            drawText(pPrompt, pGame->pRenderer);
+            drawText(pPrompt2, pGame->pRenderer);
             if (text[0])
             {
                 drawText(pMap, pGame->pRenderer);
             }
+
             SDL_RenderPresent(pGame->pRenderer);
         }
     }
     free(pMap);
+    free(pPrompt);
+    free(pPrompt2);
+    return 0;
 }
 void run(Game *pGame)
 {
