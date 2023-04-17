@@ -58,18 +58,15 @@ int init(Game *pGame)
 {
     if(SDL_Init(SDL_INIT_EVERYTHING) != 0) {
         printf("Error: %s\n",SDL_GetError());
-        return 0;
+        return 1;
     }
     if(TTF_Init() != 0) {
         printf("Error: %s\n",TTF_GetError());
-        SDL_Quit();
-        return 0;
+        return 1;
     }
     if (SDLNet_Init()) {
 		printf("SDLNet_Init: %s\n", SDLNet_GetError());
-        TTF_Quit();
-        SDL_Quit();
-		return 0;
+		return 1;
 	}
 
     pGame->config.vSync = true; // Hårdkodad
