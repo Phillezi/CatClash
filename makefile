@@ -5,18 +5,20 @@ CFLAGS = -g -c
 LDFLAGS = -Wall -lmingw32 -lSDL2main -lSDL2_image -lSDL2 -lSDL2_net -lSDL2_ttf #-mwindows -lm
 
 all:
-	@echo "Building test"
+	@echo "Building main"
 	$(CC) $(CFLAGS) $(SRCDIR)/main.c 
-	$(CC) $(CFLAGS) $(SRCDIR)/init.c 
-	$(CC) main.o init.o -o main.exe $(LDFLAGS)
-
-demo:
-	@echo "Building demo"
-	$(CC) $(CFLAGS) $(SRCDIR)/demo.c 
 	$(CC) $(CFLAGS) $(SRCDIR)/init.c
 	$(CC) $(CFLAGS) $(SRCDIR)/text.c  
 	$(CC) $(CFLAGS) $(SRCDIR)/levelEditor.c 
-	$(CC) demo.o init.o text.o levelEditor.o -o demo.exe $(LDFLAGS)
+	$(CC) main.o init.o text.o levelEditor.o -o main.exe $(LDFLAGS)
+
+demo:
+	@echo "Building demo"
+	$(CC) $(CFLAGS) $(SRCDIR)/main.c 
+	$(CC) $(CFLAGS) $(SRCDIR)/init.c
+	$(CC) $(CFLAGS) $(SRCDIR)/text.c  
+	$(CC) $(CFLAGS) $(SRCDIR)/levelEditor.c 
+	$(CC) main.o init.o text.o levelEditor.o -o main.exe $(LDFLAGS)
 
 net:
 	@echo "Building Networking"

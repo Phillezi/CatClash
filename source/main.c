@@ -1,166 +1,373 @@
+#include "definitions.h"
+#include <stdbool.h>
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_image.h>
 #include <SDL2/SDL_ttf.h>
-#include <stdio.h>
-#include <stdbool.h>
-#include <stdlib.h>
-#include "text.h"
 #include "init.h"
-#include "definitions.h"
-// #include "menu.h"
+#include "text.h"
+#include "levelEditor.h"
 
-#define MAX_CHARGE 100
+int init(Game *pGame);
+int menu(Game *pGame);
+int mapSelection(Game *pGame);
+void run(Game *pGame);
+void close(Game *pGame);
 
-struct uiElements
-{
-    SDL_Rect chargebar;
-    SDL_Rect healthbar;
-    SDL_Rect fpsFrame;
-};
-typedef struct uiElements UiE;
-
-void updateScreen(SDL_Renderer *pRenderer, Player player, Tile map[], SDL_Texture *pTextureTiles[], SDL_Texture *pTexturePlayer, UiE ui, SDL_Texture *pFpsTexture, float angle, int tileSize);
-int handleInput(Player *pPlayer, Tile map[], int movementAmount, int *pCharge, char *pPrevKeyPressed, float *pAngle, int tileSize);
+void updateScreen(Game *pGame);
+void centerPlayer(Game *pGame);
+int handleInput(Game *pGame);
 void movePlayer(Player *pPlayer, char direction);
-int checkCollision(Player player, Tile map[], char direction);
+int checkCollision(Player player, Tile map[], char direction, int tileSize);
 SDL_Rect findEmptyTile(Tile map[]);
+void getPlayerSpawnPos(Game *pGame);
 
 int main(int argv, char **args)
 {
-    bool run = true;
-    int previousTime = 0, movementPreviousTime = 0, charge = 0;
-    Player *pPlayer = malloc(sizeof(Player));
-    if (pPlayer == NULL)
+    Game game;
+    if (init(&game))
     {
-        printf("Error: Failed to allocate memory for pPlayer\n");
+        close(&game);
         return 1;
     }
+    while (1)
+    {
+        switch (menu(&game))
+        {
+        case 0:
+            if (mapSelection(&game))
+                break;
+            run(&game);
+            break;
+        case 1:
+            if (mapSelection(&game))
+                break;
+            levelEditor(&game);
+            break;
+        case 2:
+            close(&game);
+            return 0;
+            break;
+        default:
+            break;
+        }
+    }
+}
 
-    Tile map[MAPSIZE * MAPSIZE];
-    int windowWidth = DEFAULT_WIDTH, windowHeight = DEFAULT_HEIGHT;
-    char prevKeyPressed;
-    UiE ui;
-
+int init(Game *pGame)
+{
     SDL_Init(SDL_INIT_EVERYTHING);
     TTF_Init();
 
-    SDL_DisplayMode dm;
+    pGame->config.vSync = true; // Hårdkodad
 
-    if (SDL_GetDesktopDisplayMode(0, &dm) != 0)
+    SDL_DisplayMode displayMode;
+    if (SDL_GetDesktopDisplayMode(0, &displayMode) < 0)
     {
-        printf("SDL_GetDesktopDisplayMode failed: %s", SDL_GetError());
+        printf("SDL_GetDesktopDisplayMode failed: %s\n", SDL_GetError());
+        SDL_Quit();
+        return -1;
+    }
+
+    pGame->windowWidth = (float)displayMode.w * 0.7; // 70% of avaliable space
+    pGame->windowHeight = (float)displayMode.h * 0.7;
+
+    pGame->world.tileSize = (pGame->windowHeight / MAPSIZE) * 4;
+
+    pGame->pWindow = SDL_CreateWindow(WINDOW_NAME, SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, pGame->windowWidth, pGame->windowHeight, 0);
+    if (!pGame->pWindow)
+    {
+        printf("Error: %s\n", SDL_GetError());
+        return -1;
+    }
+
+    if (pGame->config.vSync)
+    {
+        pGame->pRenderer = SDL_CreateRenderer(pGame->pWindow, -1, SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC);
+        printf("Vsync is enabled\n");
     }
     else
     {
-        windowWidth = dm.h - 100, windowHeight = dm.h - 100;
+        pGame->pRenderer = SDL_CreateRenderer(pGame->pWindow, -1, SDL_RENDERER_ACCELERATED);
+        printf("Vsync is not enabled\n");
     }
 
-    int tileSize = (windowHeight / MAPSIZE);
-
-    char fileName[31];
-    do
-    {
-        printf("map name: ");
-        scanf(" %30s", fileName);
-    } while (initMap(map, fileName, tileSize) == -1);
-
-    // int windowWidth = dm.w, windowHeight = dm.h; //DEFAULT_WIDTH, windowHeight = DEFAULT_HEIGHT;
-    SDL_Window *pWindow = SDL_CreateWindow(WINDOW_NAME, SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, windowWidth, windowHeight, 0);
-    if (!pWindow)
+    if (!pGame->pRenderer)
     {
         printf("Error: %s\n", SDL_GetError());
-        SDL_Quit();
-        return 1;
-    }
-
-    SDL_Renderer *pRenderer = SDL_CreateRenderer(pWindow, -1, SDL_RENDERER_ACCELERATED); // | SDL_RENDERER_PRESENTVSYNC);
-    if (!pRenderer)
-    {
-        printf("Error: %s\n", SDL_GetError());
-        SDL_DestroyWindow(pWindow);
-        SDL_Quit();
         return 1;
     }
 
     char tileTextures[TILES][20] = {"resources/Tile1.png", "resources/Tile2.png", "resources/Tile3.png", "resources/Tile4.png"};
-    SDL_Texture *pTextureTiles[TILES];
-    if (initTextureTiles(pRenderer, pWindow, pTextureTiles, tileTextures, TILES) == -1)
+    if (initTextureTiles(pGame->pRenderer, pGame->pWindow, pGame->pTileTextures, tileTextures, TILES) == -1)
     {
         printf("Error: %s\n", SDL_GetError());
-        SDL_DestroyRenderer(pRenderer);
-        SDL_DestroyWindow(pWindow);
-        SDL_Quit();
         return 1;
     }
 
-    SDL_Texture *pTexturePlayer;
-    if (initTexturePlayer(pRenderer, pWindow, &pTexturePlayer) == -1)
+    if (initTexturePlayer(pGame->pRenderer, pGame->pWindow, &pGame->pPlayerTexture) == -1)
     {
         printf("Error: %s\n", SDL_GetError());
-        SDL_DestroyRenderer(pRenderer);
-        SDL_DestroyWindow(pWindow);
-        SDL_Quit();
         return 1;
     }
 
-    if (SDL_QueryTexture(pTexturePlayer, NULL, NULL, &pPlayer->rect.w, &pPlayer->rect.h) < 0)
+    pGame->ui.pGameFont = TTF_OpenFont("resources/fonts/RetroGaming.ttf", 100);
+    if (!pGame->ui.pGameFont)
     {
-        printf("Error: %s\n", SDL_GetError());
-        SDL_DestroyRenderer(pRenderer);
-        SDL_DestroyWindow(pWindow);
-        SDL_Quit();
+        printf("Error: %s\n", TTF_GetError());
         return 1;
     }
 
-    SDL_Rect spawnTile = findEmptyTile(map); // this function returns a valid spawn tile
-    pPlayer->x = spawnTile.x;
-    pPlayer->y = spawnTile.y;
-    pPlayer->rect.x = spawnTile.x; // windowWidth / 2;
-    pPlayer->rect.y = spawnTile.y; // windowHeight / 2;
-
-    pPlayer->rect.w = map[0].wall.w;
-    pPlayer->rect.h = map[0].wall.w;
-
-    pPlayer->hp = 255;
-
-    ui.chargebar.x = ((windowWidth / 2) - (MAX_CHARGE / 2));
-    ui.chargebar.y = ((3 * windowHeight) / 4);
-    ui.chargebar.w = charge;
-    ui.chargebar.h = map[0].wall.w;
-
-    ui.healthbar.x = ((windowWidth / 2) + (MAX_CHARGE / 2) + 5);
-    ui.healthbar.y = ((3 * windowHeight) / 4);
-    ui.healthbar.w = pPlayer->hp;
-    ui.healthbar.h = map[0].wall.w;
-
-    // PERFORMANCE monitor
-    int oneSecTimer = 0, frameCounter = 0;
-    ui.fpsFrame.w = 40;
-    ui.fpsFrame.h = 40;
-    ui.fpsFrame.x = windowWidth - ui.fpsFrame.w;
-    ui.fpsFrame.y = 0;
-
-    TTF_Font *pFont = TTF_OpenFont("resources/fonts/Pixelletters.ttf", 20);
-    SDL_Color colGreen = {0, 255, 0};
-    SDL_Surface *pFpsSurface = TTF_RenderText_Solid(pFont, "FPS", colGreen);
-    SDL_Texture *pFpsTexture = SDL_CreateTextureFromSurface(pRenderer, pFpsSurface);
-    SDL_FreeSurface(pFpsSurface);
-    float angle = 0;
-
-    while (run)
+    pGame->ui.pFpsFont = TTF_OpenFont("resources/fonts/RetroGaming.ttf", pGame->world.tileSize);
+    if (!pGame->ui.pFpsFont)
     {
+        printf("Error: %s\n", TTF_GetError());
+        return 1;
+    }
+
+    pGame->ui.pMenuText = createText(pGame->pRenderer, 97, 181, 97, pGame->ui.pGameFont, "Press Space to play!", pGame->windowWidth / 2, pGame->windowHeight / 2);
+    pGame->ui.pOverText = createText(pGame->pRenderer, 20, 197, 204, pGame->ui.pGameFont, "You Died!", pGame->windowWidth / 2, pGame->windowHeight / 2);
+    if (!pGame->ui.pMenuText || !pGame->ui.pOverText)
+    {
+        printf("Error: %s\n", SDL_GetError());
+        return 1;
+    }
+
+    if (SDL_QueryTexture(pGame->pPlayerTexture, NULL, NULL, &pGame->player.rect.w, &pGame->player.rect.h) < 0)
+    {
+        printf("Error: %s\n", SDL_GetError());
+        return 1;
+    }
+    getPlayerSpawnPos(pGame);
+
+    pGame->player.rect.w = pGame->world.tileSize;
+    pGame->player.rect.h = pGame->world.tileSize;
+
+    pGame->player.hp = 255;
+
+    pGame->ui.chargebar.x = ((pGame->windowWidth / 2) - (MAX_CHARGE / 2));
+    pGame->ui.chargebar.y = ((3 * pGame->windowHeight) / 4);
+    pGame->ui.chargebar.w = pGame->player.charge;
+    pGame->ui.chargebar.h = pGame->world.tileSize;
+
+    pGame->ui.healthbar.x = ((pGame->windowWidth / 2) + (MAX_CHARGE / 2) + 5);
+    pGame->ui.healthbar.y = ((3 * pGame->windowHeight) / 4);
+    pGame->ui.healthbar.w = pGame->player.hp;
+    pGame->ui.healthbar.h = pGame->world.tileSize;
+
+    pGame->movementAmount = (float)pGame->world.tileSize / TILESIZE;
+
+    return 0;
+}
+int menu(Game *pGame)
+{
+    int selectedMode = 0, previousTime = 0;
+    int r = 0, g = 0, b = 0;
+    Text *pPlay = malloc(sizeof(Text)), *pLvlEdit = malloc(sizeof(Text)), *pQuit = malloc(sizeof(Text));
+    while (true)
+    {
+        SDL_Event event;
+        while (SDL_PollEvent(&event))
+        {
+            if (event.type == SDL_QUIT)
+                return 2;
+            else if (event.type == SDL_KEYDOWN)
+            {
+                if (event.key.keysym.sym == SDLK_UP)
+                {
+                    if (selectedMode > 0)
+                        selectedMode--;
+                    else
+                        selectedMode = 2;
+                }
+                else if (event.key.keysym.sym == SDLK_DOWN)
+                {
+
+                    if (selectedMode < 2)
+                        selectedMode++;
+                    else
+                        selectedMode = 0;
+                }
+                else if (event.key.keysym.sym == SDLK_RETURN)
+                {
+                    freeText(pPlay);
+                    freeText(pLvlEdit);
+                    freeText(pQuit);
+                    return selectedMode;
+                }
+            }
+        }
+
+        if (SDL_GetTicks() - previousTime >= 1000 / 60)
+        {
+            previousTime = SDL_GetTicks();
+            switch (rand() % 3 + 1)
+            {
+            case 1:
+                if (r < 255)
+                    r++;
+                else
+                    r = 0;
+                break;
+            case 2:
+                if (g < 255)
+                    g++;
+                else
+                    g = 0;
+                break;
+            case 3:
+                if (b < 255)
+                    b++;
+                else
+                    b = 0;
+                break;
+            }
+        }
+        switch (selectedMode)
+        {
+        case 0:
+            pPlay = createText(pGame->pRenderer, r, g, b, pGame->ui.pFpsFont, "Play", pGame->windowWidth / 2, pGame->windowHeight / 4);
+            pLvlEdit = createText(pGame->pRenderer, 200, 200, 200, pGame->ui.pFpsFont, "Edit level", pGame->windowWidth / 2, (pGame->windowHeight / 4) + pGame->world.tileSize);
+            pQuit = createText(pGame->pRenderer, 200, 200, 200, pGame->ui.pFpsFont, "QUIT", pGame->windowWidth / 2, (pGame->windowHeight / 4) + (2 * pGame->world.tileSize));
+            break;
+        case 1:
+            pPlay = createText(pGame->pRenderer, 200, 200, 200, pGame->ui.pFpsFont, "Play", pGame->windowWidth / 2, pGame->windowHeight / 4);
+            pLvlEdit = createText(pGame->pRenderer, r, g, b, pGame->ui.pFpsFont, "Edit level", pGame->windowWidth / 2, (pGame->windowHeight / 4) + pGame->world.tileSize);
+            pQuit = createText(pGame->pRenderer, 200, 200, 200, pGame->ui.pFpsFont, "QUIT", pGame->windowWidth / 2, (pGame->windowHeight / 4) + (2 * pGame->world.tileSize));
+            break;
+        case 2:
+            pPlay = createText(pGame->pRenderer, 200, 200, 200, pGame->ui.pFpsFont, "Play", pGame->windowWidth / 2, pGame->windowHeight / 4);
+            pLvlEdit = createText(pGame->pRenderer, 200, 200, 200, pGame->ui.pFpsFont, "Edit level", pGame->windowWidth / 2, (pGame->windowHeight / 4) + pGame->world.tileSize);
+            pQuit = createText(pGame->pRenderer, r, g, b, pGame->ui.pFpsFont, "QUIT", pGame->windowWidth / 2, (pGame->windowHeight / 4) + (2 * pGame->world.tileSize));
+            break;
+        }
+
+        SDL_SetRenderDrawColor(pGame->pRenderer, 255, 255, 255, 255);
+        SDL_RenderClear(pGame->pRenderer);
+        drawText(pPlay, pGame->pRenderer);
+        drawText(pLvlEdit, pGame->pRenderer);
+        drawText(pQuit, pGame->pRenderer);
+        SDL_RenderPresent(pGame->pRenderer);
+    }
+    freeText(pPlay);
+    freeText(pLvlEdit);
+    freeText(pQuit);
+    return 0;
+}
+int mapSelection(Game *pGame)
+{
+    int previousTime = 0;
+    bool exit = false;
+    Text *pPrompt = createText(pGame->pRenderer, 0, 0, 0, pGame->ui.pFpsFont, "Type the name", pGame->windowWidth / 2, (pGame->windowHeight / 2) - (2 * pGame->world.tileSize));
+    Text *pPrompt2 = createText(pGame->pRenderer, 0, 0, 0, pGame->ui.pFpsFont, "of the map:", pGame->windowWidth / 2, (pGame->windowHeight / 2) - pGame->world.tileSize);
+    Text *pMap = malloc(sizeof(Text));
+
+    int counter = 0;
+    char text[31] = {0};
+    while (!exit)
+    {
+        SDL_Event event;
+        while (SDL_PollEvent(&event))
+        {
+            if (event.type == SDL_QUIT)
+            {
+                exit = true;
+                freeText(pMap);
+                freeText(pPrompt);
+                freeText(pPrompt2);
+                return 1;
+            }
+
+            else if (event.type == SDL_KEYDOWN)
+            {
+                if (event.key.keysym.sym == SDLK_RETURN)
+                {
+                    if (initMap(pGame->map, text, pGame->world.tileSize) != -1)
+                    {
+                        getPlayerSpawnPos(pGame);
+                        exit = true;
+                    }
+                    else
+                    {
+                        for (int i = 0; i < 31; i++)
+                        {
+                            text[i] == 0;
+                            pMap = createText(pGame->pRenderer, 0, 0, 0, pGame->ui.pFpsFont, text, pGame->windowWidth / 2, pGame->windowHeight / 2);
+                        }
+                    }
+                }
+                else if (event.key.keysym.sym == SDLK_BACKSPACE)
+                {
+                    if (counter > 0)
+                    {
+                        text[counter - 1] = 0;
+                        counter--;
+                        if (counter)
+                            pMap = createText(pGame->pRenderer, 0, 0, 0, pGame->ui.pFpsFont, text, pGame->windowWidth / 2, pGame->windowHeight / 2);
+                    }
+                }
+                else
+                {
+                    // printf("KEY VALUE: %d\n", event.key.keysym.sym);
+                    if ((event.key.keysym.sym > 96 && event.key.keysym.sym < 127) || (event.key.keysym.sym >= 48 && event.key.keysym.sym <= 57))
+                    {
+
+                        if (counter < 31)
+                        {
+                            const Uint8 *currentKeyStates = SDL_GetKeyboardState(NULL);
+                            if (((event.key.keysym.sym > 96 && event.key.keysym.sym < 127)) && (currentKeyStates[SDL_SCANCODE_LSHIFT] || currentKeyStates[SDL_SCANCODE_RSHIFT]))
+                                text[counter] = event.key.keysym.sym - 32;
+                            else
+                            {
+                                text[counter] = event.key.keysym.sym;
+                            }
+
+                            counter++;
+                            pMap = createText(pGame->pRenderer, 0, 0, 0, pGame->ui.pFpsFont, text, pGame->windowWidth / 2, pGame->windowHeight / 2);
+                        }
+                    }
+                }
+            }
+        }
+        if (SDL_GetTicks() - previousTime >= 1000 / 60)
+        {
+            previousTime = SDL_GetTicks();
+
+            SDL_SetRenderDrawColor(pGame->pRenderer, 255, 255, 255, 255);
+            SDL_RenderClear(pGame->pRenderer);
+            drawText(pPrompt, pGame->pRenderer);
+            drawText(pPrompt2, pGame->pRenderer);
+            if (text[0])
+            {
+                drawText(pMap, pGame->pRenderer);
+            }
+
+            SDL_RenderPresent(pGame->pRenderer);
+        }
+    }
+    freeText(pMap);
+    freeText(pPrompt);
+    freeText(pPrompt2);
+    return 0;
+}
+void run(Game *pGame)
+{
+    bool exit = false;
+    pGame->config.fps = 60;
+    int frameCounter = 0, oneSecTimer = 0, previousTime = 0, movementPreviousTime = 0;
+    while (!exit)
+    {
+
         if (SDL_GetTicks() - oneSecTimer >= 1000) // Performance monitor
         {
             oneSecTimer = SDL_GetTicks();
             char buffer[50];
-            SDL_DestroyTexture(pFpsTexture);
+            // SDL_DestroyTexture(&pGame->ui.pFpsText->pTexture);
             sprintf(buffer, "%d", frameCounter);
-            SDL_Surface *pFpsSurface = TTF_RenderText_Solid(pFont, buffer, colGreen);
-            SDL_Texture *pFpsTexture = SDL_CreateTextureFromSurface(pRenderer, pFpsSurface);
-            SDL_FreeSurface(pFpsSurface);
+            pGame->ui.pFpsText = createText(pGame->pRenderer, 0, 255, 0, pGame->ui.pFpsFont, buffer, pGame->windowWidth - pGame->world.tileSize, pGame->world.tileSize);
             printf("%s\n", buffer);
             frameCounter = 0;
         }
+
         int deltaTime = SDL_GetTicks() - previousTime;
         if (deltaTime >= (1000 / FPS))
         {
@@ -168,213 +375,282 @@ int main(int argv, char **args)
             while (SDL_PollEvent(&event))
             {
                 if (event.type == SDL_QUIT)
-                    run = false;
+                    exit = true;
             }
 
             int movementDeltaTime = SDL_GetTicks() - movementPreviousTime;
             if (movementDeltaTime >= (1000 / 60))
             {
                 movementPreviousTime = SDL_GetTicks();
-                handleInput(pPlayer, map, 5, &charge, &prevKeyPressed, &angle, tileSize);
-                // printf("ANGLE: %f\n", angle);
+                handleInput(pGame);
+                pGame->player.rect.h = (pGame->world.tileSize / 2) + ((pGame->world.tileSize / 2) * (1 - (float)pGame->player.charge / MAX_CHARGE));
+                pGame->player.rect.y += pGame->world.tileSize - pGame->player.rect.h;
 
-                if (pPlayer->hp <= 0)
+                if (pGame->player.hp <= 0)
                 {
-                    printf("You Died\n");
-                    pPlayer->hp = 255;
+                    pGame->state = OVER;
+                    //printf("You Died\n");
+                    pGame->player.hp = 255;
                 }
 
-                ui.healthbar.w = pPlayer->hp;
-                ui.chargebar.w = charge;
+                pGame->ui.healthbar.w = pGame->player.hp;
+                pGame->ui.chargebar.w = pGame->player.charge;
             }
             previousTime = SDL_GetTicks();
-            updateScreen(pRenderer, *pPlayer, map, pTextureTiles, pTexturePlayer, ui, pFpsTexture, angle, tileSize);
+            updateScreen(pGame);
             frameCounter++;
         }
     }
-    // DESTROY EVERYTHING
-    free(pPlayer);
-    SDL_DestroyTexture(pTextureTiles[0]);
-    SDL_DestroyTexture(pTextureTiles[1]);
-    SDL_DestroyTexture(pTextureTiles[2]);
-    SDL_DestroyTexture(pTextureTiles[3]);
-    SDL_DestroyTexture(pTexturePlayer);
-    SDL_DestroyTexture(pFpsTexture);
-
-    SDL_DestroyRenderer(pRenderer);
-    SDL_DestroyWindow(pWindow);
-    TTF_CloseFont(pFont);
-    TTF_Quit();
-    SDL_Quit();
-    return 0;
 }
-void updateScreen(SDL_Renderer *pRenderer, Player player, Tile map[], SDL_Texture *pTextureTiles[], SDL_Texture *pTexturePlayer, UiE ui, SDL_Texture *pFpsTexture, float angle, int tileSize)
+void close(Game *pGame)
 {
-    SDL_SetRenderDrawColor(pRenderer, 255, 255, 255, 255);
-    SDL_RenderClear(pRenderer);
-    SDL_Rect temp;
-    for (int i = 0; i < (((player.y) / map[0].wall.w) * MAPSIZE) + ((player.x - 1) / map[0].wall.w) + 2; i++)
-    {
-        switch (map[i].type)
-        {
-        case 0:
-            if (i > MAPSIZE - 1)
-            {
-                if (map[i - MAPSIZE].type)
-                {
-                    temp = map[i].wall;
-                    temp.h = ((float)tileSize * angle);
-                    SDL_SetTextureColorMod(pTextureTiles[(map[i - MAPSIZE].type - 1)], 150, 150, 150);
-                    SDL_RenderCopy(pRenderer, pTextureTiles[(map[i - MAPSIZE].type - 1)], NULL, &temp);
-                    SDL_SetTextureColorMod(pTextureTiles[(map[i - MAPSIZE].type - 1)], 255, 255, 255);
-                }
-            }
-            break;
-        case 1:
-            SDL_RenderCopy(pRenderer, pTextureTiles[0], NULL, &map[i].wall);
-            break;
-        case 2:
-            SDL_RenderCopy(pRenderer, pTextureTiles[1], NULL, &map[i].wall);
-            break;
-        case 3:
-            SDL_RenderCopy(pRenderer, pTextureTiles[2], NULL, &map[i].wall);
-            break;
-        case 4:
-            SDL_RenderCopy(pRenderer, pTextureTiles[3], NULL, &map[i].wall);
-            break;
-        default:
-            break;
-        }
-    }
-    SDL_SetRenderDrawColor(pRenderer, 0, 0, 0, 255);
-    SDL_RenderDrawRect(pRenderer, &player.rect);
-    SDL_RenderCopy(pRenderer, pTexturePlayer, NULL, &player.rect);
+    if (pGame->pTileTextures[0])
+        SDL_DestroyTexture(pGame->pTileTextures[0]);
+    if (pGame->pTileTextures[1])
+        SDL_DestroyTexture(pGame->pTileTextures[1]);
+    if (pGame->pTileTextures[2])
+        SDL_DestroyTexture(pGame->pTileTextures[2]);
+    if (pGame->pTileTextures[3])
+        SDL_DestroyTexture(pGame->pTileTextures[3]);
+    if (pGame->pPlayerTexture)
+        SDL_DestroyTexture(pGame->pPlayerTexture);
+    if (pGame->ui.pGameFont)
+        TTF_CloseFont(pGame->ui.pGameFont);
+    if (pGame->ui.pFpsFont)
+        TTF_CloseFont(pGame->ui.pFpsFont);
+    if (pGame->ui.pMenuText)
+        freeText(pGame->ui.pMenuText);
+    if (pGame->ui.pOverText)
+        freeText(pGame->ui.pOverText);
+    if (pGame->ui.pFpsText)
+        freeText(pGame->ui.pFpsText);
 
-    for (int i = (((player.y) / map[0].wall.w) * MAPSIZE) + ((player.x - 1) / map[0].wall.w) + 2; i < MAPSIZE * MAPSIZE; i++)
-    {
-        switch (map[i].type)
-        {
-        case 0:
-            if (i > MAPSIZE - 1)
-            {
-                if (map[i - MAPSIZE].type)
-                {
-                    temp = map[i].wall;
-                    temp.h = ((float)tileSize * angle);
-                    SDL_SetTextureColorMod(pTextureTiles[(map[i - MAPSIZE].type - 1)], 150, 150, 150);
-                    SDL_RenderCopy(pRenderer, pTextureTiles[(map[i - MAPSIZE].type - 1)], NULL, &temp);
-                    SDL_SetTextureColorMod(pTextureTiles[(map[i - MAPSIZE].type - 1)], 255, 255, 255);
-                }
-            }
-            break;
-        case 1:
-            SDL_RenderCopy(pRenderer, pTextureTiles[0], NULL, &map[i].wall);
-            break;
-        case 2:
-            SDL_RenderCopy(pRenderer, pTextureTiles[1], NULL, &map[i].wall);
-            break;
-        case 3:
-            SDL_RenderCopy(pRenderer, pTextureTiles[2], NULL, &map[i].wall);
-            break;
-        case 4:
-            SDL_RenderCopy(pRenderer, pTextureTiles[3], NULL, &map[i].wall);
-            break;
-        default:
-            break;
-        }
-    }
-
-    SDL_SetRenderDrawColor(pRenderer, 0, 255, 0, 255);
-    SDL_RenderFillRect(pRenderer, &ui.healthbar);
-
-    SDL_SetRenderDrawColor(pRenderer, 0, 0, 255, 255);
-    SDL_RenderFillRect(pRenderer, &ui.chargebar);
-
-    SDL_RenderCopy(pRenderer, pFpsTexture, NULL, &ui.fpsFrame);
-
-    SDL_RenderPresent(pRenderer);
+    if (pGame->pRenderer)
+        SDL_DestroyRenderer(pGame->pRenderer);
+    if (pGame->pWindow)
+        SDL_DestroyWindow(pGame->pWindow);
+    SDL_Quit();
 }
-int handleInput(Player *pPlayer, Tile map[], int movementAmount, int *pCharge, char *pPrevKeypressed, float *pAngle, int tileSize)
+
+// FUNKTIONER INOM RUN
+void updateScreen(Game *pGame)
+{
+    SDL_SetRenderDrawColor(pGame->pRenderer, 255, 255, 255, 255);
+    SDL_RenderClear(pGame->pRenderer);
+    SDL_Rect temp;
+    for (int i = 0; i < (((pGame->player.y) / pGame->map[0].wall.w) * MAPSIZE) + ((pGame->player.x - 1) / pGame->map[0].wall.w) + 2; i++)
+    {
+        switch (pGame->map[i].type)
+        {
+        case 0:
+            if (i > MAPSIZE - 1)
+            {
+                if (pGame->map[i - MAPSIZE].type)
+                {
+                    temp = pGame->map[i].wall;
+                    temp.h = ((float)pGame->world.tileSize * pGame->world.angle);
+                    SDL_SetTextureColorMod(pGame->pTileTextures[(pGame->map[i - MAPSIZE].type - 1)], 150, 150, 150);
+                    SDL_RenderCopy(pGame->pRenderer, pGame->pTileTextures[(pGame->map[i - MAPSIZE].type - 1)], NULL, &temp);
+                    SDL_SetTextureColorMod(pGame->pTileTextures[(pGame->map[i - MAPSIZE].type - 1)], 255, 255, 255);
+                }
+            }
+            break;
+        case 1:
+            SDL_RenderCopy(pGame->pRenderer, pGame->pTileTextures[0], NULL, &pGame->map[i].wall);
+            break;
+        case 2:
+            SDL_RenderCopy(pGame->pRenderer, pGame->pTileTextures[1], NULL, &pGame->map[i].wall);
+            break;
+        case 3:
+            SDL_RenderCopy(pGame->pRenderer, pGame->pTileTextures[2], NULL, &pGame->map[i].wall);
+            break;
+        case 4:
+            SDL_RenderCopy(pGame->pRenderer, pGame->pTileTextures[3], NULL, &pGame->map[i].wall);
+            break;
+        default:
+            break;
+        }
+    }
+    SDL_SetRenderDrawColor(pGame->pRenderer, 0, 0, 0, 255);
+    SDL_RenderDrawRect(pGame->pRenderer, &pGame->player.rect);
+    SDL_RenderCopy(pGame->pRenderer, pGame->pPlayerTexture, NULL, &pGame->player.rect);
+
+    for (int i = (((pGame->player.y) / pGame->map[0].wall.w) * MAPSIZE) + ((pGame->player.x - 1) / pGame->map[0].wall.w) + 2; i < MAPSIZE * MAPSIZE; i++)
+    {
+        switch (pGame->map[i].type)
+        {
+        case 0:
+            if (i > MAPSIZE - 1)
+            {
+                if (pGame->map[i - MAPSIZE].type)
+                {
+                    temp = pGame->map[i].wall;
+                    temp.h = ((float)pGame->world.tileSize * pGame->world.angle);
+                    SDL_SetTextureColorMod(pGame->pTileTextures[(pGame->map[i - MAPSIZE].type - 1)], 150, 150, 150);
+                    SDL_RenderCopy(pGame->pRenderer, pGame->pTileTextures[(pGame->map[i - MAPSIZE].type - 1)], NULL, &temp);
+                    SDL_SetTextureColorMod(pGame->pTileTextures[(pGame->map[i - MAPSIZE].type - 1)], 255, 255, 255);
+                }
+            }
+            break;
+        case 1:
+            SDL_RenderCopy(pGame->pRenderer, pGame->pTileTextures[0], NULL, &pGame->map[i].wall);
+            break;
+        case 2:
+            SDL_RenderCopy(pGame->pRenderer, pGame->pTileTextures[1], NULL, &pGame->map[i].wall);
+            break;
+        case 3:
+            SDL_RenderCopy(pGame->pRenderer, pGame->pTileTextures[2], NULL, &pGame->map[i].wall);
+            break;
+        case 4:
+            SDL_RenderCopy(pGame->pRenderer, pGame->pTileTextures[3], NULL, &pGame->map[i].wall);
+            break;
+        default:
+            break;
+        }
+    }
+    if (pGame->state == OVER)
+    {
+        drawText(pGame->ui.pOverText, pGame->pRenderer);
+    }
+    drawText(pGame->ui.pFpsText, pGame->pRenderer);
+
+    SDL_SetRenderDrawColor(pGame->pRenderer, 0, 255, 0, 255);
+    SDL_RenderFillRect(pGame->pRenderer, &pGame->ui.healthbar);
+
+    SDL_SetRenderDrawColor(pGame->pRenderer, 0, 0, 255, 255);
+    SDL_RenderFillRect(pGame->pRenderer, &pGame->ui.chargebar);
+
+    SDL_RenderPresent(pGame->pRenderer);
+}
+
+void centerPlayer(Game *pGame)
+{
+    int screenShiftAmount = pGame->movementAmount;
+    if (pGame->player.rect.x >= (4 * pGame->windowWidth) / 5 || pGame->player.rect.x <= pGame->windowWidth / 5)
+    {
+        screenShiftAmount = pGame->movementAmount * 2;
+    }
+    if (pGame->player.rect.y >= (4 * pGame->windowHeight) / 5 || pGame->player.rect.y <= pGame->windowHeight / 5)
+    {
+        screenShiftAmount = pGame->movementAmount * 2;
+    }
+    if (pGame->player.rect.x >= pGame->windowWidth || pGame->player.rect.x <= 0)
+    {
+        screenShiftAmount = pGame->movementAmount * 10;
+    }
+    if (pGame->player.rect.y >= pGame->windowHeight || pGame->player.rect.y <= 0)
+    {
+        screenShiftAmount = pGame->movementAmount * 10;
+    }
+    if (pGame->player.rect.y < (2 * pGame->windowHeight) / 5)
+    {
+        for (int i = 0; i < MAPSIZE * MAPSIZE; i++)
+        {
+            pGame->map[i].wall.y += screenShiftAmount;
+        }
+    }
+    if (pGame->player.rect.y > (3 * pGame->windowHeight) / 5)
+    {
+        for (int i = 0; i < MAPSIZE * MAPSIZE; i++)
+        {
+            pGame->map[i].wall.y -= screenShiftAmount;
+        }
+    }
+    if (pGame->player.rect.x < (2 * pGame->windowWidth) / 5)
+    {
+        for (int i = 0; i < MAPSIZE * MAPSIZE; i++)
+        {
+            pGame->map[i].wall.x += screenShiftAmount;
+        }
+    }
+    if (pGame->player.rect.x > (3 * pGame->windowWidth) / 5)
+    {
+        for (int i = 0; i < MAPSIZE * MAPSIZE; i++)
+        {
+            pGame->map[i].wall.x -= screenShiftAmount;
+        }
+    }
+}
+
+int handleInput(Game *pGame)
 {
     const Uint8 *currentKeyStates = SDL_GetKeyboardState(NULL);
-    float scale = (float)map[0].wall.h / tileSize;
+    float scaleY = (float)pGame->map[0].wall.h / pGame->world.tileSize;
+    float scaleX = (float)pGame->map[0].wall.w / pGame->world.tileSize;
     if (currentKeyStates[SDL_SCANCODE_Q])
     {
-        if (*pAngle >= 0.01)
+        if (pGame->world.angle >= 0.01)
         {
-            *pAngle -= 0.01;
+            pGame->world.angle -= 0.01;
             for (int i = 0; i < MAPSIZE * MAPSIZE; i++)
             {
-                map[i].wall.h = ((float)tileSize * (1 - *pAngle));
+                pGame->map[i].wall.h = ((float)pGame->world.tileSize * (1 - pGame->world.angle));
 
                 if (i > (MAPSIZE - 1))
                 {
-                    map[i].wall.y = map[i - MAPSIZE].wall.y + map[i].wall.h;
+                    pGame->map[i].wall.y = pGame->map[i - MAPSIZE].wall.y + pGame->map[i].wall.h;
                 }
             }
-            pPlayer->rect.y = (float)pPlayer->y * (float)map[0].wall.h / tileSize;
         }
     }
     if (currentKeyStates[SDL_SCANCODE_E])
     {
-        if (*pAngle < 1)
+        if (pGame->world.angle < 1)
         {
-            *pAngle += 0.01;
+            pGame->world.angle += 0.01;
             for (int i = 0; i < MAPSIZE * MAPSIZE; i++)
             {
-                map[i].wall.h = ((float)tileSize * (1 - *pAngle));
+                pGame->map[i].wall.h = ((float)pGame->world.tileSize * (1 - pGame->world.angle));
 
                 if (i > (MAPSIZE - 1))
                 {
-                    map[i].wall.y = map[i - MAPSIZE].wall.y + map[i].wall.h;
+                    pGame->map[i].wall.y = pGame->map[i - MAPSIZE].wall.y + pGame->map[i].wall.h;
                 }
             }
-            pPlayer->rect.y = (float)pPlayer->y * (float)map[0].wall.h / tileSize;
         }
     }
     if (currentKeyStates[SDL_SCANCODE_SPACE])
     {
-        if (*pCharge < MAX_CHARGE)
+        pGame->state = START;
+        if (pGame->player.charge < MAX_CHARGE)
         {
-            *pCharge += 1;
+            pGame->player.charge += 1;
         }
         else
         {
             printf("FULLY CHARGED\n");
         }
     }
-    else if (*pCharge > 0)
+    else if (pGame->player.charge > 0)
     {
         int damage = 0;
 
-        for (int i = 0; i < 2 * (*pCharge / 2); i++)
+        for (int i = 0; i < 2 * (pGame->player.charge / 2); i++)
         {
-            if (!checkCollision(*pPlayer, map, *pPrevKeypressed))
+            if (!checkCollision(pGame->player, pGame->map, pGame->player.prevKeyPressed, pGame->world.tileSize))
             {
-                movePlayer(pPlayer, *pPrevKeypressed);
-                pPlayer->rect.y = (float)pPlayer->y * scale;
+                movePlayer(&pGame->player, pGame->player.prevKeyPressed);
             }
             else
             {
-                damage = *pCharge * 2;
-                *pCharge = 0;
+                damage = pGame->player.charge * 2;
+                pGame->player.charge = 0;
                 break;
             }
         }
-        pPlayer->hp -= damage;
-        *pCharge -= 1;
+        pGame->player.hp -= damage;
+        pGame->player.charge -= 1;
     }
     else
     {
-        for (int i = 0; i < movementAmount; i++)
+        for (int i = 0; i < pGame->movementAmount; i++)
         {
             if (currentKeyStates[SDL_SCANCODE_W] || currentKeyStates[SDL_SCANCODE_UP])
             {
-                *pPrevKeypressed = 'W';
-                if (!checkCollision(*pPlayer, map, 'W'))
+                pGame->player.prevKeyPressed = 'W';
+                if (!checkCollision(pGame->player, pGame->map, 'W', pGame->world.tileSize))
                 {
-                    movePlayer(pPlayer, 'W');
-                    pPlayer->rect.y = (float)pPlayer->y * scale;
+                    movePlayer(&pGame->player, 'W');
                 }
                 else
                 {
@@ -383,11 +659,10 @@ int handleInput(Player *pPlayer, Tile map[], int movementAmount, int *pCharge, c
             }
             if (currentKeyStates[SDL_SCANCODE_A] || currentKeyStates[SDL_SCANCODE_LEFT])
             {
-                *pPrevKeypressed = 'A';
-                if (!checkCollision(*pPlayer, map, 'A'))
+                pGame->player.prevKeyPressed = 'A';
+                if (!checkCollision(pGame->player, pGame->map, 'A', pGame->world.tileSize))
                 {
-                    movePlayer(pPlayer, 'A');
-                    // pPlayer->rect.y = (float)pPlayer->y * scale;
+                    movePlayer(&pGame->player, 'A');
                 }
                 else
                 {
@@ -396,11 +671,10 @@ int handleInput(Player *pPlayer, Tile map[], int movementAmount, int *pCharge, c
             }
             if (currentKeyStates[SDL_SCANCODE_S] || currentKeyStates[SDL_SCANCODE_DOWN])
             {
-                *pPrevKeypressed = 'S';
-                if (!checkCollision(*pPlayer, map, 'S'))
+                pGame->player.prevKeyPressed = 'S';
+                if (!checkCollision(pGame->player, pGame->map, 'S', pGame->world.tileSize))
                 {
-                    movePlayer(pPlayer, 'S');
-                    pPlayer->rect.y = (float)pPlayer->y * scale;
+                    movePlayer(&pGame->player, 'S');
                 }
                 else
                 {
@@ -409,17 +683,17 @@ int handleInput(Player *pPlayer, Tile map[], int movementAmount, int *pCharge, c
             }
             if (currentKeyStates[SDL_SCANCODE_D] || currentKeyStates[SDL_SCANCODE_RIGHT])
             {
-                *pPrevKeypressed = 'D';
-                if (!checkCollision(*pPlayer, map, 'D'))
+                pGame->player.prevKeyPressed = 'D';
+                if (!checkCollision(pGame->player, pGame->map, 'D', pGame->world.tileSize))
                 {
-                    movePlayer(pPlayer, 'D');
-                    // pPlayer->rect.y = pPlayer->y * scale;
+                    movePlayer(&pGame->player, 'D');
                 }
                 else
                 {
                     printf("COLLISION D\n");
                 }
             }
+
             /*
             if (!checkCollision(*pPlayer, map, *pPrevKeypressed))
                 {
@@ -432,6 +706,13 @@ int handleInput(Player *pPlayer, Tile map[], int movementAmount, int *pCharge, c
                 */
         }
     }
+    // CENTER PLAYER
+    centerPlayer(pGame);
+
+    int offsetX = pGame->map[0].wall.x - pGame->map[0].x;
+    int offsetY = pGame->map[0].wall.y - pGame->map[0].y;
+    pGame->player.rect.x = ((float)pGame->player.x * scaleX) + offsetX;
+    pGame->player.rect.y = ((float)pGame->player.y * scaleY) + offsetY;
     return 0;
 }
 void movePlayer(Player *pPlayer, char direction)
@@ -439,52 +720,48 @@ void movePlayer(Player *pPlayer, char direction)
     switch (direction)
     {
     case 'W':
-        // pPlayer->rect.y--;
         pPlayer->y--;
         break;
     case 'A':
-        pPlayer->rect.x--;
         pPlayer->x--;
         break;
     case 'S':
-        // pPlayer->rect.y++;
         pPlayer->y++;
         break;
     case 'D':
-        pPlayer->rect.x++;
         pPlayer->x++;
         break;
     default:
         break;
     }
 }
-int checkCollision(Player player, Tile map[], char direction)
+int checkCollision(Player player, Tile map[], char direction, int tileSize)
 {
     switch (direction)
     {
     case 'W':
-        if (map[(((player.y - 1) / map[0].wall.w) * MAPSIZE) + (player.x / map[0].wall.w)].type)
-            return map[(((player.y - 1) / map[0].wall.w) * MAPSIZE) + (player.x / map[0].wall.w)].type;
-        else if (map[(((player.y - 1) / map[0].wall.w) * MAPSIZE) + ((player.x + (map[0].wall.w - 1)) / map[0].wall.w)].type)
-            return map[(((player.y - 1) / map[0].wall.w) * MAPSIZE) + ((player.x + (map[0].wall.w - 1)) / map[0].wall.w)].type;
+        if (map[(((player.y - 1) / tileSize) * MAPSIZE) + (player.x / tileSize)].type)
+            return map[(((player.y - 1) / tileSize) * MAPSIZE) + (player.x / tileSize)].type;
+        else if (map[(((player.y - 1) / tileSize) * MAPSIZE) + ((player.x + (tileSize - 1)) / tileSize)].type)
+            return map[(((player.y - 1) / tileSize) * MAPSIZE) + ((player.x + (tileSize - 1)) / tileSize)].type;
         break;
     case 'A':
-        if (map[(((player.y) / map[0].wall.w) * MAPSIZE) + ((player.x - 1) / map[0].wall.w)].type)
-            return map[(((player.y) / map[0].wall.w) * MAPSIZE) + ((player.x - 1) / map[0].wall.w)].type;
-        else if (map[(((player.y + (map[0].wall.w - 1)) / map[0].wall.w) * MAPSIZE) + ((player.x - 1) / map[0].wall.w)].type)
-            return map[(((player.y + (map[0].wall.w - 1)) / map[0].wall.w) * MAPSIZE) + ((player.x - 1) / map[0].wall.w)].type;
+        if (map[(((player.y) / tileSize) * MAPSIZE) + ((player.x - 1) / tileSize)].type)
+            return map[(((player.y) / tileSize) * MAPSIZE) + ((player.x - 1) / tileSize)].type;
+        else if (map[(((player.y + (tileSize - 1)) / tileSize) * MAPSIZE) + ((player.x - 1) / tileSize)].type)
+            return map[(((player.y + (tileSize - 1)) / tileSize) * MAPSIZE) + ((player.x - 1) / tileSize)].type;
         break;
     case 'S':
-        if (map[(((player.y + map[0].wall.w) / map[0].wall.w) * MAPSIZE) + (player.x / map[0].wall.w)].type)
-            return map[(((player.y + map[0].wall.w) / map[0].wall.w) * MAPSIZE) + (player.x / map[0].wall.w)].type;
-        else if (map[(((player.y + map[0].wall.w) / map[0].wall.w) * MAPSIZE) + ((player.x + (map[0].wall.w - 1)) / map[0].wall.w)].type)
-            return map[(((player.y + map[0].wall.w) / map[0].wall.w) * MAPSIZE) + ((player.x + (map[0].wall.w - 1)) / map[0].wall.w)].type;
+        if (map[(((player.y + tileSize) / tileSize) * MAPSIZE) + (player.x / tileSize)].type)
+            return map[(((player.y + tileSize) / tileSize) * MAPSIZE) + (player.x / tileSize)].type;
+        else if (map[(((player.y + tileSize) / tileSize) * MAPSIZE) + ((player.x + (tileSize - 1)) / tileSize)].type)
+            return map[(((player.y + tileSize) / tileSize) * MAPSIZE) + ((player.x + (tileSize - 1)) / tileSize)].type;
         break;
     case 'D':
-        if (map[(((player.y) / map[0].wall.w) * MAPSIZE) + ((player.x + map[0].wall.w) / map[0].wall.w)].type)
-            return map[(((player.y) / map[0].wall.w) * MAPSIZE) + ((player.x + map[0].wall.w) / map[0].wall.w)].type;
-        else if (map[(((player.y + (map[0].wall.w - 1)) / map[0].wall.w) * MAPSIZE) + ((player.x + map[0].wall.w) / map[0].wall.w)].type)
-            return map[(((player.y + (map[0].wall.w - 1)) / map[0].wall.w) * MAPSIZE) + ((player.x + map[0].wall.w) / map[0].wall.w)].type;
+        if (map[(((player.y) / tileSize) * MAPSIZE) + ((player.x + tileSize) / tileSize)].type)
+            return map[(((player.y) / tileSize) * MAPSIZE) + ((player.x + tileSize) / tileSize)].type;
+        else if (map[(((player.y + (tileSize - 1)) / tileSize) * MAPSIZE) + ((player.x + tileSize) / tileSize)].type)
+            return map[(((player.y + (tileSize - 1)) / tileSize) * MAPSIZE) + ((player.x + tileSize) / tileSize)].type;
         break;
     default:
         break;
@@ -501,4 +778,12 @@ SDL_Rect findEmptyTile(Tile map[])
             return map[i].wall;
         }
     }
+}
+void getPlayerSpawnPos(Game *pGame)
+{
+    SDL_Rect spawnTile = findEmptyTile(pGame->map); // this function returns a valid spawn tile
+    pGame->player.x = spawnTile.x;
+    pGame->player.y = spawnTile.y;
+    pGame->player.rect.x = spawnTile.x; // windowWidth / 2;
+    pGame->player.rect.y = spawnTile.y; // windowHeight / 2;
 }
