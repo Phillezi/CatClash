@@ -278,6 +278,16 @@ int mapSelection(Game *pGame)
                 return 1;
             }
             else if (getStringFromUser(text, event))
+                if (initMap(pGame->map, text, pGame->world.tileSize))
+                {
+                    printf("No file found\n");
+                }
+                else
+                {
+                    getPlayerSpawnPos(pGame);
+                    exit = true;
+                }
+            else
             {
                 if (text[0])
                     pMap = createText(pGame->pRenderer, 0, 0, 0, pGame->ui.pFpsFont, text, pGame->windowWidth / 2, pGame->windowHeight / 2);
@@ -745,21 +755,26 @@ void getPlayerSpawnPos(Game *pGame)
 
 int getStringFromUser(char text[], SDL_Event event)
 {
-    int strCounter = strlen(text), updateStatus = 0;
+    int strCounter = strlen(text), strEnd = 0;
     if (event.type == SDL_KEYDOWN)
     {
+        if (event.key.keysym.sym == SDLK_RETURN)
+        {
+            if(strCounter){
+                strEnd = 1;
+            }
+        }
         if (event.key.keysym.sym == SDLK_BACKSPACE)
         {
             if (strCounter > 0)
             {
                 text[strCounter - 1] = 0;
                 strCounter--;
-                updateStatus = 1;
             }
         }
         else
         {
-            if ((event.key.keysym.sym > 96 && event.key.keysym.sym < 127) || (event.key.keysym.sym >= 48 && event.key.keysym.sym <= 57))
+            if ((event.key.keysym.sym >= 'a' && event.key.keysym.sym <= '~') || (event.key.keysym.sym >= ' ' && event.key.keysym.sym <= '9'))
             {
 
                 if (strCounter < 31)
@@ -773,10 +788,9 @@ int getStringFromUser(char text[], SDL_Event event)
                     }
 
                     strCounter++;
-                    updateStatus = 1;
                 }
             }
         }
     }
-    return updateStatus;
+    return strEnd;
 }
