@@ -492,7 +492,8 @@ void run(Game *pGame)
         {
             oneSecTimer = SDL_GetTicks();
             char buffer[50];
-            // SDL_DestroyTexture(&pGame->ui.pFpsText->pTexture);
+            if(pGame->ui.pFpsText)
+                freeText(pGame->ui.pFpsText);
             sprintf(buffer, "%d", frameCounter);
             pGame->ui.pFpsText = createText(pGame->pRenderer, 0, 255, 0, pGame->ui.pFpsFont, buffer, pGame->windowWidth - pGame->world.tileSize, pGame->world.tileSize);
             printf("%s\n", buffer);
