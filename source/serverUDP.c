@@ -71,6 +71,11 @@ int main(int argc, char **argv) {
             // Remove player if packet contains "exit" and adjust other players
             if (!strcmp((char *)pRecieve->data, "exit")) {
                 printf("Player %d has exited\n", id);
+
+                sprintf((char *)pSent->data, "%d", id);
+                pSent->len = sizeof(id) + 1;
+                SDLNet_UDP_Send(socketDesc, -1, pSent);
+
                 for (int i = id-1; i < players-1; i++) {
                     player[i] = player[i+1];
                     player[i].id--;
