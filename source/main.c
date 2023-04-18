@@ -446,6 +446,7 @@ int joinServerMenu(Game *pGame)
                     fprintf(stderr, "SDLNet_AllocPacket: %s\n", SDLNet_GetError());
                     exit(EXIT_FAILURE);
                 }
+                pGame->nrOfPlayers++;
                 pGame->pPacket->address.host = pGame->serverAddress.host;
                 pGame->pPacket->address.port = pGame->serverAddress.port;
                 */

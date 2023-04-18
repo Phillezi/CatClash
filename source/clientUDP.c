@@ -14,17 +14,20 @@ void sendData(Game *pGame) {
 void retrieveData(Game *pGame) {
     Player udpData;
 
-    if ((int *)pGame->pPacket->data > 0 && (int *)pGame->pPacket->data <= 5) {
-        //pGame->nrOfPlayers--;
-        /* for (size_t i = (int *)pGame->pPacket->data-1; i < MAX_PLAYERS; i++)  {
-            pGame->players[i] = pGame->players[i+1];
+    if (strstr((char *)pGame->pPacket->data, "exit")) {
+        if ((char *)pGame->pPacket->data[0] > 0 && (char *)pGame->pPacket->data[0] <= 5) {
+            //pGame->nrOfPlayers--;
+            /* for (size_t i = (int *)pGame->pPacket->data-1; i < MAX_PLAYERS; i++)  {
+                pGame->players[i] = pGame->players[i+1];
+            }
+            */
+           printf("Hello!");
         }
-        */
-       printf("Hello!");
     }
     else {
         memcpy(&udpData, (char * ) pGame->pPacket->data, sizeof(Player));
-        memcpy(&pGame->player, (char * ) pGame->pPacket->data, sizeof(Player));    // OBS! Can't handle list atm as we lack player array
+        //memcpy(&pGame->players[udpData.id-1], (char * ) pGame->pPacket->data, sizeof(Player));    // OBS! Can't handle list atm as we lack player array
         printf("UDP Packet incoming \tid: %d\tx: %d\ty: %d\n", udpData.id, udpData.x, udpData.y);
+        //if (pGame->nrOfPlayers+1 == udpData.id) pGame->nrOfPlayers++;     // Increments nrOfPlayers if new id is one higher than current nrOfPlayers
     }
 }

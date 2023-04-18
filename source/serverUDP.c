@@ -22,7 +22,7 @@ int main(int argc, char **argv) {
     UDPpacket *pRecieve;    // Pointer to packet memory
     UDPpacket *pSent;       
     
-    int quit = 0, players = 0, id;
+    int quit = 0, playerCount = 0, id;
     char a[20];
     PlayerInfo player[MAX_PLAYERS] = {0,0,0};
     Player udpData;
@@ -54,36 +54,36 @@ int main(int argc, char **argv) {
         if (SDLNet_UDP_Recv(socketDesc, pRecieve)) {
 
             // Add new players
-            if (players < MAX_PLAYERS){
+            if (playerCount < MAX_PLAYERS){
                 if (newAddress(player, pRecieve) > 0) {
-                    players++;
-                    player[players - 1].ip = pRecieve->address.host;
-                    player[players - 1].port = pRecieve->address.port;
-                    player[players - 1].id = players;
-                    printf("Client %d has connected!\n", players);
+                    playerCount++;
+                    player[playerCount - 1].ip = pRecieve->address.host;
+                    player[playerCount - 1].port = pRecieve->address.port;
+                    player[playerCount - 1].id = playerCount;
+                    printf("Client %d has connected!\n", playerCount);
                 }
             }
 
             // Find packet sender among players
-            for (int i = 0; i < players; i++)
+            for (int i = 0; i < playerCount; i++)
                 if (pRecieve->address.port == player[i].port) { id = player[i].id; printf("Recieved data from player %d\n", id); }
 
             // Remove player if packet contains "exit" and adjust other players
             if (!strcmp((char *)pRecieve->data, "exit")) {
                 printf("Player %d has exited\n", id);
 
-                sprintf((char *)pSent->data, "%d", id);
-                pSent->len = sizeof(id) + 1;
+                sprintf((char *)pSent->data, "%d exit", id);
+                pSent->len = strlen((char *)pSent->data) + 1;
                 SDLNet_UDP_Send(socketDesc, -1, pSent);
 
-                for (int i = id-1; i < players-1; i++) {
+                for (int i = id-1; i < playerCount-1; i++) {
                     player[i] = player[i+1];
                     player[i].id--;
                     printf("- Player %d is now player %d\n", i+2, player[i].id);
                 }
-                players--;
+                playerCount--;
             } else {    // Mirror packet to other players
-                for (int i = 0; i < players; i++){
+                for (int i = 0; i < playerCount; i++){
                     if (id != player[i].id) {  
                         printf("Send to client %d\n", player[i].id);
 
