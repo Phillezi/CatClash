@@ -6,6 +6,7 @@
 #include "init.h"
 #include "text.h"
 #include "levelEditor.h"
+//#include "client.h"
 
 int init(Game *pGame);
 int menu(Game *pGame);
@@ -200,7 +201,7 @@ int init(Game *pGame)
 int menu(Game *pGame)
 {
     int selectedMode = 0, previousTime = 0;
-    int r = 0, g = 0, b = 0;
+    int r = rand() % 255 + 1, g = rand() % 255 + 1, b = rand() % 255 + 1;
     int rAdd = 1, gAdd = 1, bAdd = 1;
     // Text *pPlay = malloc(sizeof(Text)), *pLvlEdit = malloc(sizeof(Text)), *pQuit = malloc(sizeof(Text));
     Text *pPlay = createText(pGame->pRenderer, 200, 200, 200, pGame->ui.pFpsFont, "Play", pGame->windowWidth / 2, pGame->windowHeight / 4);
@@ -438,7 +439,18 @@ int joinServerMenu(Game *pGame)
                 return 1;
             }
             else if (getStringFromUser(text, event))
+            {
                 exit = true;
+                /*
+                if (!tryConnectTcp(text))
+                {
+                    close(pGame);
+                    clientTCP(text);
+                    exit = true;
+                }
+                */
+            }
+
             else
             {
                 if (text[0])
@@ -642,7 +654,7 @@ void updateScreen(Game *pGame)
     }
     drawText(pGame->ui.pFpsText, pGame->pRenderer);
 
-    SDL_SetRenderDrawColor(pGame->pRenderer, 0, 255, 0, 255);
+    SDL_SetRenderDrawColor(pGame->pRenderer, 255 - pGame->player.hp, pGame->player.hp, 0, 255);
     SDL_RenderFillRect(pGame->pRenderer, &pGame->ui.healthbar);
 
     SDL_SetRenderDrawColor(pGame->pRenderer, 0, 0, 255, 255);
