@@ -107,35 +107,12 @@ void lvlhandleInput(Game *pGame, int *pMouseX, int *pMouseY)
             pGame->map[(((*pMouseY - pGame->map[0].wall.y) / pGame->map[0].wall.w * MAPSIZE) + ((*pMouseX - pGame->map[0].wall.x) / pGame->map[0].wall.w))].type = 4;
     }
     else if (currentKeyStates[SDL_SCANCODE_S] && currentKeyStates[SDL_SCANCODE_LCTRL])
-    { /*
-         char text[31] = {0};
-         int done = 0;
-         Text *pSaveStr = createText(pGame->pRenderer, 0, 0, 0, pGame->ui.pFpsFont, "Write the filname", pGame->windowWidth / 2, pGame->windowHeight / 2);
-         SDL_Event event;
-         do
-         {
-             while (SDL_PollEvent(&event))
-             {
-
-                 if (event.type == event.type == SDL_QUIT)
-                 {
-                     break;
-                 }
-                 else
-                 {
-                     done = lvlgetStringFromUser(text, event);
-                 }
-                 if (text[0])
-                 {
-                     freeText(pSaveStr);
-                     pSaveStr = createText(pGame->pRenderer, 0, 0, 0, pGame->ui.pFpsFont, text, pGame->windowWidth / 2, pGame->windowHeight / 2);
-                 }
-                 drawText(pSaveStr, pGame->pRenderer);
-                 SDL_RenderPresent(pGame->pRenderer);
-             }
-         } while (!done);
-         freeText(pSaveStr);
-         */
+    {
+        char fileName[31];
+        printf("What would you like to name the file?\n: ");
+        scanf(" %30s", fileName);
+        saveToFile(pGame->map, fileName);
+        printf("saved file\n");
     }
     else if (currentKeyStates[SDL_SCANCODE_DELETE])
     {
@@ -263,4 +240,31 @@ void lvlupdateScreen(Game *pGame, int mouseX, int mouseY)
     // SDL_RenderFillRect(pRenderer, &openButton);
 
     SDL_RenderPresent(pGame->pRenderer);
+}
+void saveToFile(Tile map[], char fileName[])
+{
+    char location[100];
+    if (strstr(fileName, ".txt"))
+        sprintf(location, "%s%s", SAVE_MAP_PATH, fileName);
+    else
+        sprintf(location, "%s%s.txt", SAVE_MAP_PATH, fileName);
+    printf("Saved at: %s\n", location);
+    FILE *fp;
+    fp = fopen(location, "w+");
+    if (fp != NULL)
+    {
+        for (int row = 0; row < MAPSIZE; row++)
+        {
+            for (int col = 0; col < MAPSIZE; col++)
+            {
+                fprintf(fp, "%d ", map[row * MAPSIZE + col].type);
+            }
+            fprintf(fp, "\n");
+        }
+        fclose(fp);
+    }
+    else
+    {
+        printf("ERROR opening FILE");
+    }
 }
