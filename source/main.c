@@ -6,7 +6,7 @@
 #include "init.h"
 #include "text.h"
 #include "levelEditor.h"
-//#include "client.h"
+// #include "client.h"
 
 int init(Game *pGame);
 int menu(Game *pGame);
@@ -77,7 +77,7 @@ int init(Game *pGame)
         printf("SDLNet_Init: %s\n", SDLNet_GetError());
         return 1;
     }
-    
+
     pGame->config.vSync = true; // Hårdkodad
 
     SDL_DisplayMode displayMode;
@@ -116,12 +116,20 @@ int init(Game *pGame)
         return 1;
     }
 
+    loadTileAtlas(pGame->pRenderer, pGame->pTileTextures, "resources/texturedemo.png");
+    if (!pGame->pTileTextures[0])
+    {
+        printf("Error: %s\n", SDL_GetError());
+        return 1;
+    }
+    /*
     char tileTextures[TILES][20] = {"resources/Tile1.png", "resources/Tile2.png", "resources/Tile3.png", "resources/Tile4.png"};
     if (initTextureTiles(pGame->pRenderer, pGame->pWindow, pGame->pTileTextures, tileTextures, TILES) == -1)
     {
         printf("Error: %s\n", SDL_GetError());
         return 1;
     }
+    */
 
     if (initTexturePlayer(pGame->pRenderer, pGame->pWindow, &pGame->pPlayerTexture) == -1)
     {
@@ -493,7 +501,7 @@ void run(Game *pGame)
         {
             oneSecTimer = SDL_GetTicks();
             char buffer[50];
-            if(pGame->ui.pFpsText)
+            if (pGame->ui.pFpsText)
                 freeText(pGame->ui.pFpsText);
             sprintf(buffer, "%d", frameCounter);
             pGame->ui.pFpsText = createText(pGame->pRenderer, 0, 255, 0, pGame->ui.pFpsFont, buffer, pGame->windowWidth - pGame->world.tileSize, pGame->world.tileSize);

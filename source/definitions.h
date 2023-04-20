@@ -18,6 +18,8 @@
 #define TILES 4
 #define MAX_NAME_LEN 21
 #define MAX_CHARGE 100
+#define TILE_HEIGHT 32
+#define TILE_WIDTH 32
 
 // ADTS
 

@@ -28,6 +28,63 @@ int initTextureTiles(SDL_Renderer *pRenderer, SDL_Window *pWindow, SDL_Texture *
     }
     return 0;
 }
+/*
+    loadTexture:
+    loads texture from png image
+    Expected in-parameters: pRenderer, imagePath
+    Returns NULL if it fails
+*/
+SDL_Texture *loadTexture(SDL_Renderer *pRenderer, const char imagePath[])
+{
+    SDL_Surface *pSurface = IMG_Load(imagePath);
+    if (!pSurface)
+    {
+        printf("Failed to load image %s: %s\n", imagePath, IMG_GetError());
+        return NULL;
+    }
+
+    SDL_Texture *pTexture = SDL_CreateTextureFromSurface(pRenderer, pSurface);
+    if (!pTexture)
+    {
+        printf("Failed to create texture from %s: %s\n", imagePath, SDL_GetError());
+        SDL_FreeSurface(pSurface);
+        return NULL;
+    }
+
+    SDL_FreeSurface(pSurface);
+    return pTexture;
+}
+
+/*
+    loadTileAtlas:
+    loads texture from png image, then divides texture to tiles
+    Expected in-parameters: pRenderer, pTileTextures, imgpath
+*/
+void loadTileAtlas(SDL_Renderer *pRenderer, SDL_Texture *pTiles[], const char imagePath[])
+{
+    SDL_Texture *pTexture = loadTexture(pRenderer, imagePath);
+    if (!pTexture)
+    {
+        printf("Failed to load tile atlas %s\n", imagePath);
+        return;
+    }
+
+    int atlasWidth, atlasHeight;
+    SDL_QueryTexture(pTexture, NULL, NULL, &atlasWidth, &atlasHeight);
+
+    for (int i = 0; i < 4; i++)
+    {
+        int x = i * TILE_WIDTH;
+        int y = 0;
+        SDL_Rect srcRect = { x, y, TILE_WIDTH, TILE_HEIGHT };
+        pTiles[i] = SDL_CreateTexture(pRenderer, SDL_PIXELFORMAT_RGBA8888, SDL_TEXTUREACCESS_TARGET, TILE_WIDTH, TILE_HEIGHT);
+        SDL_SetRenderTarget(pRenderer, pTiles[i]);
+        SDL_RenderCopy(pRenderer, pTexture, &srcRect, NULL);
+        SDL_SetRenderTarget(pRenderer, NULL);
+    }
+
+    SDL_DestroyTexture(pTexture);
+}
 
 /*
     initTexturePlayer:

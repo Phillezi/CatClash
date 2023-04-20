@@ -7,6 +7,10 @@
 
 int initTextureTiles(SDL_Renderer *pRenderer, SDL_Window *pWindow, SDL_Texture *pTextureTiles[], char tileTextures[][PATH_LEN], int nrOfTiles);
 
+SDL_Texture* loadTexture(SDL_Renderer *pRenderer, const char imagePath[]);
+
+void loadTileAtlas(SDL_Renderer *pRenderer, SDL_Texture  *pTiles[], const char imagePath[]);
+
 int initTexturePlayer(SDL_Renderer *pRenderer, SDL_Window *pWindow, SDL_Texture **pTexturePlayer);
 
 int initMap(Tile map[], char filepath[], int tileSize);
