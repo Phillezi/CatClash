@@ -8,9 +8,11 @@ all:
 	@echo "Building main"
 	$(CC) $(CFLAGS) $(SRCDIR)/main.c 
 	$(CC) $(CFLAGS) $(SRCDIR)/init.c
-	$(CC) $(CFLAGS) $(SRCDIR)/text.c  
+	$(CC) $(CFLAGS) $(SRCDIR)/text.c
+	$(CC) $(CFLAGS) $(SRCDIR)/player.c  
+	$(CC) $(CFLAGS) $(SRCDIR)/menu.c    
 	$(CC) $(CFLAGS) $(SRCDIR)/levelEditor.c
-	$(CC) main.o init.o text.o levelEditor.o -o main.exe $(LDFLAGS)
+	$(CC) main.o init.o text.o player.o menu.o levelEditor.o -o main.exe $(LDFLAGS)
 
 demo:
 	@echo "Building demo"
