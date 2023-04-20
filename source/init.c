@@ -71,12 +71,16 @@ void loadTileAtlas(SDL_Renderer *pRenderer, SDL_Texture *pTiles[], const char im
 
     int atlasWidth, atlasHeight;
     SDL_QueryTexture(pTexture, NULL, NULL, &atlasWidth, &atlasHeight);
-
-    for (int i = 0; i < 4; i++)
+    int row = 0;
+    for (int i = 0; i < TILES; i++)
     {
-        int x = i * TILE_WIDTH;
-        int y = 0;
-        SDL_Rect srcRect = { x, y, TILE_WIDTH, TILE_HEIGHT };
+        if ((i * TILE_WIDTH) - (row * atlasWidth) > atlasWidth)
+        {
+            row++;
+        }
+        int x = (i * TILE_WIDTH) - (row * atlasWidth);
+        int y = row * TILE_HEIGHT;
+        SDL_Rect srcRect = {x, y, TILE_WIDTH, TILE_HEIGHT};
         pTiles[i] = SDL_CreateTexture(pRenderer, SDL_PIXELFORMAT_RGBA8888, SDL_TEXTUREACCESS_TARGET, TILE_WIDTH, TILE_HEIGHT);
         SDL_SetRenderTarget(pRenderer, pTiles[i]);
         SDL_RenderCopy(pRenderer, pTexture, &srcRect, NULL);
@@ -174,7 +178,8 @@ Tile createTile(int col, int row, int type, int tileSize)
     return i;
 }
 
-int readConfig(Config *pConfig){
+int readConfig(Config *pConfig)
+{
 
     FILE *fp;
 
@@ -182,7 +187,7 @@ int readConfig(Config *pConfig){
 
     if (fp != NULL)
     {
-        //kod som kollar igenom config.txt och uppdaterar config structen därefter
+        // kod som kollar igenom config.txt och uppdaterar config structen därefter
         fclose(fp);
     }
     else
