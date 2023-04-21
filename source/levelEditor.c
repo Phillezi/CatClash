@@ -45,7 +45,7 @@ int levelEditor(Game *pGame)
 }
 void lvlhandleZoom(Game *pGame, int mouseWheelY)
 {
-    if (mouseWheelY > 0) // scroll up
+    if (mouseWheelY < 0) // scroll up
     {
         if (pGame->map[0].wall.w >= 5)
         {
@@ -59,7 +59,7 @@ void lvlhandleZoom(Game *pGame, int mouseWheelY)
             }
         }
     }
-    else if (mouseWheelY < 0) // scroll down
+    else if (mouseWheelY > 0) // scroll down
     {
         if (pGame->map[0].wall.w < pGame->windowWidth)
         {
