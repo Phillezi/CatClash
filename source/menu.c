@@ -169,7 +169,7 @@ int mapSelection(Game *pGame)
     bool exit = false;
     Text *pPrompt = createText(pGame->pRenderer, 0, 0, 0, pGame->ui.pFpsFont, "Type the name", pGame->windowWidth / 2, (pGame->windowHeight / 2) - (2 * pGame->world.tileSize));
     Text *pPrompt2 = createText(pGame->pRenderer, 0, 0, 0, pGame->ui.pFpsFont, "of the map:", pGame->windowWidth / 2, (pGame->windowHeight / 2) - pGame->world.tileSize);
-    Text *pMap = malloc(sizeof(Text));
+    Text *pMap = createText(pGame->pRenderer, 0, 0, 0, pGame->ui.pFpsFont, ":", pGame->windowWidth / 2, pGame->windowHeight / 2);
 
     int counter = 0;
     char text[31] = {0};
@@ -186,22 +186,27 @@ int mapSelection(Game *pGame)
                 freeText(pPrompt2);
                 return 1;
             }
-            else if (getStringFromUser(text, event))
-                if (initMap(pGame->map, text, pGame->world.tileSize))
+            else
+            {
+                if (getStringFromUser(text, event))
                 {
-                    printf("No file found\n");
+                    if (initMap(pGame->map, text, pGame->world.tileSize))
+                    {
+                        printf("No file found\n");
+                    }
+                    else
+                    {
+                        getPlayerSpawnPos(pGame);
+                        exit = true;
+                    }
                 }
                 else
                 {
-                    getPlayerSpawnPos(pGame);
-                    exit = true;
-                }
-            else
-            {
-                if (text[0])
-                {
-                    freeText(pMap);
-                    pMap = createText(pGame->pRenderer, 0, 0, 0, pGame->ui.pFpsFont, text, pGame->windowWidth / 2, pGame->windowHeight / 2);
+                    if (text[0])
+                    {
+                        freeText(pMap);
+                        pMap = createText(pGame->pRenderer, 0, 0, 0, pGame->ui.pFpsFont, text, pGame->windowWidth / 2, pGame->windowHeight / 2);
+                    }
                 }
             }
         }
@@ -211,8 +216,11 @@ int mapSelection(Game *pGame)
 
             SDL_SetRenderDrawColor(pGame->pRenderer, 255, 255, 255, 255);
             SDL_RenderClear(pGame->pRenderer);
+
             drawText(pPrompt, pGame->pRenderer);
+
             drawText(pPrompt2, pGame->pRenderer);
+
             if (text[0])
             {
                 drawText(pMap, pGame->pRenderer);
