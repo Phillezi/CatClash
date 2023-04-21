@@ -8,12 +8,13 @@
 #include "menu.h"
 #include "player.h"
 #include "levelEditor.h"
+#include "pthread.h"
 //#include "client.h"
 
 int init(Game *pGame);
 void run(Game *pGame);
 void close(Game *pGame);
-void updateScreen(Game *pGame);
+void *updateScreen(void *pGameIn);
 
 
 int main(int argv, char **args)
@@ -70,7 +71,7 @@ int init(Game *pGame)
         return 1;
     }
     
-    pGame->config.vSync = true; // Hårdkodad
+    pGame->config.vSync = false; // Hårdkodad
 
     SDL_DisplayMode displayMode;
     if (SDL_GetDesktopDisplayMode(0, &displayMode) < 0)
@@ -167,11 +168,20 @@ int init(Game *pGame)
 
     pGame->movementAmount = (float)pGame->world.tileSize / TILESIZE;
 
+    pGame->config.multiThreading = true;
+
+    if(pGame->config.multiThreading)
+        printf("Multithreading is enabled\n");
+    else
+        printf("Multithreading is not enabled\n");
+
     return 0;
 }
 
 void run(Game *pGame)
 {
+    //if(pGame->config.multiThreading)
+    pthread_t renderThread;
     bool exit = false;
     pGame->config.fps = 60;
     int frameCounter = 0, oneSecTimer = 0, previousTime = 0, movementPreviousTime = 0;
@@ -192,7 +202,8 @@ void run(Game *pGame)
         int deltaTime = SDL_GetTicks() - previousTime;
         if (deltaTime >= (1000 / FPS))
         {
-
+            if(pGame->config.multiThreading)
+                pthread_create(&renderThread, NULL, updateScreen, (void *)pGame);
             int movementDeltaTime = SDL_GetTicks() - movementPreviousTime;
             if (movementDeltaTime >= (1000 / 60))
             {
@@ -212,7 +223,10 @@ void run(Game *pGame)
                 pGame->ui.chargebar.w = pGame->player.charge;
             }
             previousTime = SDL_GetTicks();
-            updateScreen(pGame);
+            if(pGame->config.multiThreading)
+                pthread_join(renderThread, NULL);
+            else
+                updateScreen(pGame);
             frameCounter++;
         }
         SDL_Event event;
@@ -258,8 +272,9 @@ void close(Game *pGame)
 }
 
 // FUNKTIONER INOM RUN
-void updateScreen(Game *pGame)
+void *updateScreen(void *pGameIn)
 {
+    Game *pGame = (Game *)pGameIn;
     SDL_SetRenderDrawColor(pGame->pRenderer, 255, 255, 255, 255);
     SDL_RenderClear(pGame->pRenderer);
     SDL_Rect temp;
