@@ -72,7 +72,7 @@ int main(int argc, char **argv) {
             if (!strcmp((char *)pRecieve->data, "exit")) {
                 printf("Player %d has exited\n", id);
 
-                sprintf((char *)pSent->data, "%d exit", id);
+                sprintf((char *)pSent->data, "%c exit", id+48); // 48 = 0 in ASCII 
                 pSent->len = strlen((char *)pSent->data) + 1;
                 SDLNet_UDP_Send(socketDesc, -1, pSent);
 
