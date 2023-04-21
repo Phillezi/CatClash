@@ -17,7 +17,6 @@ int levelEditor(Game *pGame)
                 exit = true;
                 break;
             }
-
             else if (event.type == SDL_MOUSEWHEEL)
             {
                 lvlhandleZoom(pGame, event.wheel.y);
@@ -35,11 +34,11 @@ int levelEditor(Game *pGame)
     // Reset zoom
     while (pGame->map[0].wall.w > pGame->world.tileSize)
     {
-        lvlhandleZoom(pGame, 1);
+        lvlhandleZoom(pGame, -1);
     }
     while (pGame->map[0].wall.w < pGame->world.tileSize)
     {
-        lvlhandleZoom(pGame, -1);
+        lvlhandleZoom(pGame, 1);
     }
     return 0;
 }
