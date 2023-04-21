@@ -72,19 +72,26 @@ void loadTileAtlas(SDL_Renderer *pRenderer, SDL_Texture *pTiles[], const char im
     int atlasWidth, atlasHeight;
     SDL_QueryTexture(pTexture, NULL, NULL, &atlasWidth, &atlasHeight);
     int row = 0;
+    int offset = 0;
     for (int i = 0; i < TILES; i++)
     {
         if ((i * TILE_WIDTH) - (row * atlasWidth) > atlasWidth)
         {
             row++;
         }
-        int x = (i * TILE_WIDTH) - (row * atlasWidth);
+        int x = (i * TILE_WIDTH + offset) - (row * atlasWidth);
         int y = row * TILE_HEIGHT;
         SDL_Rect srcRect = {x, y, TILE_WIDTH, TILE_HEIGHT};
         pTiles[i] = SDL_CreateTexture(pRenderer, SDL_PIXELFORMAT_RGBA8888, SDL_TEXTUREACCESS_TARGET, TILE_WIDTH, TILE_HEIGHT);
+        if (!pTiles[i])
+        {
+            offset += TILE_WIDTH;
+            i--;
+        }
         SDL_SetRenderTarget(pRenderer, pTiles[i]);
         SDL_RenderCopy(pRenderer, pTexture, &srcRect, NULL);
         SDL_SetRenderTarget(pRenderer, NULL);
+        
     }
 
     SDL_DestroyTexture(pTexture);
