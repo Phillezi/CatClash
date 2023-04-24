@@ -323,13 +323,24 @@ void *updateScreen(void *pGameIn)
             default:
                 break;
             }
+            
         }
     }
     if (pGame->pPlayer)
     {
+        SDL_RendererFlip flip = SDL_FLIP_HORIZONTAL;
         SDL_SetRenderDrawColor(pGame->pRenderer, 0, 0, 0, 255);
         SDL_RenderDrawRect(pGame->pRenderer, &pGame->pPlayer->rect);
-        SDL_RenderCopy(pGame->pRenderer, pGame->pPlayerTexture, NULL, &pGame->pPlayer->rect);
+        switch(pGame->pPlayer->prevKeyPressed){
+            case 'W' : SDL_RenderCopy(pGame->pRenderer, pGame->pPlayerTexture, NULL, &pGame->pPlayer->rect); break;
+            case 'S' : SDL_RenderCopy(pGame->pRenderer, pGame->pPlayerTexture, NULL, &pGame->pPlayer->rect); break;
+
+            case 'D' : SDL_RenderCopy(pGame->pRenderer, pGame->pPlayerTexture, NULL, &pGame->pPlayer->rect); break;
+            case 'A' : SDL_RenderCopyEx(pGame->pRenderer, pGame->pPlayerTexture, NULL, &pGame->pPlayer->rect, 0, NULL, flip); break;
+            //default  : SDL_RenderCopy(pGame->pRenderer, pGame->pPlayerTexture, NULL, &pGame->pPlayer->rect); break;
+
+        }
+        
     }
 
     for (int i = (((pGame->pPlayer->y) / pGame->map[0].wall.w) * MAPSIZE) + ((pGame->pPlayer->x - 1) / pGame->map[0].wall.w) + 2; i < MAPSIZE * MAPSIZE; i++)
