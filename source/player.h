@@ -9,5 +9,6 @@ int checkCollision(Player player, Tile map[], char direction, int tileSize);
 SDL_Rect findEmptyTile(Tile map[]);
 void getPlayerSpawnPos(Game *pGame);
 Player *createPlayer(int id, char *name, int tileSize);
+void destroyPlayer(Player *pPlayer);
 
 #endif

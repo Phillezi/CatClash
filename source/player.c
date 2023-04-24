@@ -308,3 +308,7 @@ Player *createPlayer(int id, char *name, int tileSize)
 
     return pPlayer;
 }
+
+void destroyPlayer(Player *pPlayer){
+    free(pPlayer);
+}

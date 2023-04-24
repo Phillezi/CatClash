@@ -252,7 +252,7 @@ void close(Game *pGame)
 {
     if (pGame->pPlayer)
     {
-        free(pGame->pPlayer);
+        destroyPlayer(pGame->pPlayer);
     }
     if (pGame->pTileTextures[0])
         SDL_DestroyTexture(pGame->pTileTextures[0]);
