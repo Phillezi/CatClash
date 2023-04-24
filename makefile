@@ -31,9 +31,9 @@ net:
 
 netUDP:
 	@echo "Building Networking"
-	$(CC) $(CFLAGS) $(SRCDIR)/clientUDP.c 
 	$(CC) $(CFLAGS) $(SRCDIR)/serverUDP.c 
-	$(CC) serverUDP.o -o serverUDP.exe $(LDFLAGS)
+	$(CC) $(CFLAGS) $(SRCDIR)/text.c 
+	$(CC) serverUDP.o text.o -o serverUDP.exe $(LDFLAGS)
 
 mapC:
 	@echo "Building MapCreator"
