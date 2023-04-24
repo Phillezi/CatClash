@@ -88,7 +88,6 @@ struct game
     SDL_Window *pWindow;
     SDL_Renderer *pRenderer;
 
-
     SDL_Texture *pTileTextures[TILES];
     SDL_Texture *pPlayerTexture;
 
@@ -99,7 +98,8 @@ struct game
     IPaddress serverAddress;
     UDPpacket *pPacket;
 
-    Player player;
+//    Player player;
+    Player *pPlayer;
     Tile map[MAPSIZE*MAPSIZE];
     World world;
     GameState state;

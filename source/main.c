@@ -9,13 +9,12 @@
 #include "player.h"
 #include "levelEditor.h"
 #include "pthread.h"
-//#include "client.h"
+// #include "client.h"
 
 int init(Game *pGame);
 void run(Game *pGame);
 void close(Game *pGame);
 void *updateScreen(void *pGameIn);
-
 
 int main(int argv, char **args)
 {
@@ -70,7 +69,7 @@ int init(Game *pGame)
         printf("SDLNet_Init: %s\n", SDLNet_GetError());
         return 1;
     }
-    
+
     pGame->config.vSync = false; // Hårdkodad
 
     SDL_DisplayMode displayMode;
@@ -84,6 +83,14 @@ int init(Game *pGame)
     pGame->windowHeight = (float)displayMode.h * 0.7;
 
     pGame->world.tileSize = (pGame->windowHeight / MAPSIZE) * 4;
+
+    pGame->pPlayer = createPlayer(0, "test", pGame->world.tileSize);
+
+    if (!pGame->pPlayer)
+    {
+        printf("Error: Failed to create player\n");
+        return 1;
+    }
 
     pGame->pWindow = SDL_CreateWindow(WINDOW_NAME, SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, pGame->windowWidth, pGame->windowHeight, 0);
     if (!pGame->pWindow)
@@ -144,33 +151,33 @@ int init(Game *pGame)
         return 1;
     }
 
-    if (SDL_QueryTexture(pGame->pPlayerTexture, NULL, NULL, &pGame->player.rect.w, &pGame->player.rect.h) < 0)
+    if (SDL_QueryTexture(pGame->pPlayerTexture, NULL, NULL, &pGame->pPlayer->rect.w, &pGame->pPlayer->rect.h) < 0)
     {
         printf("Error: %s\n", SDL_GetError());
         return 1;
     }
     getPlayerSpawnPos(pGame);
 
-    pGame->player.rect.w = pGame->world.tileSize;
-    pGame->player.rect.h = pGame->world.tileSize;
+    pGame->pPlayer->rect.w = pGame->world.tileSize;
+    pGame->pPlayer->rect.h = pGame->world.tileSize;
 
-    pGame->player.hp = 255;
+    pGame->pPlayer->hp = 255;
 
     pGame->ui.chargebar.x = ((pGame->windowWidth / 2) - (MAX_CHARGE / 2));
     pGame->ui.chargebar.y = ((3 * pGame->windowHeight) / 4);
-    pGame->ui.chargebar.w = pGame->player.charge;
+    pGame->ui.chargebar.w = pGame->pPlayer->charge;
     pGame->ui.chargebar.h = pGame->world.tileSize;
 
     pGame->ui.healthbar.x = ((pGame->windowWidth / 2) + (MAX_CHARGE / 2) + 5);
     pGame->ui.healthbar.y = ((3 * pGame->windowHeight) / 4);
-    pGame->ui.healthbar.w = pGame->player.hp;
+    pGame->ui.healthbar.w = pGame->pPlayer->hp;
     pGame->ui.healthbar.h = pGame->world.tileSize;
 
     pGame->movementAmount = (float)pGame->world.tileSize / TILESIZE;
 
     pGame->config.multiThreading = true;
 
-    if(pGame->config.multiThreading)
+    if (pGame->config.multiThreading)
         printf("Multithreading is enabled\n");
     else
         printf("Multithreading is not enabled\n");
@@ -180,7 +187,7 @@ int init(Game *pGame)
 
 void run(Game *pGame)
 {
-    //if(pGame->config.multiThreading)
+    // if(pGame->config.multiThreading)
     pthread_t renderThread;
     bool exit = false;
     pGame->config.fps = 60;
@@ -191,7 +198,7 @@ void run(Game *pGame)
         {
             oneSecTimer = SDL_GetTicks();
             char buffer[50];
-            if(pGame->ui.pFpsText)
+            if (pGame->ui.pFpsText)
                 freeText(pGame->ui.pFpsText);
             sprintf(buffer, "%d", frameCounter);
             pGame->ui.pFpsText = createText(pGame->pRenderer, 0, 255, 0, pGame->ui.pFpsFont, buffer, pGame->windowWidth - pGame->world.tileSize, pGame->world.tileSize);
@@ -202,28 +209,28 @@ void run(Game *pGame)
         int deltaTime = SDL_GetTicks() - previousTime;
         if (deltaTime >= (1000 / FPS))
         {
-            if(pGame->config.multiThreading)
+            if (pGame->config.multiThreading)
                 pthread_create(&renderThread, NULL, updateScreen, (void *)pGame);
             int movementDeltaTime = SDL_GetTicks() - movementPreviousTime;
             if (movementDeltaTime >= (1000 / 60))
             {
                 movementPreviousTime = SDL_GetTicks();
                 handleInput(pGame);
-                pGame->player.rect.h = (pGame->world.tileSize / 2) + ((pGame->world.tileSize / 2) * (1 - (float)pGame->player.charge / MAX_CHARGE));
-                pGame->player.rect.y += pGame->world.tileSize - pGame->player.rect.h;
+                pGame->pPlayer->rect.h = (pGame->world.tileSize / 2) + ((pGame->world.tileSize / 2) * (1 - (float)pGame->pPlayer->charge / MAX_CHARGE));
+                pGame->pPlayer->rect.y += pGame->world.tileSize - pGame->pPlayer->rect.h;
 
-                if (pGame->player.hp <= 0)
+                if (pGame->pPlayer->hp <= 0)
                 {
                     pGame->state = OVER;
                     // printf("You Died\n");
-                    pGame->player.hp = 255;
+                    pGame->pPlayer->hp = 255;
                 }
 
-                pGame->ui.healthbar.w = pGame->player.hp;
-                pGame->ui.chargebar.w = pGame->player.charge;
+                pGame->ui.healthbar.w = pGame->pPlayer->hp;
+                pGame->ui.chargebar.w = pGame->pPlayer->charge;
             }
             previousTime = SDL_GetTicks();
-            if(pGame->config.multiThreading)
+            if (pGame->config.multiThreading)
                 pthread_join(renderThread, NULL);
             else
                 updateScreen(pGame);
@@ -243,6 +250,10 @@ void run(Game *pGame)
 
 void close(Game *pGame)
 {
+    if (pGame->pPlayer)
+    {
+        free(pGame->pPlayer);
+    }
     if (pGame->pTileTextures[0])
         SDL_DestroyTexture(pGame->pTileTextures[0]);
     if (pGame->pTileTextures[1])
@@ -278,7 +289,7 @@ void *updateScreen(void *pGameIn)
     SDL_SetRenderDrawColor(pGame->pRenderer, 255, 255, 255, 255);
     SDL_RenderClear(pGame->pRenderer);
     SDL_Rect temp;
-    for (int i = 0; i < (((pGame->player.y) / pGame->map[0].wall.w) * MAPSIZE) + ((pGame->player.x - 1) / pGame->map[0].wall.w) + 2; i++)
+    for (int i = 0; i < (((pGame->pPlayer->y) / pGame->map[0].wall.w) * MAPSIZE) + ((pGame->pPlayer->x - 1) / pGame->map[0].wall.w) + 2; i++)
     {
         if (((pGame->map[i].wall.x <= pGame->windowWidth) && (pGame->map[i].wall.x + pGame->world.tileSize >= 0)) && ((pGame->map[i].wall.y <= pGame->windowHeight) && (pGame->map[i].wall.y + pGame->world.tileSize >= 0)))
         {
@@ -314,11 +325,14 @@ void *updateScreen(void *pGameIn)
             }
         }
     }
-    SDL_SetRenderDrawColor(pGame->pRenderer, 0, 0, 0, 255);
-    SDL_RenderDrawRect(pGame->pRenderer, &pGame->player.rect);
-    SDL_RenderCopy(pGame->pRenderer, pGame->pPlayerTexture, NULL, &pGame->player.rect);
+    if (pGame->pPlayer)
+    {
+        SDL_SetRenderDrawColor(pGame->pRenderer, 0, 0, 0, 255);
+        SDL_RenderDrawRect(pGame->pRenderer, &pGame->pPlayer->rect);
+        SDL_RenderCopy(pGame->pRenderer, pGame->pPlayerTexture, NULL, &pGame->pPlayer->rect);
+    }
 
-    for (int i = (((pGame->player.y) / pGame->map[0].wall.w) * MAPSIZE) + ((pGame->player.x - 1) / pGame->map[0].wall.w) + 2; i < MAPSIZE * MAPSIZE; i++)
+    for (int i = (((pGame->pPlayer->y) / pGame->map[0].wall.w) * MAPSIZE) + ((pGame->pPlayer->x - 1) / pGame->map[0].wall.w) + 2; i < MAPSIZE * MAPSIZE; i++)
     {
         if (((pGame->map[i].wall.x <= pGame->windowWidth) && (pGame->map[i].wall.x + pGame->world.tileSize >= 0)) && ((pGame->map[i].wall.y <= pGame->windowHeight) && (pGame->map[i].wall.y + pGame->world.tileSize >= 0)))
         {
@@ -360,7 +374,7 @@ void *updateScreen(void *pGameIn)
     }
     drawText(pGame->ui.pFpsText, pGame->pRenderer);
 
-    SDL_SetRenderDrawColor(pGame->pRenderer, 255 - pGame->player.hp, pGame->player.hp, 0, 255);
+    SDL_SetRenderDrawColor(pGame->pRenderer, 255 - pGame->pPlayer->hp, pGame->pPlayer->hp, 0, 255);
     SDL_RenderFillRect(pGame->pRenderer, &pGame->ui.healthbar);
 
     SDL_SetRenderDrawColor(pGame->pRenderer, 0, 0, 255, 255);
