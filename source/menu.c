@@ -13,11 +13,16 @@ int menu(Game *pGame)
     int selectedMode = 0, previousTime = 0;
     int r = rand() % 255 + 1, g = rand() % 255 + 1, b = rand() % 255 + 1;
     int rAdd = 1, gAdd = 1, bAdd = 1;
+    int playW, levelEditW, quitW, joinServerW;
     // Text *pPlay = malloc(sizeof(Text)), *pLvlEdit = malloc(sizeof(Text)), *pQuit = malloc(sizeof(Text));
     Text *pPlay = createText(pGame->pRenderer, 200, 200, 200, pGame->ui.pFpsFont, "Play", pGame->windowWidth / 2, pGame->windowHeight / 4);
+    TTF_SizeText(pGame->ui.pFpsFont, "Play", &playW, NULL);
     Text *pLvlEdit = createText(pGame->pRenderer, 200, 200, 200, pGame->ui.pFpsFont, "Edit level", pGame->windowWidth / 2, (pGame->windowHeight / 4) + pGame->world.tileSize);
+    TTF_SizeText(pGame->ui.pFpsFont, "Edit level", &levelEditW, NULL);
     Text *pQuit = createText(pGame->pRenderer, 200, 200, 200, pGame->ui.pFpsFont, "QUIT", pGame->windowWidth / 2, (pGame->windowHeight / 4) + (2 * pGame->world.tileSize));
+    TTF_SizeText(pGame->ui.pFpsFont, "QUIT", &quitW, NULL);
     Text *pJoinServer = createText(pGame->pRenderer, 200, 200, 200, pGame->ui.pFpsFont, "Join Server", pGame->windowWidth / 2, (pGame->windowHeight / 4) + (3 * pGame->world.tileSize));
+    TTF_SizeText(pGame->ui.pFpsFont, "Join Server", &joinServerW, NULL);
     while (true)
     {
         SDL_Event event;
@@ -57,6 +62,24 @@ int menu(Game *pGame)
                     freeText(pJoinServer);
                     return selectedMode;
                 }
+            }
+            else if(event.type == SDL_MOUSEMOTION)
+            {
+                int mouseX, mouseY;
+                int buttons = SDL_GetMouseState(&mouseX, &mouseY);
+                int centerOfScreenX = pGame->windowWidth / 2;
+                int topOfFirstRowY = pGame->windowHeight / 4;
+                int topOfSecondRowY = (pGame->windowHeight / 4) + pGame->world.tileSize;
+                int topOfThirdRowY = (pGame->windowHeight / 4) + (2 * pGame->world.tileSize);
+                int topOfFourthRowY = (pGame->windowHeight / 4) + (3 * pGame->world.tileSize);
+                if (centerOfScreenX - (playW / 2) < mouseX && mouseX < centerOfScreenX + (playW / 2) && topOfFirstRowY - (pGame->world.tileSize / 2) < mouseY && mouseY < topOfFirstRowY + (pGame->world.tileSize / 2))
+                    selectedMode = 0;
+                else  if (centerOfScreenX - (levelEditW / 2) < mouseX && mouseX < centerOfScreenX + (levelEditW / 2) && topOfSecondRowY - (pGame->world.tileSize / 2) < mouseY && mouseY < topOfSecondRowY + (pGame->world.tileSize / 2))
+                    selectedMode = 1;
+                else  if (centerOfScreenX - (quitW / 2) < mouseX && mouseX < centerOfScreenX + (quitW / 2) && topOfThirdRowY - (pGame->world.tileSize / 2) < mouseY && mouseY < topOfThirdRowY + (pGame->world.tileSize / 2))
+                    selectedMode = 2;
+                else  if (centerOfScreenX - (joinServerW / 2) < mouseX && mouseX < centerOfScreenX + (joinServerW / 2) && topOfFourthRowY - (pGame->world.tileSize / 2) < mouseY && mouseY < topOfFourthRowY + (pGame->world.tileSize / 2))
+                    selectedMode = 3;
             }
         }
 
