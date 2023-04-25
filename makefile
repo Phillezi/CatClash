@@ -12,7 +12,8 @@ all:
 	$(CC) $(CFLAGS) $(SRCDIR)/player.c  
 	$(CC) $(CFLAGS) $(SRCDIR)/menu.c    
 	$(CC) $(CFLAGS) $(SRCDIR)/levelEditor.c
-	$(CC) main.o init.o text.o player.o menu.o levelEditor.o -o main.exe $(LDFLAGS)
+	$(CC) $(CFLAGS) $(SRCDIR)/ioHandler.c
+	$(CC) main.o init.o text.o player.o menu.o levelEditor.o ioHandler.o -o main.exe $(LDFLAGS)
 
 demo:
 	@echo "Building demo"

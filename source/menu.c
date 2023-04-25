@@ -7,6 +7,7 @@
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_image.h>
 #include <SDL2/SDL_ttf.h>
+#include "ioHandler.h"
 
 int menu(Game *pGame)
 {
@@ -431,4 +432,114 @@ int getStringFromUser(char text[], SDL_Event event)
         }
     }
     return strEnd;
+}
+
+int testSelectMenu(Game *pGame)
+{
+    int len = 0;
+    int selected = 0;
+    TTF_Font *listFont = TTF_OpenFont("resources/fonts/RetroGaming.ttf", pGame->world.tileSize / 2);
+    char **strArr = checkFolderAndReturnList(SAVE_MAP_PATH, &len);
+    Text *pText[len];
+    for (int i = 0; i < len; i++)
+    {
+        if (!(i == selected))
+            pText[i] = createText(pGame->pRenderer, 100, 100, 100, listFont, strArr[i], pGame->windowWidth / 2, (pGame->windowHeight / 2) + ((i - selected) * pGame->world.tileSize / 2));
+        else
+        {
+            pText[i] = createText(pGame->pRenderer, 0, 0, 0, pGame->ui.pFpsFont, strArr[i], pGame->windowWidth / 2, (pGame->windowHeight / 2) + ((i - selected) * pGame->world.tileSize / 2));
+        }
+    }
+
+    bool exit = false;
+    int previousTime = 0;
+    while (!exit)
+    {
+        SDL_Event event;
+        while (SDL_PollEvent(&event))
+        {
+            if (event.type == SDL_QUIT)
+            {
+                exit = true;
+                TTF_CloseFont(listFont);
+                for (int i = 0; i < len; i++)
+                    freeText(pText[i]);
+                freeTextList(strArr, len);
+                return 1;
+                break;
+            }
+            else if (event.type == SDL_MOUSEWHEEL || event.type == SDL_KEYDOWN || event.type == SDL_MOUSEBUTTONDOWN)
+            {
+                if (event.wheel.y < 0 && event.type == SDL_MOUSEWHEEL || event.key.keysym.sym == SDLK_DOWN) // scroll up
+                {
+                    if (selected < len - 1)
+                    {
+                        selected++;
+                        for (int i = 0; i < len; i++)
+                        {
+                            freeText(pText[i]);
+                            if (!(i == selected))
+                                pText[i] = createText(pGame->pRenderer, 100, 100, 100, listFont, strArr[i], pGame->windowWidth / 2, (pGame->windowHeight / 2) + ((i - selected) * pGame->world.tileSize / 2));
+                            else
+                            {
+                                pText[i] = createText(pGame->pRenderer, 0, 0, 0, pGame->ui.pFpsFont, strArr[i], pGame->windowWidth / 2, (pGame->windowHeight / 2) + ((i - selected) * pGame->world.tileSize / 2));
+                            }
+                        }
+                    }
+                }
+                else if (event.wheel.y > 0 && event.type == SDL_MOUSEWHEEL || event.key.keysym.sym == SDLK_UP) // scroll down
+                {
+                    if (selected > 0)
+                    {
+                        selected--;
+                        for (int i = 0; i < len; i++)
+                        {
+                            freeText(pText[i]);
+                            if (!(i == selected))
+                                pText[i] = createText(pGame->pRenderer, 100, 100, 100, listFont, strArr[i], pGame->windowWidth / 2, (pGame->windowHeight / 2) + ((i - selected) * pGame->world.tileSize / 2));
+                            else
+                            {
+                                pText[i] = createText(pGame->pRenderer, 0, 0, 0, pGame->ui.pFpsFont, strArr[i], pGame->windowWidth / 2, (pGame->windowHeight / 2) + ((i - selected) * pGame->world.tileSize / 2));
+                            }
+                        }
+                    }
+                }
+                else if (event.key.keysym.sym == SDLK_RETURN || event.button.button == SDL_BUTTON_LEFT)
+                {
+                    printf("DETECTED KEYPRESS\n");
+                    if (initMap(pGame->map, strArr[selected], pGame->world.tileSize))
+                    {
+                        printf("No file found\n");
+                    }
+                    else
+                    {
+                        printf("epic\n");
+                        getPlayerSpawnPos(pGame);
+                        exit = true;
+                        break;
+                    }
+                }
+            }
+        }
+        if (SDL_GetTicks() - previousTime >= 1000 / 60)
+        {
+            previousTime = SDL_GetTicks();
+
+            SDL_SetRenderDrawColor(pGame->pRenderer, 255, 255, 255, 255);
+            SDL_RenderClear(pGame->pRenderer);
+            for (int i = 0; i < len; i++)
+            {
+                if (i != selected)
+                    drawText(pText[i], pGame->pRenderer);
+            }
+            drawText(pText[selected], pGame->pRenderer);
+
+            SDL_RenderPresent(pGame->pRenderer);
+        }
+    }
+    TTF_CloseFont(listFont);
+    for (int i = 0; i < len; i++)
+        freeText(pText[i]);
+    freeTextList(strArr, len);
+    return 0;
 }

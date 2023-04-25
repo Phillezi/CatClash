@@ -8,7 +8,7 @@
 
 // DEFINITIONS
 #define MAP_FILEPATH "resources/map.txt"
-#define SAVE_MAP_PATH "resources/"
+#define SAVE_MAP_PATH "resources/maps/"
 #define DEFAULT_WIDTH 1024
 #define DEFAULT_HEIGHT 1024
 #define WINDOW_NAME "Test"

@@ -29,12 +29,16 @@ int main(int argv, char **args)
         switch (menu(&game))
         {
         case 0:
-            if (mapSelection(&game))
+            //if (mapSelection(&game))
+            //    break;
+            if(testSelectMenu(&game))
                 break;
             run(&game);
             break;
         case 1:
-            if (mapSelection(&game))
+            //if (mapSelection(&game))
+            //    break;
+            if(testSelectMenu(&game))
                 break;
             levelEditor(&game);
             break;
@@ -194,6 +198,7 @@ int init(Game *pGame)
 
 void run(Game *pGame)
 {
+    SDL_SetWindowTitle(pGame->pWindow, "Kitten game");
     // if(pGame->config.multiThreading)
     // pthread_t renderThread;
     pthread_t movementThread;
