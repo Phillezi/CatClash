@@ -332,8 +332,6 @@ void *updateScreen(void *pGameIn)
             switch (pGame->map[i].type)
             {
             case 0:
-                SDL_SetRenderDrawColor(pGame->pRenderer, 200, 200, 200, 255);
-                SDL_RenderFillRect(pGame->pRenderer, &pGame->map[i].wall);
                 if (i > MAPSIZE - 1)
                 {
                     if (pGame->map[i - MAPSIZE].type)
@@ -394,8 +392,6 @@ void *updateScreen(void *pGameIn)
             switch (pGame->map[i].type)
             {
             case 0:
-                SDL_SetRenderDrawColor(pGame->pRenderer, 200, 200, 200, 255);
-                SDL_RenderFillRect(pGame->pRenderer, &pGame->map[i].wall);
                 if (i > MAPSIZE - 1)
                 {
                     if (pGame->map[i - MAPSIZE].type)
