@@ -14,5 +14,7 @@ int initMap(Tile map[], char filepath[], int tileSize);
 Tile createTile(int x, int y, int type, int tileSize);
 
 int readConfig(Config *pConfig);
+void loadTileAtlas(SDL_Renderer *pRenderer, SDL_Texture *pTiles[], const char imagePath[]);
+SDL_Texture *loadTexture(SDL_Renderer *pRenderer, const char imagePath[]);
 
 #endif
