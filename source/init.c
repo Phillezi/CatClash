@@ -36,26 +36,6 @@ int initTextureTiles(SDL_Renderer *pRenderer, SDL_Window *pWindow, SDL_Texture *
     Returns -1 if it fails
 */
 
-/*  Old initTexturePlayer function
-int initTexturePlayer(SDL_Renderer *pRenderer, SDL_Window *pWindow, SDL_Texture **pTexturePlayer)
-{
-
-    SDL_Surface *pSurface = IMG_Load("resources/cat3.png");
-    if (!pSurface)
-    {
-        return -1;
-    }
-
-    *pTexturePlayer = SDL_CreateTextureFromSurface(pRenderer, pSurface);
-    SDL_FreeSurface(pSurface);
-    if (!pTexturePlayer)
-    {
-        return -1;
-    }
-    return 0;
-}
-*/
-
 int initTexturePlayer(SDL_Renderer *pRenderer, SDL_Window *pWindow, SDL_Texture **pTexturePlayer)
 {
 
