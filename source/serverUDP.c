@@ -114,10 +114,10 @@ int setup(Server *pServer) {
         exit(EXIT_FAILURE); 
     }
 
-    pServer->pSpace   = createText(pServer->pRenderer, 100, 100, 100, pServer->pFont, "Press space", pServer->windowWidth / 2, pServer->windowHeight / 3);
-    pServer->pJoining = createText(pServer->pRenderer, 100, 100, 100, pServer->pFont, "to start hosting", pServer->windowWidth / 2, pServer->windowHeight / 3 + 8 * TILESIZE);
-    pServer->pRunning = createText(pServer->pRenderer, 100, 100, 100, pServer->pFont, "Server is running", pServer->windowWidth / 2, pServer->windowHeight / 2);
-    pServer->pClosed  = createText(pServer->pRenderer, 100, 100, 100, pServer->pFont, "to open server", pServer->windowWidth / 2, pServer->windowHeight / 3 + 8 * TILESIZE);
+    pServer->pSpace   = createText(pServer->pRenderer, 102, 205, 170, pServer->pFont, "Press space",        pServer->windowWidth / 2, 2*(pServer->windowHeight / MAPSIZE) * 4);
+    pServer->pJoining = createText(pServer->pRenderer, 102, 205, 170, pServer->pFont, "to start hosting",   pServer->windowWidth / 2, 4*(pServer->windowHeight / MAPSIZE) * 4);
+    pServer->pRunning = createText(pServer->pRenderer, 102, 205, 170, pServer->pFont, "Server is running",  pServer->windowWidth / 2, 4*(pServer->windowHeight / MAPSIZE) * 4);
+    pServer->pClosed  = createText(pServer->pRenderer, 102, 205, 170, pServer->pFont, "to open server",     pServer->windowWidth / 2, 4*(pServer->windowHeight / MAPSIZE) * 4);
 
     if (!pServer->pSpace || !pServer->pJoining || !pServer->pRunning || !pServer->pClosed) {
         printf("Error: %s\n", SDL_GetError());
@@ -139,7 +139,7 @@ void run(Server *pServer) {
         SDL_RenderClear(pServer->pRenderer);
 
         sprintf(prompt, "Clients: %d", pServer->nrOfClients);
-        Text *pPrompt = createText(pServer->pRenderer, 100, 100, 100, pServer->pFont, prompt, pServer->windowWidth / 2, pServer->windowHeight / 3 + 20 * TILESIZE);
+        Text *pPrompt = createText(pServer->pRenderer, 102, 205, 170, pServer->pFont, prompt, pServer->windowWidth / 2, 6*(pServer->windowHeight / MAPSIZE) * 4);
 
         switch (pServer->state) {
         case CLOSED:
