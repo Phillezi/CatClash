@@ -115,9 +115,16 @@ int init(Game *pGame)
         printf("Error: %s\n", SDL_GetError());
         return 1;
     }
-
-    char tileTextures[TILES][20] = {"resources/Tile1.png", "resources/Tile2.png", "resources/Tile3.png", "resources/Tile4.png"};
-    if (initTextureTiles(pGame->pRenderer, pGame->pWindow, pGame->pTileTextures, tileTextures, TILES) == -1)
+    /*
+        char tileTextures[TILES][20] = {"resources/Tile1.png", "resources/Tile2.png", "resources/Tile3.png", "resources/Tile4.png"};
+        if (initTextureTiles(pGame->pRenderer, pGame->pWindow, pGame->pTileTextures, tileTextures, TILES) == -1)
+        {
+            printf("Error: %s\n", SDL_GetError());
+            return 1;
+        }
+    */
+    loadTileAtlas(pGame->pRenderer, pGame->pTileTextures, "resources/texturedemo.png");
+    if (!pGame->pTileTextures[0])
     {
         printf("Error: %s\n", SDL_GetError());
         return 1;

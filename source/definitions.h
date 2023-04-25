@@ -18,6 +18,8 @@
 #define TILES 4
 #define MAX_NAME_LEN 21
 #define MAX_CHARGE 100
+#define TILE_WIDTH 32
+#define TILE_HEIGHT 32
 
 // ADTS
 
@@ -31,7 +33,7 @@ typedef struct tile Tile;
 
 /*
     Player structure:
-    includes: int id, str name (max 20 chars + NULL), 
+    includes: int id, str name (max 20 chars + NULL),
     int hp, int x, y, SDL_Rect rect
 */
 struct player
@@ -61,7 +63,8 @@ struct config
 };
 typedef struct config Config;
 
-struct text{
+struct text
+{
     SDL_Rect rect;
     SDL_Texture *pTexture;
     SDL_Renderer *pRenderer;
@@ -78,8 +81,12 @@ struct uiElements
 };
 typedef struct uiElements UiE;
 
-
-enum gameState{START, ONGOING, OVER};
+enum gameState
+{
+    START,
+    ONGOING,
+    OVER
+};
 typedef enum gameState GameState;
 
 struct game
@@ -98,16 +105,14 @@ struct game
     IPaddress serverAddress;
     UDPpacket *pPacket;
 
-//    Player player;
+    //    Player player;
     Player *pPlayer;
-    Tile map[MAPSIZE*MAPSIZE];
+    Tile map[MAPSIZE * MAPSIZE];
     World world;
     GameState state;
 
     Config config;
-
 };
 typedef struct game Game;
-
 
 #endif
