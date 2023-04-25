@@ -39,7 +39,10 @@ int setup(Server *pServer);
 void run(Server *pServer);
 void close(Server *pServer);
 void addClient(Server *pServer);
-void recieveAndSend(Server *pServer);
+void send(Server *pServer, Player udpData, int id);
+int findID(Server *pServer);
+int checkExit(Server *pServer, int id);
+void recieveAndSend(Server *pServer, Player udpData);
 
 int main(int argc, char **argv) {
     Server s;
@@ -128,6 +131,7 @@ int setup(Server *pServer) {
 void run(Server *pServer) {
     int quit = 0, draw = 0; 
     SDL_Event event;
+    Player udpData;
     char prompt[12];
 
     while (!quit) {
@@ -151,25 +155,26 @@ void run(Server *pServer) {
             drawText(pServer->pSpace, pServer->pRenderer);
             drawText(pServer->pJoining, pServer->pRenderer);
             drawText(pPrompt, pServer->pRenderer);
-            freeText(pPrompt);
 
             if(SDL_PollEvent(&event)) { 
                 if (event.type==SDL_QUIT) quit = 1; 
                 if (event.type==SDL_KEYDOWN && pServer->nrOfClients >= 2) 
                     if (event.key.keysym.sym == SDLK_SPACE) pServer->state = RUNNING;
             }
-            if(SDLNet_UDP_Recv(pServer->socketDesc, pServer->pRecieve)==1 && pServer->nrOfClients < MAX_PLAYERS) addClient(pServer);
+            if(pServer->state == RUNNING) send(pServer, udpData, -1);
+            if(SDLNet_UDP_Recv(pServer->socketDesc, pServer->pRecieve)==1 && pServer->nrOfClients < MAX_PLAYERS) 
+                { addClient(pServer); checkExit(pServer, findID(pServer)); }
             break;
         case RUNNING:
             drawText(pServer->pRunning, pServer->pRenderer);
             drawText(pPrompt, pServer->pRenderer);
-            freeText(pPrompt);
 
             if(SDL_PollEvent(&event)) if(event.type==SDL_QUIT) quit = 1;
-            if(SDLNet_UDP_Recv(pServer->socketDesc, pServer->pRecieve)==1) recieveAndSend(pServer);
+            if(SDLNet_UDP_Recv(pServer->socketDesc, pServer->pRecieve)==1) recieveAndSend(pServer, udpData);
             break;
         }
 
+        freeText(pPrompt);
         SDL_RenderPresent(pServer->pRenderer);
     }
 }
@@ -199,25 +204,41 @@ void addClient(Server *pServer) {
     pServer->nrOfClients++;
 }
 
-/* Retrieves and resends data from UDP port. Rejects data from unknown players. */
-void recieveAndSend(Server *pServer) {
-    int id, known = 0;
-    Player udpData;
+void send(Server *pServer, Player udpData, int id) {
+    for (int i = 0; i < pServer->nrOfClients; i++){
+        if (id != pServer->clients[i].id) {  
+            printf("Send to client %d\n", pServer->clients[i].id);
+
+            pServer->pSent->address.host = pServer->clients[i].address.host;     // Set destination host
+            pServer->pSent->address.port = pServer->clients[i].address.port;     // Set destination port
+
+            // Copy recieved data to another package and print for error handling
+            memcpy(&udpData, (char *)pServer->pRecieve->data, sizeof(Player));
+            udpData.id = pServer->clients[i].id;
+            memcpy((char *)pServer->pSent->data, &udpData, sizeof(Player)+1);
+
+            //sprintf((char *)pSent->data, "%s", a);
+            pServer->pSent->len = sizeof(Player) + 1;
+            SDLNet_UDP_Send(pServer->socketDesc, -1, pServer->pSent);
+        }
+    }
+}
+
+int findID(Server *pServer) {
+    int id;
 
     // Find packet sender among players
     for (int i = 0; i < pServer->nrOfClients; i++)
-        if (pServer->pRecieve->address.port == pServer->clients[i].address.port) { id = pServer->clients[i].id; printf("Recieved data from player %d\n", id); known = 1; }
+        if (pServer->pRecieve->address.port == pServer->clients[i].address.port) { id = pServer->clients[i].id; printf("Recieved data from player %d\n", id); return id;}
+    return 0;
+}
 
-    // If client is not known, return
-    if (!known) return;
-
-    // Remove player if packet contains "exit" and adjust other players
+int checkExit(Server *pServer, int id) {
     if (!strcmp((char *)pServer->pRecieve->data, "exit")) {
         printf("Player %d has exited\n", id);
 
         sprintf((char *)pServer->pSent->data, "%c exit", id+48); // 48 = 0 in ASCII 
         pServer->pSent->len = strlen((char *)pServer->pSent->data) + 1;
-        SDLNet_UDP_Send(pServer->socketDesc, -1, pServer->pSent);
 
         for (int i = id-1; i < pServer->nrOfClients-1; i++) {
             pServer->clients[i] = pServer->clients[i+1];
@@ -225,22 +246,27 @@ void recieveAndSend(Server *pServer) {
             printf("- Player %d is now player %d\n", i+2, pServer->clients[i].id);
         }
         pServer->nrOfClients--;
-    } else {    // Mirror packet to other players
-        for (int i = 0; i < pServer->nrOfClients; i++){
-            if (id != pServer->clients[i].id) {  
-                printf("Send to client %d\n", pServer->clients[i].id);
 
+        for (int i = 0; i < pServer->nrOfClients; i++) {
+            if(id != pServer->clients[i].id) {
                 pServer->pSent->address.host = pServer->clients[i].address.host;     // Set destination host
                 pServer->pSent->address.port = pServer->clients[i].address.port;     // Set destination port
-
-                // Copy recieved data to another package and print for error handling
-                memcpy(&udpData, (char *)pServer->pRecieve->data, sizeof(Player));
-                memcpy((char *)pServer->pSent->data, &udpData, sizeof(Player)+1);
-
-                //sprintf((char *)pSent->data, "%s", a);
-                pServer->pSent->len = sizeof(Player) + 1;
                 SDLNet_UDP_Send(pServer->socketDesc, -1, pServer->pSent);
             }
         }
+        return 0;
     }
+    else return 1;
+}
+
+/* Retrieves and resends data from UDP port. Rejects data from unknown players. */
+void recieveAndSend(Server *pServer, Player udpData) {
+    // Find packet sender among players
+    int id = findID(pServer);
+
+    // If client is not known, return
+    if (!id) return;
+
+    if (!checkExit(pServer, id)) return;     // If not exit, 
+    else send(pServer, udpData, id);    // Resend data to other players
 }
