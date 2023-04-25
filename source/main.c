@@ -227,8 +227,6 @@ void run(Game *pGame)
                 }
                 else
                     handleInput(pGame);
-                pGame->pPlayer->rect.h = (pGame->world.tileSize / 2) + ((pGame->world.tileSize / 2) * (1 - (float)pGame->pPlayer->charge / MAX_CHARGE));
-                pGame->pPlayer->rect.y += pGame->world.tileSize - pGame->pPlayer->rect.h;
 
                 if (pGame->pPlayer->hp <= 0)
                 {

@@ -54,9 +54,9 @@ void centerPlayer(Game *pGame)
     }
 }
 
-void *handleInput(void *pGameIn)//Game *pGame)
+void *handleInput(void *pGameIn) // Game *pGame)
 {
-    Game *pGame = (Game *) pGameIn;
+    Game *pGame = (Game *)pGameIn;
     const Uint8 *currentKeyStates = SDL_GetKeyboardState(NULL);
     float scaleY = (float)pGame->map[0].wall.h / pGame->world.tileSize;
     float scaleX = (float)pGame->map[0].wall.w / pGame->world.tileSize;
@@ -130,7 +130,7 @@ void *handleInput(void *pGameIn)//Game *pGame)
         {
             if (currentKeyStates[SDL_SCANCODE_W] || currentKeyStates[SDL_SCANCODE_UP])
             {
-                
+
                 if (!checkCollision(*pGame->pPlayer, pGame->map, 'W', pGame->world.tileSize))
                 {
                     pGame->pPlayer->prevKeyPressed = 'W';
@@ -143,7 +143,7 @@ void *handleInput(void *pGameIn)//Game *pGame)
             }
             if (currentKeyStates[SDL_SCANCODE_A] || currentKeyStates[SDL_SCANCODE_LEFT])
             {
-                
+
                 if (!checkCollision(*pGame->pPlayer, pGame->map, 'A', pGame->world.tileSize))
                 {
                     pGame->pPlayer->prevKeyPressed = 'A';
@@ -156,7 +156,7 @@ void *handleInput(void *pGameIn)//Game *pGame)
             }
             if (currentKeyStates[SDL_SCANCODE_S] || currentKeyStates[SDL_SCANCODE_DOWN])
             {
-                
+
                 if (!checkCollision(*pGame->pPlayer, pGame->map, 'S', pGame->world.tileSize))
                 {
                     pGame->pPlayer->prevKeyPressed = 'S';
@@ -169,7 +169,7 @@ void *handleInput(void *pGameIn)//Game *pGame)
             }
             if (currentKeyStates[SDL_SCANCODE_D] || currentKeyStates[SDL_SCANCODE_RIGHT])
             {
-                
+
                 if (!checkCollision(*pGame->pPlayer, pGame->map, 'D', pGame->world.tileSize))
                 {
                     pGame->pPlayer->prevKeyPressed = 'D';
@@ -200,6 +200,9 @@ void *handleInput(void *pGameIn)//Game *pGame)
     int offsetY = pGame->map[0].wall.y - pGame->map[0].y;
     pGame->pPlayer->rect.x = ((float)pGame->pPlayer->x * scaleX) + offsetX;
     pGame->pPlayer->rect.y = ((float)pGame->pPlayer->y * scaleY) + offsetY;
+
+    pGame->pPlayer->rect.h = (pGame->world.tileSize / 2) + ((pGame->world.tileSize / 2) * (1 - (float)pGame->pPlayer->charge / MAX_CHARGE));
+    pGame->pPlayer->rect.y += pGame->world.tileSize - pGame->pPlayer->rect.h;
     return 0;
 }
 
@@ -299,7 +302,7 @@ Player *createPlayer(int id, char *name, int tileSize)
     pPlayer->charge = 0;
     pPlayer->hp = 255;
     pPlayer->id = id;
-    if(strlen(name)< MAX_NAME_LEN)
+    if (strlen(name) < MAX_NAME_LEN)
         strcpy(pPlayer->name, name);
     else
         strcpy(pPlayer->name, "ERROR");
@@ -314,6 +317,7 @@ Player *createPlayer(int id, char *name, int tileSize)
     return pPlayer;
 }
 
-void destroyPlayer(Player *pPlayer){
+void destroyPlayer(Player *pPlayer)
+{
     free(pPlayer);
 }
