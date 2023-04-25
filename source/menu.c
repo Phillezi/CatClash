@@ -63,7 +63,7 @@ int menu(Game *pGame)
                     return selectedMode;
                 }
             }
-            else if(event.type == SDL_MOUSEMOTION)
+            else if (event.type == SDL_MOUSEMOTION || event.type == SDL_MOUSEBUTTONDOWN)
             {
                 int mouseX, mouseY;
                 int buttons = SDL_GetMouseState(&mouseX, &mouseY);
@@ -73,13 +73,54 @@ int menu(Game *pGame)
                 int topOfThirdRowY = (pGame->windowHeight / 4) + (2 * pGame->world.tileSize);
                 int topOfFourthRowY = (pGame->windowHeight / 4) + (3 * pGame->world.tileSize);
                 if (centerOfScreenX - (playW / 2) < mouseX && mouseX < centerOfScreenX + (playW / 2) && topOfFirstRowY - (pGame->world.tileSize / 2) < mouseY && mouseY < topOfFirstRowY + (pGame->world.tileSize / 2))
+                {
                     selectedMode = 0;
-                else  if (centerOfScreenX - (levelEditW / 2) < mouseX && mouseX < centerOfScreenX + (levelEditW / 2) && topOfSecondRowY - (pGame->world.tileSize / 2) < mouseY && mouseY < topOfSecondRowY + (pGame->world.tileSize / 2))
+                    if (buttons & SDL_BUTTON(SDL_BUTTON_LEFT))
+                    {
+                        freeText(pPlay);
+                        freeText(pLvlEdit);
+                        freeText(pQuit);
+                        freeText(pJoinServer);
+                        return selectedMode;
+                    }
+                }
+
+                else if (centerOfScreenX - (levelEditW / 2) < mouseX && mouseX < centerOfScreenX + (levelEditW / 2) && topOfSecondRowY - (pGame->world.tileSize / 2) < mouseY && mouseY < topOfSecondRowY + (pGame->world.tileSize / 2))
+                {
                     selectedMode = 1;
-                else  if (centerOfScreenX - (quitW / 2) < mouseX && mouseX < centerOfScreenX + (quitW / 2) && topOfThirdRowY - (pGame->world.tileSize / 2) < mouseY && mouseY < topOfThirdRowY + (pGame->world.tileSize / 2))
+                    if (buttons & SDL_BUTTON(SDL_BUTTON_LEFT))
+                    {
+                        freeText(pPlay);
+                        freeText(pLvlEdit);
+                        freeText(pQuit);
+                        freeText(pJoinServer);
+                        return selectedMode;
+                    }
+                }
+                else if (centerOfScreenX - (quitW / 2) < mouseX && mouseX < centerOfScreenX + (quitW / 2) && topOfThirdRowY - (pGame->world.tileSize / 2) < mouseY && mouseY < topOfThirdRowY + (pGame->world.tileSize / 2))
+                {
                     selectedMode = 2;
-                else  if (centerOfScreenX - (joinServerW / 2) < mouseX && mouseX < centerOfScreenX + (joinServerW / 2) && topOfFourthRowY - (pGame->world.tileSize / 2) < mouseY && mouseY < topOfFourthRowY + (pGame->world.tileSize / 2))
+                    if (buttons & SDL_BUTTON(SDL_BUTTON_LEFT))
+                    {
+                        freeText(pPlay);
+                        freeText(pLvlEdit);
+                        freeText(pQuit);
+                        freeText(pJoinServer);
+                        return selectedMode;
+                    }
+                }
+                else if (centerOfScreenX - (joinServerW / 2) < mouseX && mouseX < centerOfScreenX + (joinServerW / 2) && topOfFourthRowY - (pGame->world.tileSize / 2) < mouseY && mouseY < topOfFourthRowY + (pGame->world.tileSize / 2))
+                {
                     selectedMode = 3;
+                    if (buttons & SDL_BUTTON(SDL_BUTTON_LEFT))
+                    {
+                        freeText(pPlay);
+                        freeText(pLvlEdit);
+                        freeText(pQuit);
+                        freeText(pJoinServer);
+                        return selectedMode;
+                    }
+                }
             }
         }
 
