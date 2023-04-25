@@ -34,11 +34,12 @@ char **checkFolderAndReturnList(char *folderPath , int *arrLen)
         {
             if (strstr(dir->d_name, ".txt") && i < 100)
             {
-                fileNames[i] = (char *)malloc((strlen(dir->d_name) + 1) * sizeof(char));
+                fileNames[i] = (char *)malloc((strlen(dir->d_name)-strlen(".txt") + 1) * sizeof(char));
                 if(!fileNames[i]){
                     printf("Error: Could not allocate memory\n");
                     break;
                 }
+                dir->d_name[(strlen(dir->d_name)-strlen(".txt"))] = 0; // remove ".txt"
                 strcpy(fileNames[i], dir->d_name);
                 i++;
             }
