@@ -161,7 +161,7 @@ void lvlhandleInput(Game *pGame, int *pMouseX, int *pMouseY)
         {
             for (int row = 0; row < MAPSIZE; row++)
             {
-                pGame->map[(MAPSIZE * row) + ((MAPSIZE / 2) + i)].type = pGame->map[(MAPSIZE * row) + ((MAPSIZE / 2) - (i+1))].type;
+                pGame->map[(MAPSIZE * row) + ((MAPSIZE / 2) + i)].type = pGame->map[(MAPSIZE * row) + ((MAPSIZE / 2) - (i + 1))].type;
             }
         }
     }
@@ -203,28 +203,12 @@ void lvlupdateScreen(Game *pGame, int mouseX, int mouseY)
     {
         if (((pGame->map[i].wall.x <= pGame->windowWidth) && (pGame->map[i].wall.x + pGame->map[i].wall.w >= 0)) && ((pGame->map[i].wall.y <= pGame->windowHeight) && (pGame->map[i].wall.y + pGame->map[i].wall.w >= 0)))
         {
-            switch (pGame->map[i].type)
+            if (pGame->map[i].type > 0)
+                SDL_RenderCopy(pGame->pRenderer, pGame->pTileTextures[pGame->map[i].type - 1], NULL, &pGame->map[i].wall);
+            else if (pGame->map[i].type == -1)
             {
-            case 0:
-                break;
-            case 1:
-                // SDL_SetRenderDrawColor(pRenderer, 0, 0, 0, 255);
-                SDL_RenderCopy(pGame->pRenderer, pGame->pTileTextures[0], NULL, &pGame->map[i].wall); // SDL_RenderFillRect(pRenderer, &map[i].wall);
-                break;
-            case 2:
-                // SDL_SetRenderDrawColor(pRenderer, 100, 0, 0, 255);
-                SDL_RenderCopy(pGame->pRenderer, pGame->pTileTextures[1], NULL, &pGame->map[i].wall); // SDL_RenderFillRect(pRenderer, &map[i].wall);
-                break;
-            case 3:
-                // SDL_SetRenderDrawColor(pRenderer, 0, 100, 0, 255);
-                SDL_RenderCopy(pGame->pRenderer, pGame->pTileTextures[2], NULL, &pGame->map[i].wall); // SDL_RenderFillRect(pRenderer, &map[i].wall);
-                break;
-            case 4:
-                // SDL_SetRenderDrawColor(pRenderer, 0, 0, 100, 255);
-                SDL_RenderCopy(pGame->pRenderer, pGame->pTileTextures[3], NULL, &pGame->map[i].wall); // SDL_RenderFillRect(pRenderer, &map[i].wall);
-                break;
-            default:
-                break;
+                SDL_SetRenderDrawColor(pGame->pRenderer, 0, 155, 0, 255);
+                SDL_RenderFillRect(pGame->pRenderer, &pGame->map[i].wall);
             }
         }
     }
