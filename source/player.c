@@ -273,9 +273,22 @@ SDL_Rect findEmptyTile(Tile map[])
     }
 }
 
+SDL_Rect findSpawnTile(Tile map[])
+{
+    for (int i = 0; i < MAPSIZE * MAPSIZE; i++)
+    {
+        if (map[i].type == -1)
+        {
+            return map[i].wall;
+        }
+    }
+    printf("Error: No spawn Tile in Selected map!\n");
+    return findEmptyTile(map);
+}
+
 void getPlayerSpawnPos(Game *pGame)
 {
-    SDL_Rect spawnTile = findEmptyTile(pGame->map); // this function returns a valid spawn tile
+    SDL_Rect spawnTile = findSpawnTile(pGame->map); // this function returns a valid spawn tile
     /*
     pGame->player.x = spawnTile.x;
     pGame->player.y = spawnTile.y;

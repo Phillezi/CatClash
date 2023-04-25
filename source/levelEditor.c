@@ -155,6 +155,16 @@ void lvlhandleInput(Game *pGame, int *pMouseX, int *pMouseY)
             pGame->map[i].wall.x += pGame->movementAmount;
         }
     }
+    else if (currentKeyStates[SDL_SCANCODE_M])
+    {
+        for (int i = 0; i < MAPSIZE / 2; i++)
+        {
+            for (int row = 0; row < MAPSIZE; row++)
+            {
+                pGame->map[(MAPSIZE * row) + ((MAPSIZE / 2) + i)].type = pGame->map[(MAPSIZE * row) + ((MAPSIZE / 2) - (i+1))].type;
+            }
+        }
+    }
 
     // float scale = ((float)map[0].wall.w / TILESIZE);
 

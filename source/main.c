@@ -329,9 +329,10 @@ void *updateScreen(void *pGameIn)
     {
         if (((pGame->map[i].wall.x <= pGame->windowWidth) && (pGame->map[i].wall.x + pGame->world.tileSize >= 0)) && ((pGame->map[i].wall.y <= pGame->windowHeight) && (pGame->map[i].wall.y + pGame->world.tileSize >= 0)))
         {
-            switch (pGame->map[i].type)
+            if (pGame->map[i].type > 0)
+                SDL_RenderCopy(pGame->pRenderer, pGame->pTileTextures[pGame->map[i].type - 1], NULL, &pGame->map[i].wall);
+            else
             {
-            case 0:
                 if (i > MAPSIZE - 1)
                 {
                     if (pGame->map[i - MAPSIZE].type)
@@ -343,21 +344,6 @@ void *updateScreen(void *pGameIn)
                         SDL_SetTextureColorMod(pGame->pTileTextures[(pGame->map[i - MAPSIZE].type - 1)], 255, 255, 255);
                     }
                 }
-                break;
-            case 1:
-                SDL_RenderCopy(pGame->pRenderer, pGame->pTileTextures[0], NULL, &pGame->map[i].wall);
-                break;
-            case 2:
-                SDL_RenderCopy(pGame->pRenderer, pGame->pTileTextures[1], NULL, &pGame->map[i].wall);
-                break;
-            case 3:
-                SDL_RenderCopy(pGame->pRenderer, pGame->pTileTextures[2], NULL, &pGame->map[i].wall);
-                break;
-            case 4:
-                SDL_RenderCopy(pGame->pRenderer, pGame->pTileTextures[3], NULL, &pGame->map[i].wall);
-                break;
-            default:
-                break;
             }
         }
     }
@@ -389,9 +375,10 @@ void *updateScreen(void *pGameIn)
     {
         if (((pGame->map[i].wall.x <= pGame->windowWidth) && (pGame->map[i].wall.x + pGame->world.tileSize >= 0)) && ((pGame->map[i].wall.y <= pGame->windowHeight) && (pGame->map[i].wall.y + pGame->world.tileSize >= 0)))
         {
-            switch (pGame->map[i].type)
+            if (pGame->map[i].type > 0)
+                SDL_RenderCopy(pGame->pRenderer, pGame->pTileTextures[pGame->map[i].type - 1], NULL, &pGame->map[i].wall);
+            else
             {
-            case 0:
                 if (i > MAPSIZE - 1)
                 {
                     if (pGame->map[i - MAPSIZE].type)
@@ -403,21 +390,6 @@ void *updateScreen(void *pGameIn)
                         SDL_SetTextureColorMod(pGame->pTileTextures[(pGame->map[i - MAPSIZE].type - 1)], 255, 255, 255);
                     }
                 }
-                break;
-            case 1:
-                SDL_RenderCopy(pGame->pRenderer, pGame->pTileTextures[0], NULL, &pGame->map[i].wall);
-                break;
-            case 2:
-                SDL_RenderCopy(pGame->pRenderer, pGame->pTileTextures[1], NULL, &pGame->map[i].wall);
-                break;
-            case 3:
-                SDL_RenderCopy(pGame->pRenderer, pGame->pTileTextures[2], NULL, &pGame->map[i].wall);
-                break;
-            case 4:
-                SDL_RenderCopy(pGame->pRenderer, pGame->pTileTextures[3], NULL, &pGame->map[i].wall);
-                break;
-            default:
-                break;
             }
         }
     }

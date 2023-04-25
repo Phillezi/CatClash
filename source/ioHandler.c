@@ -60,9 +60,9 @@ char **checkFolderAndReturnList(char *folderPath , int *arrLen)
 void freeTextList(char **strArr, int len){
     for(int i = 0; i < len; i++){
         if(strArr[i]){
-            printf("Trying to free memory at: %p\n", strArr[i]);
+            //printf("Trying to free memory at: %p\n", strArr[i]);
             free(strArr[i]);
-            printf("Success!\n");
+            //printf("Success!\n");
         }
         else{
             printf("No adress at location index %d\n", i);
