@@ -29,16 +29,16 @@ int main(int argv, char **args)
         switch (menu(&game))
         {
         case 0:
-            //if (mapSelection(&game))
-            //    break;
-            if(testSelectMenu(&game))
+            // if (mapSelection(&game))
+            //     break;
+            if (testSelectMenu(&game))
                 break;
             run(&game);
             break;
         case 1:
-            //if (mapSelection(&game))
-            //    break;
-            if(testSelectMenu(&game))
+            // if (mapSelection(&game))
+            //     break;
+            if (testSelectMenu(&game))
                 break;
             levelEditor(&game);
             break;
@@ -58,6 +58,7 @@ int main(int argv, char **args)
 
 int init(Game *pGame)
 {
+    char windowTitle[100] = "CatClash   |";
     if (SDL_Init(SDL_INIT_EVERYTHING) != 0)
     {
         printf("Error: %s\n", SDL_GetError());
@@ -107,6 +108,7 @@ int init(Game *pGame)
     {
         pGame->pRenderer = SDL_CreateRenderer(pGame->pWindow, -1, SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC);
         printf("Vsync is enabled\n");
+        sprintf(windowTitle,"%s Vsync |", windowTitle);
     }
     else
     {
@@ -189,16 +191,29 @@ int init(Game *pGame)
     pGame->config.multiThreading = true;
 
     if (pGame->config.multiThreading)
+    {
         printf("Multithreading is enabled\n");
+        sprintf(windowTitle,"%s MultiThreaded |", windowTitle);
+    }
     else
+    {
         printf("Multithreading is not enabled\n");
+    }
 
+    SDL_SetWindowTitle(pGame->pWindow, windowTitle);
+    SDL_Surface *pSurface = IMG_Load("resources/caet2.png");
+    if (!pSurface)
+    {
+        printf("Failed to load image: %s\n", IMG_GetError());
+        return 1;
+    }
+    SDL_SetWindowIcon(pGame->pWindow, pSurface);
+    SDL_FreeSurface(pSurface);
     return 0;
 }
 
 void run(Game *pGame)
 {
-    SDL_SetWindowTitle(pGame->pWindow, "Kitten game");
     // if(pGame->config.multiThreading)
     // pthread_t renderThread;
     pthread_t movementThread;
@@ -215,7 +230,7 @@ void run(Game *pGame)
                 freeText(pGame->ui.pFpsText);
             sprintf(buffer, "%d", frameCounter);
             pGame->ui.pFpsText = createText(pGame->pRenderer, 0, 255, 0, pGame->ui.pFpsFont, buffer, pGame->windowWidth - pGame->world.tileSize, pGame->world.tileSize);
-            printf("%s\n", buffer);
+            // printf("%s\n", buffer);
             frameCounter = 0;
         }
 

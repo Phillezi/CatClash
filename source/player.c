@@ -138,7 +138,7 @@ void *handleInput(void *pGameIn) // Game *pGame)
                 }
                 else
                 {
-                    printf("COLLISION W\n");
+                    //printf("COLLISION W\n");
                 }
             }
             if (currentKeyStates[SDL_SCANCODE_A] || currentKeyStates[SDL_SCANCODE_LEFT])
@@ -151,7 +151,7 @@ void *handleInput(void *pGameIn) // Game *pGame)
                 }
                 else
                 {
-                    printf("COLLISION A\n");
+                    //printf("COLLISION A\n");
                 }
             }
             if (currentKeyStates[SDL_SCANCODE_S] || currentKeyStates[SDL_SCANCODE_DOWN])
@@ -164,7 +164,7 @@ void *handleInput(void *pGameIn) // Game *pGame)
                 }
                 else
                 {
-                    printf("COLLISION S\n");
+                    //printf("COLLISION S\n");
                 }
             }
             if (currentKeyStates[SDL_SCANCODE_D] || currentKeyStates[SDL_SCANCODE_RIGHT])
@@ -177,7 +177,7 @@ void *handleInput(void *pGameIn) // Game *pGame)
                 }
                 else
                 {
-                    printf("COLLISION D\n");
+                    //printf("COLLISION D\n");
                 }
             }
 
