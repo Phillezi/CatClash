@@ -188,7 +188,8 @@ int init(Game *pGame)
 void run(Game *pGame)
 {
     // if(pGame->config.multiThreading)
-    pthread_t renderThread;
+    // pthread_t renderThread;
+    pthread_t movementThread;
     bool exit = false;
     pGame->config.fps = 60;
     int frameCounter = 0, oneSecTimer = 0, previousTime = 0, movementPreviousTime = 0;
@@ -209,13 +210,23 @@ void run(Game *pGame)
         int deltaTime = SDL_GetTicks() - previousTime;
         if (deltaTime >= (1000 / FPS))
         {
-            if (pGame->config.multiThreading)
+            /*
+            if (pGame->config.multiThreading){
                 pthread_create(&renderThread, NULL, updateScreen, (void *)pGame);
+            }
+            */
+
             int movementDeltaTime = SDL_GetTicks() - movementPreviousTime;
             if (movementDeltaTime >= (1000 / 60))
             {
                 movementPreviousTime = SDL_GetTicks();
-                handleInput(pGame);
+                if (pGame->config.multiThreading)
+                {
+                    pthread_join(movementThread, NULL);
+                    pthread_create(&movementThread, NULL, handleInput, (void *)pGame);
+                }
+                else
+                    handleInput(pGame);
                 pGame->pPlayer->rect.h = (pGame->world.tileSize / 2) + ((pGame->world.tileSize / 2) * (1 - (float)pGame->pPlayer->charge / MAX_CHARGE));
                 pGame->pPlayer->rect.y += pGame->world.tileSize - pGame->pPlayer->rect.h;
 
@@ -230,10 +241,10 @@ void run(Game *pGame)
                 pGame->ui.chargebar.w = pGame->pPlayer->charge;
             }
             previousTime = SDL_GetTicks();
-            if (pGame->config.multiThreading)
-                pthread_join(renderThread, NULL);
-            else
-                updateScreen(pGame);
+            // if (pGame->config.multiThreading)
+            //  pthread_join(renderThread, NULL);
+            // else
+            updateScreen(pGame);
             frameCounter++;
         }
         SDL_Event event;
@@ -323,7 +334,6 @@ void *updateScreen(void *pGameIn)
             default:
                 break;
             }
-            
         }
     }
     if (pGame->pPlayer)
@@ -331,16 +341,23 @@ void *updateScreen(void *pGameIn)
         SDL_RendererFlip flip = SDL_FLIP_HORIZONTAL;
         SDL_SetRenderDrawColor(pGame->pRenderer, 0, 0, 0, 255);
         SDL_RenderDrawRect(pGame->pRenderer, &pGame->pPlayer->rect);
-        switch(pGame->pPlayer->prevKeyPressed){
-            case 'W' : SDL_RenderCopy(pGame->pRenderer, pGame->pPlayerTexture, NULL, &pGame->pPlayer->rect); break;
-            case 'S' : SDL_RenderCopy(pGame->pRenderer, pGame->pPlayerTexture, NULL, &pGame->pPlayer->rect); break;
+        switch (pGame->pPlayer->prevKeyPressed)
+        {
+        case 'W':
+            SDL_RenderCopy(pGame->pRenderer, pGame->pPlayerTexture, NULL, &pGame->pPlayer->rect);
+            break;
+        case 'S':
+            SDL_RenderCopy(pGame->pRenderer, pGame->pPlayerTexture, NULL, &pGame->pPlayer->rect);
+            break;
 
-            case 'D' : SDL_RenderCopy(pGame->pRenderer, pGame->pPlayerTexture, NULL, &pGame->pPlayer->rect); break;
-            case 'A' : SDL_RenderCopyEx(pGame->pRenderer, pGame->pPlayerTexture, NULL, &pGame->pPlayer->rect, 0, NULL, flip); break;
-            //default  : SDL_RenderCopy(pGame->pRenderer, pGame->pPlayerTexture, NULL, &pGame->pPlayer->rect); break;
-
+        case 'D':
+            SDL_RenderCopy(pGame->pRenderer, pGame->pPlayerTexture, NULL, &pGame->pPlayer->rect);
+            break;
+        case 'A':
+            SDL_RenderCopyEx(pGame->pRenderer, pGame->pPlayerTexture, NULL, &pGame->pPlayer->rect, 0, NULL, flip);
+            break;
+            // default  : SDL_RenderCopy(pGame->pRenderer, pGame->pPlayerTexture, NULL, &pGame->pPlayer->rect); break;
         }
-        
     }
 
     for (int i = (((pGame->pPlayer->y) / pGame->map[0].wall.w) * MAPSIZE) + ((pGame->pPlayer->x - 1) / pGame->map[0].wall.w) + 2; i < MAPSIZE * MAPSIZE; i++)

@@ -54,8 +54,9 @@ void centerPlayer(Game *pGame)
     }
 }
 
-int handleInput(Game *pGame)
+void *handleInput(void *pGameIn)//Game *pGame)
 {
+    Game *pGame = (Game *) pGameIn;
     const Uint8 *currentKeyStates = SDL_GetKeyboardState(NULL);
     float scaleY = (float)pGame->map[0].wall.h / pGame->world.tileSize;
     float scaleX = (float)pGame->map[0].wall.w / pGame->world.tileSize;
@@ -129,9 +130,10 @@ int handleInput(Game *pGame)
         {
             if (currentKeyStates[SDL_SCANCODE_W] || currentKeyStates[SDL_SCANCODE_UP])
             {
-                pGame->pPlayer->prevKeyPressed = 'W';
+                
                 if (!checkCollision(*pGame->pPlayer, pGame->map, 'W', pGame->world.tileSize))
                 {
+                    pGame->pPlayer->prevKeyPressed = 'W';
                     movePlayer(pGame->pPlayer, 'W');
                 }
                 else
@@ -141,9 +143,10 @@ int handleInput(Game *pGame)
             }
             if (currentKeyStates[SDL_SCANCODE_A] || currentKeyStates[SDL_SCANCODE_LEFT])
             {
-                pGame->pPlayer->prevKeyPressed = 'A';
+                
                 if (!checkCollision(*pGame->pPlayer, pGame->map, 'A', pGame->world.tileSize))
                 {
+                    pGame->pPlayer->prevKeyPressed = 'A';
                     movePlayer(pGame->pPlayer, 'A');
                 }
                 else
@@ -153,9 +156,10 @@ int handleInput(Game *pGame)
             }
             if (currentKeyStates[SDL_SCANCODE_S] || currentKeyStates[SDL_SCANCODE_DOWN])
             {
-                pGame->pPlayer->prevKeyPressed = 'S';
+                
                 if (!checkCollision(*pGame->pPlayer, pGame->map, 'S', pGame->world.tileSize))
                 {
+                    pGame->pPlayer->prevKeyPressed = 'S';
                     movePlayer(pGame->pPlayer, 'S');
                 }
                 else
@@ -165,9 +169,10 @@ int handleInput(Game *pGame)
             }
             if (currentKeyStates[SDL_SCANCODE_D] || currentKeyStates[SDL_SCANCODE_RIGHT])
             {
-                pGame->pPlayer->prevKeyPressed = 'D';
+                
                 if (!checkCollision(*pGame->pPlayer, pGame->map, 'D', pGame->world.tileSize))
                 {
+                    pGame->pPlayer->prevKeyPressed = 'D';
                     movePlayer(pGame->pPlayer, 'D');
                 }
                 else
