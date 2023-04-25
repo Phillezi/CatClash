@@ -1,128 +1,272 @@
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_net.h>
+#include <SDL2/SDL_ttf.h>
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
 #include "definitions.h"
+#include "text.h"
 
 #define MAX_PLAYERS 5
 #define PORT 1234
 
-typedef struct playerInfo {
-    Uint32 ip;
-    Uint32 port;
+enum serverState{JOINING, RUNNING, CLOSED};
+typedef enum serverState ServerState;
+
+typedef struct info {
+    IPaddress address;
     int id;
-} PlayerInfo;
+} Info;
 
-/* \returns ID of new player, -1 on already connected player */
-int newAddress(PlayerInfo player[], UDPpacket *pRecieve);
+typedef struct server {
+    SDL_Window *pWindow;
+    SDL_Renderer *pRenderer;
+    TTF_Font *pFont;
+    Text *pSpace, *pClosed, *pJoining, *pRunning;
 
-int main(int argc, char **argv) {
+    ServerState state;
+    int windowWidth;
+    int windowHeight;
+
+    int nrOfClients;
+    Info clients[MAX_PLAYERS];
     UDPsocket socketDesc;   // Socket descriptor
     UDPpacket *pRecieve;    // Pointer to packet memory
-    UDPpacket *pSent;       
-    
-    int quit = 0, playerCount = 0, id;
-    char a[20];
-    PlayerInfo player[MAX_PLAYERS] = {0,0,0};
-    Player udpData;
+    UDPpacket *pSent;           
+} Server;
 
-    // Error checking and initiliaziation
+int setup(Server *pServer);
+void run(Server *pServer);
+void close(Server *pServer);
+void addClient(Server *pServer);
+void send(Server *pServer, Player udpData, int id);
+int findID(Server *pServer);
+int checkExit(Server *pServer, int id);
+void recieveAndSend(Server *pServer, Player udpData);
 
-        // Initialize SDL_net
-        if (SDLNet_Init() < 0) {
-            fprintf(stderr, "SDLNet_Init: %s\n", SDLNet_GetError());
-            exit(EXIT_FAILURE);
-        }
-
-        // Open socket
-        if (!(socketDesc = SDLNet_UDP_Open(PORT))) {
-            fprintf(stderr, "SDLNet_UDP_Open: %s\n", SDLNet_GetError());
-            exit(EXIT_FAILURE);
-        }
-
-        // Make space for future packets
-        if (!((pSent = SDLNet_AllocPacket(512)) && (pRecieve = SDLNet_AllocPacket(512)))) {
-            fprintf(stderr, "SDLNet_AllocPacket: %s\n", SDLNet_GetError());
-            exit(EXIT_FAILURE); 
-        }
-    
-    // Main loop
-    while (!quit) {
-        
-        // Get ready to recieve packet - UDP_Recv != 0 if a packet is coming
-        if (SDLNet_UDP_Recv(socketDesc, pRecieve)) {
-
-            // Add new players
-            if (playerCount < MAX_PLAYERS){
-                if (newAddress(player, pRecieve) > 0) {
-                    playerCount++;
-                    player[playerCount - 1].ip = pRecieve->address.host;
-                    player[playerCount - 1].port = pRecieve->address.port;
-                    player[playerCount - 1].id = playerCount;
-                    printf("Client %d has connected!\n", playerCount);
-                }
-            }
-
-            // Find packet sender among players
-            for (int i = 0; i < playerCount; i++)
-                if (pRecieve->address.port == player[i].port) { id = player[i].id; printf("Recieved data from player %d\n", id); }
-
-            // Remove player if packet contains "exit" and adjust other players
-            if (!strcmp((char *)pRecieve->data, "exit")) {
-                printf("Player %d has exited\n", id);
-
-                sprintf((char *)pSent->data, "%c exit", id+48); // 48 = 0 in ASCII 
-                pSent->len = strlen((char *)pSent->data) + 1;
-                SDLNet_UDP_Send(socketDesc, -1, pSent);
-
-                for (int i = id-1; i < playerCount-1; i++) {
-                    player[i] = player[i+1];
-                    player[i].id--;
-                    printf("- Player %d is now player %d\n", i+2, player[i].id);
-                }
-                playerCount--;
-            } else {    // Mirror packet to other players
-                for (int i = 0; i < playerCount; i++){
-                    if (id != player[i].id) {  
-                        printf("Send to client %d\n", player[i].id);
-
-                        pSent->address.host = player[i].ip;       // Set destination host
-                        pSent->address.port = player[i].port;     // Set destination port
-
-                        //sscanf((char * )pRecieve->data, "%s\n", &a);
-                        //printf("%s\n", a);
-
-                        // Copy recieved data to another package and print for error handling
-                        memcpy(&udpData, (char *)pRecieve->data, sizeof(Player));
-                        printf("UDP Packet data: %d %d", udpData.x, udpData.y);
-                        memcpy((char *)pSent->data, &udpData, sizeof(Player)+1);
-
-                        //sprintf((char *)pSent->data, "%s", a);
-                        pSent->len = sizeof(Player) + 1;
-                        SDLNet_UDP_Send(socketDesc, -1, pSent);
-                    }
-                }
-            }
-
-            // Quit main loop if packet contains "quit"
-            if (!strcmp((char *)pRecieve->data, "quit")) quit = 1;
-        }
-    }
-
-
-    /* Clean and exit */
-	SDLNet_FreePacket(pSent);
-    SDLNet_FreePacket(pRecieve);
-	SDLNet_Quit();
-	return EXIT_SUCCESS;
+int main(int argc, char **argv) {
+    Server s;
+    if (!setup(&s)) return 1;
+    run(&s);
+    close(&s);
 }
 
-int newAddress(PlayerInfo player[], UDPpacket *pRecieve) {
-    for (int i = 0; i < MAX_PLAYERS; i++) {
-        if (pRecieve->address.port == player[i].port)   // known user?
-            return -1;                                  // yes return -1
-        else if (player[i].ip == 0)                     // not known user, empty ip att player[i].ip?
-            return (i+1);                               // yes return id of new player;
+int setup(Server *pServer) {
+    // Basic inits
+    if (SDL_Init(SDL_INIT_EVERYTHING)!=0) {
+        printf("Error: %s\n",SDL_GetError());
+        return 0;
     }
+    if (TTF_Init()!=0) {
+        printf("Error: %s\n",TTF_GetError());
+        SDL_Quit();
+        return 0;
+    }
+    if (SDLNet_Init()) {
+		fprintf(stderr, "SDLNet_Init: %s\n", SDLNet_GetError());
+        TTF_Quit();
+        SDL_Quit();
+		return 0;
+	}
+
+    // Init window
+    char windowName[30];
+    sprintf(windowName, "Kittenfork Server");
+
+    SDL_DisplayMode display;
+    if (SDL_GetDesktopDisplayMode(0, &display) < 0) {
+        printf("SDL_GetDesktopDisplayMode failed: %s\n", SDL_GetError());
+        return 0;
+    }
+
+    pServer->windowWidth  = (float) display.w * 0.7; // 40% of avaliable space
+    pServer->windowHeight = (float) display.h * 0.7;
+
+    pServer->pWindow = SDL_CreateWindow(windowName,SDL_WINDOWPOS_CENTERED,SDL_WINDOWPOS_CENTERED,pServer->windowWidth,pServer->windowHeight,0);
+    if (!pServer->pWindow) {
+        printf("Error: %s\n",SDL_GetError());
+        close(pServer);
+        return 0;
+    }
+    pServer->pRenderer = SDL_CreateRenderer(pServer->pWindow, -1, SDL_RENDERER_ACCELERATED|SDL_RENDERER_PRESENTVSYNC);
+    if (!pServer->pRenderer) {
+        printf("Error: %s\n",SDL_GetError());
+        close(pServer);
+        return 0;    
+    }
+
+    // Init font
+    pServer->pFont = TTF_OpenFont("resources/fonts/RetroGaming.ttf", 100);
+    if (!pServer->pFont) {
+        printf("Error: %s\n", TTF_GetError());
+        close(pServer);
+        return 1;
+    }
+
+    // Open socket
+    if (!(pServer->socketDesc = SDLNet_UDP_Open(PORT))) {
+        fprintf(stderr, "SDLNet_UDP_Open: %s\n", SDLNet_GetError());
+        exit(EXIT_FAILURE);
+    }
+    // Make space for future packets
+    if (!((pServer->pSent = SDLNet_AllocPacket(512)) && (pServer->pRecieve = SDLNet_AllocPacket(512)))) {
+        fprintf(stderr, "SDLNet_AllocPacket: %s\n", SDLNet_GetError());
+        exit(EXIT_FAILURE); 
+    }
+
+    pServer->pSpace   = createText(pServer->pRenderer, 100, 100, 100, pServer->pFont, "Press space", pServer->windowWidth / 2, pServer->windowHeight / 3);
+    pServer->pJoining = createText(pServer->pRenderer, 100, 100, 100, pServer->pFont, "to start hosting", pServer->windowWidth / 2, pServer->windowHeight / 3 + 8 * TILESIZE);
+    pServer->pRunning = createText(pServer->pRenderer, 100, 100, 100, pServer->pFont, "Server is running", pServer->windowWidth / 2, pServer->windowHeight / 2);
+    pServer->pClosed  = createText(pServer->pRenderer, 100, 100, 100, pServer->pFont, "to open server", pServer->windowWidth / 2, pServer->windowHeight / 3 + 8 * TILESIZE);
+
+    if (!pServer->pSpace || !pServer->pJoining || !pServer->pRunning || !pServer->pClosed) {
+        printf("Error: %s\n", SDL_GetError());
+        close(pServer);
+    }
+
+    pServer->state = CLOSED;
+    pServer->nrOfClients = 0;
+}
+
+void run(Server *pServer) {
+    int quit = 0, draw = 0; 
+    SDL_Event event;
+    Player udpData;
+    char prompt[12];
+
+    while (!quit) {
+        SDL_SetRenderDrawColor(pServer->pRenderer, 255, 255, 255, 255);
+        SDL_RenderClear(pServer->pRenderer);
+
+        sprintf(prompt, "Clients: %d", pServer->nrOfClients);
+        Text *pPrompt = createText(pServer->pRenderer, 100, 100, 100, pServer->pFont, prompt, pServer->windowWidth / 2, pServer->windowHeight / 3 + 20 * TILESIZE);
+
+        switch (pServer->state) {
+        case CLOSED:
+            drawText(pServer->pSpace, pServer->pRenderer);
+            drawText(pServer->pClosed, pServer->pRenderer);
+            if(SDL_PollEvent(&event)) { 
+                if (event.type==SDL_QUIT) quit = 1; 
+                if (event.type==SDL_KEYDOWN) 
+                    if (event.key.keysym.sym == SDLK_SPACE) pServer->state = JOINING;
+            }
+            break;
+        case JOINING:
+            drawText(pServer->pSpace, pServer->pRenderer);
+            drawText(pServer->pJoining, pServer->pRenderer);
+            drawText(pPrompt, pServer->pRenderer);
+
+            if(SDL_PollEvent(&event)) { 
+                if (event.type==SDL_QUIT) quit = 1; 
+                if (event.type==SDL_KEYDOWN && pServer->nrOfClients >= 2) 
+                    if (event.key.keysym.sym == SDLK_SPACE) pServer->state = RUNNING;
+            }
+            if(pServer->state == RUNNING) send(pServer, udpData, -1);
+            if(SDLNet_UDP_Recv(pServer->socketDesc, pServer->pRecieve)==1 && pServer->nrOfClients < MAX_PLAYERS) 
+                { addClient(pServer); checkExit(pServer, findID(pServer)); }
+            break;
+        case RUNNING:
+            drawText(pServer->pRunning, pServer->pRenderer);
+            drawText(pPrompt, pServer->pRenderer);
+
+            if(SDL_PollEvent(&event)) if(event.type==SDL_QUIT) quit = 1;
+            if(SDLNet_UDP_Recv(pServer->socketDesc, pServer->pRecieve)==1) recieveAndSend(pServer, udpData);
+            break;
+        }
+
+        freeText(pPrompt);
+        SDL_RenderPresent(pServer->pRenderer);
+    }
+}
+
+void close(Server *pServer) {
+    if(pServer->pRenderer) SDL_DestroyRenderer(pServer->pRenderer);
+    if(pServer->pWindow) SDL_DestroyWindow(pServer->pWindow);
+
+    if(pServer->pFont) TTF_CloseFont(pServer->pFont);
+
+    if(pServer->pRecieve) SDLNet_FreePacket(pServer->pRecieve);
+    if(pServer->pSent) SDLNet_FreePacket(pServer->pSent);
+	if(pServer->socketDesc) SDLNet_UDP_Close(pServer->socketDesc);
+
+    SDLNet_FreePacket(pServer->pSent);
+    SDLNet_FreePacket(pServer->pRecieve);
+    SDLNet_Quit();
+    TTF_Quit();    
+    SDL_Quit();
+}
+
+/* Compares port to connected players ports and if there are less than 5 players adds new players to a list */
+void addClient(Server *pServer) {
+    for (int i = 0; i < MAX_PLAYERS; i++) if (pServer->pRecieve->address.port == pServer->clients[i].address.port) return;
+    pServer->clients[pServer->nrOfClients].address = pServer->pRecieve->address;    // Adds client address
+    pServer->clients[pServer->nrOfClients].id = pServer->nrOfClients + 1;           // Adds client id
+    pServer->nrOfClients++;
+}
+
+void send(Server *pServer, Player udpData, int id) {
+    for (int i = 0; i < pServer->nrOfClients; i++){
+        if (id != pServer->clients[i].id) {  
+            printf("Send to client %d\n", pServer->clients[i].id);
+
+            pServer->pSent->address.host = pServer->clients[i].address.host;     // Set destination host
+            pServer->pSent->address.port = pServer->clients[i].address.port;     // Set destination port
+
+            // Copy recieved data to another package and print for error handling
+            memcpy(&udpData, (char *)pServer->pRecieve->data, sizeof(Player));
+            udpData.id = pServer->clients[i].id;
+            memcpy((char *)pServer->pSent->data, &udpData, sizeof(Player)+1);
+
+            //sprintf((char *)pSent->data, "%s", a);
+            pServer->pSent->len = sizeof(Player) + 1;
+            SDLNet_UDP_Send(pServer->socketDesc, -1, pServer->pSent);
+        }
+    }
+}
+
+int findID(Server *pServer) {
+    int id;
+
+    // Find packet sender among players
+    for (int i = 0; i < pServer->nrOfClients; i++)
+        if (pServer->pRecieve->address.port == pServer->clients[i].address.port) { id = pServer->clients[i].id; printf("Recieved data from player %d\n", id); return id;}
+    return 0;
+}
+
+int checkExit(Server *pServer, int id) {
+    if (!strcmp((char *)pServer->pRecieve->data, "exit")) {
+        printf("Player %d has exited\n", id);
+
+        sprintf((char *)pServer->pSent->data, "%c exit", id+48); // 48 = 0 in ASCII 
+        pServer->pSent->len = strlen((char *)pServer->pSent->data) + 1;
+
+        for (int i = id-1; i < pServer->nrOfClients-1; i++) {
+            pServer->clients[i] = pServer->clients[i+1];
+            pServer->clients[i].id--;
+            printf("- Player %d is now player %d\n", i+2, pServer->clients[i].id);
+        }
+        pServer->nrOfClients--;
+
+        for (int i = 0; i < pServer->nrOfClients; i++) {
+            if(id != pServer->clients[i].id) {
+                pServer->pSent->address.host = pServer->clients[i].address.host;     // Set destination host
+                pServer->pSent->address.port = pServer->clients[i].address.port;     // Set destination port
+                SDLNet_UDP_Send(pServer->socketDesc, -1, pServer->pSent);
+            }
+        }
+        return 0;
+    }
+    else return 1;
+}
+
+/* Retrieves and resends data from UDP port. Rejects data from unknown players. */
+void recieveAndSend(Server *pServer, Player udpData) {
+    // Find packet sender among players
+    int id = findID(pServer);
+
+    // If client is not known, return
+    if (!id) return;
+
+    if (!checkExit(pServer, id)) return;     // If not exit, 
+    else send(pServer, udpData, id);    // Resend data to other players
 }

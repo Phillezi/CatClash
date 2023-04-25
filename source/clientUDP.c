@@ -1,7 +1,7 @@
 #include "clientUDP.h"
 
 void sendData(Game *pGame) {
-    memcpy(pGame->pPacket->data, &pGame->player, sizeof(Player)+1);
+    memcpy(pGame->pPacket->data, pGame->pPlayer, sizeof(Player)+1);
 
     pGame->pPacket->len = sizeof(Player)+1;
 

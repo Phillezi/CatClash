@@ -35,6 +35,8 @@ int initTextureTiles(SDL_Renderer *pRenderer, SDL_Window *pWindow, SDL_Texture *
     Expected in-parameters: pRenderer, pWindow, &pTexturePlayer
     Returns -1 if it fails
 */
+
+/*  Old initTexturePlayer function
 int initTexturePlayer(SDL_Renderer *pRenderer, SDL_Window *pWindow, SDL_Texture **pTexturePlayer)
 {
 
@@ -52,6 +54,107 @@ int initTexturePlayer(SDL_Renderer *pRenderer, SDL_Window *pWindow, SDL_Texture 
     }
     return 0;
 }
+*/
+
+int initTexturePlayer(SDL_Renderer *pRenderer, SDL_Window *pWindow, SDL_Texture **pTexturePlayer)
+{
+
+    SDL_Rect srcRect;
+    srcRect.x = 611; // test img X starting point
+    srcRect.y = 485; // test img Y starting point
+    srcRect.w = 24;
+    srcRect.h = 24;
+
+    SDL_Surface *pSurface = IMG_Load("resources/cat3.png");
+    if (!pSurface)
+    {
+        return -1;
+    }
+
+    SDL_Surface *pCroppedSurface = SDL_CreateRGBSurface(0, 24, 20, pSurface->format->BitsPerPixel,
+                                                        pSurface->format->Rmask, pSurface->format->Gmask,
+                                                        pSurface->format->Bmask, pSurface->format->Amask);
+    SDL_BlitSurface(pSurface, &srcRect, pCroppedSurface, NULL);
+    SDL_FreeSurface(pSurface);
+
+    *pTexturePlayer = SDL_CreateTextureFromSurface(pRenderer, pCroppedSurface);
+    SDL_FreeSurface(pCroppedSurface);
+
+    if (!pTexturePlayer)
+    {
+        return -1;
+    }
+    return 0;
+}
+
+/*
+    loadTileAtlas:
+    loads texture from png image, then divides texture to tiles
+    Expected in-parameters: pRenderer, pTileTextures, imgpath
+*/
+void loadTileAtlas(SDL_Renderer *pRenderer, SDL_Texture *pTiles[], const char imagePath[])
+{
+    SDL_Texture *pTexture = loadTexture(pRenderer, imagePath);
+    if (!pTexture)
+    {
+        printf("Failed to load tile atlas %s\n", imagePath);
+        return;
+    }
+
+    int atlasWidth, atlasHeight;
+    SDL_QueryTexture(pTexture, NULL, NULL, &atlasWidth, &atlasHeight);
+    int row = 0;
+    int offset = 0;
+    for (int i = 0; i < TILES; i++)
+    {
+        if ((i * TILE_WIDTH) - (row * atlasWidth) > atlasWidth)
+        {
+            row++;
+        }
+        int x = (i * TILE_WIDTH + offset) - (row * atlasWidth);
+        int y = row * TILE_HEIGHT;
+        SDL_Rect srcRect = {x, y, TILE_WIDTH, TILE_HEIGHT};
+        pTiles[i] = SDL_CreateTexture(pRenderer, SDL_PIXELFORMAT_RGBA8888, SDL_TEXTUREACCESS_TARGET, TILE_WIDTH, TILE_HEIGHT);
+        if (!pTiles[i])
+        {
+            offset += TILE_WIDTH;
+            i--;
+        }
+        SDL_SetRenderTarget(pRenderer, pTiles[i]);
+        SDL_RenderCopy(pRenderer, pTexture, &srcRect, NULL);
+        SDL_SetRenderTarget(pRenderer, NULL);
+    }
+
+    SDL_DestroyTexture(pTexture);
+}
+
+/*
+    loadTexture:
+    loads texture from png image
+    Expected in-parameters: pRenderer, imagePath
+    Returns NULL if it fails
+*/
+SDL_Texture *loadTexture(SDL_Renderer *pRenderer, const char imagePath[])
+{
+    SDL_Surface *pSurface = IMG_Load(imagePath);
+    if (!pSurface)
+    {
+        printf("Failed to load image %s: %s\n", imagePath, IMG_GetError());
+        return NULL;
+    }
+
+    SDL_Texture *pTexture = SDL_CreateTextureFromSurface(pRenderer, pSurface);
+    if (!pTexture)
+    {
+        printf("Failed to create texture from %s: %s\n", imagePath, SDL_GetError());
+        SDL_FreeSurface(pSurface);
+        return NULL;
+    }
+
+    SDL_FreeSurface(pSurface);
+    return pTexture;
+}
+
 /*
     initMap:
     Reads the mapfile and fills the Tile map array
@@ -117,7 +220,8 @@ Tile createTile(int col, int row, int type, int tileSize)
     return i;
 }
 
-int readConfig(Config *pConfig){
+int readConfig(Config *pConfig)
+{
 
     FILE *fp;
 
@@ -125,7 +229,7 @@ int readConfig(Config *pConfig){
 
     if (fp != NULL)
     {
-        //kod som kollar igenom config.txt och uppdaterar config structen därefter
+        // kod som kollar igenom config.txt och uppdaterar config structen därefter
         fclose(fp);
     }
     else

@@ -8,44 +8,44 @@
 void centerPlayer(Game *pGame)
 {
     int screenShiftAmount = pGame->movementAmount;
-    if (pGame->player.rect.x >= (4 * pGame->windowWidth) / 5 || pGame->player.rect.x <= pGame->windowWidth / 5)
+    if (pGame->pPlayer->rect.x >= (4 * pGame->windowWidth) / 5 || pGame->pPlayer->rect.x <= pGame->windowWidth / 5)
     {
         screenShiftAmount = pGame->movementAmount * 2;
     }
-    if (pGame->player.rect.y >= (4 * pGame->windowHeight) / 5 || pGame->player.rect.y <= pGame->windowHeight / 5)
+    if (pGame->pPlayer->rect.y >= (4 * pGame->windowHeight) / 5 || pGame->pPlayer->rect.y <= pGame->windowHeight / 5)
     {
         screenShiftAmount = pGame->movementAmount * 2;
     }
-    if (pGame->player.rect.x >= pGame->windowWidth || pGame->player.rect.x <= 0)
+    if (pGame->pPlayer->rect.x >= pGame->windowWidth || pGame->pPlayer->rect.x <= 0)
     {
         screenShiftAmount = pGame->movementAmount * 10;
     }
-    if (pGame->player.rect.y >= pGame->windowHeight || pGame->player.rect.y <= 0)
+    if (pGame->pPlayer->rect.y >= pGame->windowHeight || pGame->pPlayer->rect.y <= 0)
     {
         screenShiftAmount = pGame->movementAmount * 10;
     }
-    if (pGame->player.rect.y < (2 * pGame->windowHeight) / 5)
+    if (pGame->pPlayer->rect.y < (2 * pGame->windowHeight) / 5)
     {
         for (int i = 0; i < MAPSIZE * MAPSIZE; i++)
         {
             pGame->map[i].wall.y += screenShiftAmount;
         }
     }
-    if (pGame->player.rect.y > (3 * pGame->windowHeight) / 5)
+    if (pGame->pPlayer->rect.y > (3 * pGame->windowHeight) / 5)
     {
         for (int i = 0; i < MAPSIZE * MAPSIZE; i++)
         {
             pGame->map[i].wall.y -= screenShiftAmount;
         }
     }
-    if (pGame->player.rect.x < (2 * pGame->windowWidth) / 5)
+    if (pGame->pPlayer->rect.x < (2 * pGame->windowWidth) / 5)
     {
         for (int i = 0; i < MAPSIZE * MAPSIZE; i++)
         {
             pGame->map[i].wall.x += screenShiftAmount;
         }
     }
-    if (pGame->player.rect.x > (3 * pGame->windowWidth) / 5)
+    if (pGame->pPlayer->rect.x > (3 * pGame->windowWidth) / 5)
     {
         for (int i = 0; i < MAPSIZE * MAPSIZE; i++)
         {
@@ -54,8 +54,9 @@ void centerPlayer(Game *pGame)
     }
 }
 
-int handleInput(Game *pGame)
+void *handleInput(void *pGameIn) // Game *pGame)
 {
+    Game *pGame = (Game *)pGameIn;
     const Uint8 *currentKeyStates = SDL_GetKeyboardState(NULL);
     float scaleY = (float)pGame->map[0].wall.h / pGame->world.tileSize;
     float scaleX = (float)pGame->map[0].wall.w / pGame->world.tileSize;
@@ -94,34 +95,34 @@ int handleInput(Game *pGame)
     if (currentKeyStates[SDL_SCANCODE_SPACE])
     {
         pGame->state = START;
-        if (pGame->player.charge < MAX_CHARGE)
+        if (pGame->pPlayer->charge < MAX_CHARGE)
         {
-            pGame->player.charge += 1;
+            pGame->pPlayer->charge += 1;
         }
         else
         {
             printf("FULLY CHARGED\n");
         }
     }
-    else if (pGame->player.charge > 0)
+    else if (pGame->pPlayer->charge > 0)
     {
         int damage = 0;
 
-        for (int i = 0; i < 2 * (pGame->player.charge / 2); i++)
+        for (int i = 0; i < 2 * (pGame->pPlayer->charge / 2); i++)
         {
-            if (!checkCollision(pGame->player, pGame->map, pGame->player.prevKeyPressed, pGame->world.tileSize))
+            if (!checkCollision(*pGame->pPlayer, pGame->map, pGame->pPlayer->prevKeyPressed, pGame->world.tileSize))
             {
-                movePlayer(&pGame->player, pGame->player.prevKeyPressed);
+                movePlayer(pGame->pPlayer, pGame->pPlayer->prevKeyPressed);
             }
             else
             {
-                damage = pGame->player.charge * 2;
-                pGame->player.charge = 0;
+                damage = pGame->pPlayer->charge * 2;
+                pGame->pPlayer->charge = 0;
                 break;
             }
         }
-        pGame->player.hp -= damage;
-        pGame->player.charge -= 1;
+        pGame->pPlayer->hp -= damage;
+        pGame->pPlayer->charge -= 1;
     }
     else
     {
@@ -129,10 +130,11 @@ int handleInput(Game *pGame)
         {
             if (currentKeyStates[SDL_SCANCODE_W] || currentKeyStates[SDL_SCANCODE_UP])
             {
-                pGame->player.prevKeyPressed = 'W';
-                if (!checkCollision(pGame->player, pGame->map, 'W', pGame->world.tileSize))
+
+                if (!checkCollision(*pGame->pPlayer, pGame->map, 'W', pGame->world.tileSize))
                 {
-                    movePlayer(&pGame->player, 'W');
+                    pGame->pPlayer->prevKeyPressed = 'W';
+                    movePlayer(pGame->pPlayer, 'W');
                 }
                 else
                 {
@@ -141,10 +143,11 @@ int handleInput(Game *pGame)
             }
             if (currentKeyStates[SDL_SCANCODE_A] || currentKeyStates[SDL_SCANCODE_LEFT])
             {
-                pGame->player.prevKeyPressed = 'A';
-                if (!checkCollision(pGame->player, pGame->map, 'A', pGame->world.tileSize))
+
+                if (!checkCollision(*pGame->pPlayer, pGame->map, 'A', pGame->world.tileSize))
                 {
-                    movePlayer(&pGame->player, 'A');
+                    pGame->pPlayer->prevKeyPressed = 'A';
+                    movePlayer(pGame->pPlayer, 'A');
                 }
                 else
                 {
@@ -153,10 +156,11 @@ int handleInput(Game *pGame)
             }
             if (currentKeyStates[SDL_SCANCODE_S] || currentKeyStates[SDL_SCANCODE_DOWN])
             {
-                pGame->player.prevKeyPressed = 'S';
-                if (!checkCollision(pGame->player, pGame->map, 'S', pGame->world.tileSize))
+
+                if (!checkCollision(*pGame->pPlayer, pGame->map, 'S', pGame->world.tileSize))
                 {
-                    movePlayer(&pGame->player, 'S');
+                    pGame->pPlayer->prevKeyPressed = 'S';
+                    movePlayer(pGame->pPlayer, 'S');
                 }
                 else
                 {
@@ -165,10 +169,11 @@ int handleInput(Game *pGame)
             }
             if (currentKeyStates[SDL_SCANCODE_D] || currentKeyStates[SDL_SCANCODE_RIGHT])
             {
-                pGame->player.prevKeyPressed = 'D';
-                if (!checkCollision(pGame->player, pGame->map, 'D', pGame->world.tileSize))
+
+                if (!checkCollision(*pGame->pPlayer, pGame->map, 'D', pGame->world.tileSize))
                 {
-                    movePlayer(&pGame->player, 'D');
+                    pGame->pPlayer->prevKeyPressed = 'D';
+                    movePlayer(pGame->pPlayer, 'D');
                 }
                 else
                 {
@@ -193,8 +198,11 @@ int handleInput(Game *pGame)
 
     int offsetX = pGame->map[0].wall.x - pGame->map[0].x;
     int offsetY = pGame->map[0].wall.y - pGame->map[0].y;
-    pGame->player.rect.x = ((float)pGame->player.x * scaleX) + offsetX;
-    pGame->player.rect.y = ((float)pGame->player.y * scaleY) + offsetY;
+    pGame->pPlayer->rect.x = ((float)pGame->pPlayer->x * scaleX) + offsetX;
+    pGame->pPlayer->rect.y = ((float)pGame->pPlayer->y * scaleY) + offsetY;
+
+    pGame->pPlayer->rect.h = (pGame->world.tileSize / 2) + ((pGame->world.tileSize / 2) * (1 - (float)pGame->pPlayer->charge / MAX_CHARGE));
+    pGame->pPlayer->rect.y += pGame->world.tileSize - pGame->pPlayer->rect.h;
     return 0;
 }
 
@@ -268,8 +276,48 @@ SDL_Rect findEmptyTile(Tile map[])
 void getPlayerSpawnPos(Game *pGame)
 {
     SDL_Rect spawnTile = findEmptyTile(pGame->map); // this function returns a valid spawn tile
+    /*
     pGame->player.x = spawnTile.x;
     pGame->player.y = spawnTile.y;
-    pGame->player.rect.x = spawnTile.x; // windowWidth / 2;
-    pGame->player.rect.y = spawnTile.y; // windowHeight / 2;
+    pGame->pPlayer->rect.x = spawnTile.x; // windowWidth / 2;
+    pGame->pPlayer->rect.y = spawnTile.y; // windowHeight / 2;
+    */
+
+    // for adt
+    pGame->pPlayer->x = spawnTile.x;
+    pGame->pPlayer->y = spawnTile.y;
+    pGame->pPlayer->rect.x = spawnTile.x;
+    pGame->pPlayer->rect.y = spawnTile.y;
+}
+
+Player *createPlayer(int id, char *name, int tileSize)
+{
+    Player *pPlayer = (Player *)malloc(sizeof(Player));
+    if (!pPlayer)
+    {
+        printf("Error: Failed to allocate memory for player\n");
+        return NULL;
+    }
+
+    pPlayer->charge = 0;
+    pPlayer->hp = 255;
+    pPlayer->id = id;
+    if (strlen(name) < MAX_NAME_LEN)
+        strcpy(pPlayer->name, name);
+    else
+        strcpy(pPlayer->name, "ERROR");
+    pPlayer->prevKeyPressed = 'D';
+    pPlayer->rect.w = tileSize;
+    pPlayer->rect.h = tileSize;
+    pPlayer->rect.x = 0;
+    pPlayer->rect.y = 0;
+    pPlayer->x = 0;
+    pPlayer->y = 0;
+
+    return pPlayer;
+}
+
+void destroyPlayer(Player *pPlayer)
+{
+    free(pPlayer);
 }
