@@ -108,7 +108,7 @@ int init(Game *pGame)
     {
         pGame->pRenderer = SDL_CreateRenderer(pGame->pWindow, -1, SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC);
         printf("Vsync is enabled\n");
-        sprintf(windowTitle,"%s Vsync |", windowTitle);
+        sprintf(windowTitle, "%s Vsync |", windowTitle);
     }
     else
     {
@@ -193,7 +193,7 @@ int init(Game *pGame)
     if (pGame->config.multiThreading)
     {
         printf("Multithreading is enabled\n");
-        sprintf(windowTitle,"%s MultiThreaded |", windowTitle);
+        sprintf(windowTitle, "%s MultiThreaded |", windowTitle);
     }
     else
     {
@@ -332,6 +332,8 @@ void *updateScreen(void *pGameIn)
             switch (pGame->map[i].type)
             {
             case 0:
+                SDL_SetRenderDrawColor(pGame->pRenderer, 200, 200, 200, 255);
+                SDL_RenderFillRect(pGame->pRenderer, &pGame->map[i].wall);
                 if (i > MAPSIZE - 1)
                 {
                     if (pGame->map[i - MAPSIZE].type)
@@ -392,6 +394,8 @@ void *updateScreen(void *pGameIn)
             switch (pGame->map[i].type)
             {
             case 0:
+                SDL_SetRenderDrawColor(pGame->pRenderer, 200, 200, 200, 255);
+                SDL_RenderFillRect(pGame->pRenderer, &pGame->map[i].wall);
                 if (i > MAPSIZE - 1)
                 {
                     if (pGame->map[i - MAPSIZE].type)

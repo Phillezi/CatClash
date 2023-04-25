@@ -450,6 +450,7 @@ int testSelectMenu(Game *pGame)
             pText[i] = createText(pGame->pRenderer, 0, 0, 0, pGame->ui.pFpsFont, strArr[i], pGame->windowWidth / 2, (pGame->windowHeight / 2) + ((i - selected) * pGame->world.tileSize / 2));
         }
     }
+    initMap(pGame->map, strArr[selected], pGame->world.tileSize/10);
 
     bool exit = false;
     int previousTime = 0;
@@ -485,6 +486,7 @@ int testSelectMenu(Game *pGame)
                                 pText[i] = createText(pGame->pRenderer, 0, 0, 0, pGame->ui.pFpsFont, strArr[i], pGame->windowWidth / 2, (pGame->windowHeight / 2) + ((i - selected) * pGame->world.tileSize / 2));
                             }
                         }
+                        initMap(pGame->map, strArr[selected], pGame->world.tileSize/10);
                     }
                 }
                 else if (event.wheel.y > 0 && event.type == SDL_MOUSEWHEEL || event.key.keysym.sym == SDLK_UP) // scroll down
@@ -502,18 +504,17 @@ int testSelectMenu(Game *pGame)
                                 pText[i] = createText(pGame->pRenderer, 0, 0, 0, pGame->ui.pFpsFont, strArr[i], pGame->windowWidth / 2, (pGame->windowHeight / 2) + ((i - selected) * pGame->world.tileSize / 2));
                             }
                         }
+                        initMap(pGame->map, strArr[selected], pGame->world.tileSize/10);
                     }
                 }
                 else if (event.key.keysym.sym == SDLK_RETURN || event.button.button == SDL_BUTTON_LEFT)
                 {
-                    printf("DETECTED KEYPRESS\n");
                     if (initMap(pGame->map, strArr[selected], pGame->world.tileSize))
                     {
                         printf("No file found\n");
                     }
                     else
                     {
-                        printf("epic\n");
                         getPlayerSpawnPos(pGame);
                         exit = true;
                         break;
@@ -527,6 +528,10 @@ int testSelectMenu(Game *pGame)
 
             SDL_SetRenderDrawColor(pGame->pRenderer, 255, 255, 255, 255);
             SDL_RenderClear(pGame->pRenderer);
+            for(int i = 0; i < MAPSIZE *MAPSIZE; i++){
+                if(pGame->map[i].type)
+                    SDL_RenderCopy(pGame->pRenderer, pGame->pTileTextures[pGame->map[i].type-1], NULL, &pGame->map[i].wall);
+            }
             for (int i = 0; i < len; i++)
             {
                 if (i != selected)
