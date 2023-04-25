@@ -35,6 +35,8 @@ int initTextureTiles(SDL_Renderer *pRenderer, SDL_Window *pWindow, SDL_Texture *
     Expected in-parameters: pRenderer, pWindow, &pTexturePlayer
     Returns -1 if it fails
 */
+
+/*  Old initTexturePlayer function
 int initTexturePlayer(SDL_Renderer *pRenderer, SDL_Window *pWindow, SDL_Texture **pTexturePlayer)
 {
 
@@ -52,6 +54,43 @@ int initTexturePlayer(SDL_Renderer *pRenderer, SDL_Window *pWindow, SDL_Texture 
     }
     return 0;
 }
+*/
+
+
+int initTexturePlayer(SDL_Renderer *pRenderer, SDL_Window *pWindow, SDL_Texture **pTexturePlayer)
+{
+
+    SDL_Rect srcRect;
+    srcRect.x = 611;    //test img X starting point 
+    srcRect.y = 485;    //test img Y starting point 
+    srcRect.w = 24;
+    srcRect.h = 24;
+
+    SDL_Surface *pSurface = IMG_Load("resources/cat3.png");
+    if (!pSurface)
+    {
+        return -1;
+    }
+
+    SDL_Surface *pCroppedSurface = SDL_CreateRGBSurface(0, 24, 20, pSurface->format->BitsPerPixel,
+                                                         pSurface->format->Rmask, pSurface->format->Gmask,
+                                                         pSurface->format->Bmask, pSurface->format->Amask);
+    SDL_BlitSurface(pSurface, &srcRect, pCroppedSurface, NULL);
+    SDL_FreeSurface(pSurface);
+
+    *pTexturePlayer = SDL_CreateTextureFromSurface(pRenderer, pCroppedSurface);
+    SDL_FreeSurface(pCroppedSurface);
+
+    if (!pTexturePlayer)
+    {
+        return -1;
+    }
+    return 0;
+}
+
+
+
+
 /*
     initMap:
     Reads the mapfile and fills the Tile map array
