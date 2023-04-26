@@ -41,9 +41,8 @@ int main(int argc, char **argv)
             {
                 SDLNet_TCP_AddSocket(sockets, tmpClient);
                 printf("User: %d joined!\n", playerId);
-                SDLNet_TCP_Recv(tmpClient, &tileSize, sizeof(int)+1);   // get the users tilesize
-                initMap(map, mapName, tileSize);                          // create map for their tilesize
-                SDLNet_TCP_Send(tmpClient, map, sizeof(map));           // send map to client
+                for(int i = 0; i < MAPSIZE*MAPSIZE; i++)
+                    SDLNet_TCP_Send(tmpClient, &map[i].type, sizeof(map[i].type)); // send map to client
                 SDLNet_TCP_Close(tmpClient);                            // close client
                 running = 0;
             }

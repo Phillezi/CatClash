@@ -19,15 +19,18 @@ int joinServerTCP(Game *pGame)
     }
     SDLNet_TCP_AddSocket(sockets, pGame->pClient->socketTCP);
     bool exit = false;
-    SDLNet_TCP_Send(pGame->pClient->socketTCP, &pGame->world.tileSize, sizeof(pGame->world.tileSize));
+
+    int i = 0;
+
     while (!exit)
     {
         while (SDLNet_CheckSockets(sockets, 0) > 0)
         {
             if (SDLNet_SocketReady(pGame->pClient->socketTCP))
             {
-                int bytesRecv = SDLNet_TCP_Recv(pGame->pClient->socketTCP, pGame->map, sizeof(pGame->map));
-                if (bytesRecv != sizeof(pGame->map))
+                int bytesRecv = SDLNet_TCP_Recv(pGame->pClient->socketTCP, &pGame->map[i].type, sizeof(pGame->map[i].type));
+                i++;
+                if (bytesRecv != sizeof(pGame->map[i].type))
                 {
                     printf("PACKET LOSS\n");
                     exit = true;
@@ -35,11 +38,13 @@ int joinServerTCP(Game *pGame)
                     SDLNet_FreeSocketSet(sockets);
                     return 1;
                 }
-
-                printf("Recieved message\n");
-                exit = true;
-                SDLNet_TCP_Close(pGame->pClient->socketTCP);
-                SDLNet_FreeSocketSet(sockets);
+                if (i == MAPSIZE * MAPSIZE)
+                {
+                    printf("Recieved message\n");
+                    exit = true;
+                    SDLNet_TCP_Close(pGame->pClient->socketTCP);
+                    SDLNet_FreeSocketSet(sockets);
+                }
             }
         }
     }

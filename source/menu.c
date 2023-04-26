@@ -347,6 +347,7 @@ int joinServerMenu(Game *pGame)
                     return 1;
                 }
                 free(pGame->pClient);
+                initMapFromTCP(pGame->map, pGame->world.tileSize);
                 getPlayerSpawnPos(pGame);
                 exit = true;
             }
