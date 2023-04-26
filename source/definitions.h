@@ -119,6 +119,7 @@ struct game
     PlayerNet *pClient;
 
     //    Player player;
+    Player players[MAX_PLAYERS];
     Player *pPlayer;
     Tile map[MAPSIZE * MAPSIZE];
     World world;

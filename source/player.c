@@ -138,7 +138,7 @@ void *handleInput(void *pGameIn) // Game *pGame)
                 }
                 else
                 {
-                    //printf("COLLISION W\n");
+                    // printf("COLLISION W\n");
                 }
             }
             if (currentKeyStates[SDL_SCANCODE_A] || currentKeyStates[SDL_SCANCODE_LEFT])
@@ -151,7 +151,7 @@ void *handleInput(void *pGameIn) // Game *pGame)
                 }
                 else
                 {
-                    //printf("COLLISION A\n");
+                    // printf("COLLISION A\n");
                 }
             }
             if (currentKeyStates[SDL_SCANCODE_S] || currentKeyStates[SDL_SCANCODE_DOWN])
@@ -164,7 +164,7 @@ void *handleInput(void *pGameIn) // Game *pGame)
                 }
                 else
                 {
-                    //printf("COLLISION S\n");
+                    // printf("COLLISION S\n");
                 }
             }
             if (currentKeyStates[SDL_SCANCODE_D] || currentKeyStates[SDL_SCANCODE_RIGHT])
@@ -177,7 +177,7 @@ void *handleInput(void *pGameIn) // Game *pGame)
                 }
                 else
                 {
-                    //printf("COLLISION D\n");
+                    // printf("COLLISION D\n");
                 }
             }
 
@@ -333,4 +333,17 @@ Player *createPlayer(int id, char *name, int tileSize)
 void destroyPlayer(Player *pPlayer)
 {
     free(pPlayer);
+}
+
+void translatePositionToScreen(Game *pGame, Player player)
+{
+    float scaleY = (float)pGame->map[0].wall.h / pGame->world.tileSize;
+    float scaleX = (float)pGame->map[0].wall.w / pGame->world.tileSize;
+    int offsetX = pGame->map[0].wall.x - pGame->map[0].x;
+    int offsetY = pGame->map[0].wall.y - pGame->map[0].y;
+    player.rect.x = ((float)pGame->pPlayer->x * scaleX) + offsetX;
+    player.rect.y = ((float)pGame->pPlayer->y * scaleY) + offsetY;
+
+    player.rect.h = (pGame->world.tileSize / 2) + ((pGame->world.tileSize / 2) * (1 - (float)pGame->pPlayer->charge / MAX_CHARGE));
+    player.rect.y += pGame->world.tileSize - pGame->pPlayer->rect.h;
 }

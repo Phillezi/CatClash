@@ -10,6 +10,7 @@
 #define MAX_PLAYERS 5
 #define PORT 1234
 
+void checkClient(Server *pServer, Player data);
 int setupUDP(Server *pServer);
 void runUDP(Server *pServer);
 void closeUDP(Server *pServer);
@@ -29,24 +30,26 @@ void checkClient(Server *pServer, Player data)
             printf("Sender is known (%d)\n", i);
             return;
         }
-        else                                                                                                            // no
+        else // no
         {
-            if ((pServer->clients[i].address.port == 8888) && (pServer->clients[i].address.host == 8888))               // is it a empty slot?
+            if ((pServer->clients[i].address.port == 8888) && (pServer->clients[i].address.host == 8888)) // is it a empty slot?
             {
-                pServer->clients[i].address.port = pServer->pRecieve->address.port;                                     // Save client in slot
+                pServer->clients[i].address.port = pServer->pRecieve->address.port; // Save client in slot
                 pServer->clients[i].address.host = pServer->pRecieve->address.host;
                 pServer->clients[i].id = data.id;
                 return;
             }
-            else                                                                                                        // not the sender nor empty slot
+            else // not the sender nor empty slot
             {
                 printf("Sender is not %d ( %d:%d )\n", i, pServer->clients[i].address.host, pServer->clients[i].address.port);
+                /*
                 memcpy(&pServer->pSent->data, pServer->pRecieve->data, sizeof(Player));
                 pServer->pSent->address.port = pServer->clients[i].address.port;
                 pServer->pSent->address.host = pServer->clients[i].address.host;
                 pServer->pSent->len = pServer->pRecieve->len;
 
-                SDLNet_UDP_Send(pServer->socketUDP, -1, pServer->pSent);                                                // Send to them since they arnn't the sender nor empty
+                SDLNet_UDP_Send(pServer->socketUDP, -1, pServer->pSent); // Send to them since they arnn't the sender nor empty
+                */
             }
         }
     }
@@ -144,6 +147,19 @@ void runUDP(Server *pServer)
                 memcpy(&data, pServer->pRecieve->data, sizeof(Player));
                 printf("Recived: id: %d, x: %d, y: %d from %d:%d\n", data.id, data.x, data.y, pServer->pRecieve->address.host, pServer->pRecieve->address.port);
                 checkClient(pServer, data);
+                for (int i = 0; i < pServer->nrOfClients; i++)
+                {
+                    if (pServer->clients[i].id != data.id)
+                    {
+                        memcpy(&pServer->pSent->data, pServer->pRecieve, sizeof(pServer->pRecieve));
+                        pServer->pSent->address.port = pServer->clients[i].address.port;
+                        pServer->pSent->address.host = pServer->clients[i].address.host;
+
+                        if(!SDLNet_UDP_Send(pServer->socketUDP, -1, pServer->pSent)){
+                            printf("Error: Could not send package\n");
+                        }
+                    }
+                }
 
                 // SDLNet_UDP_Send(pServer->socketUDP, -1, pServer->pRecieve);
             }

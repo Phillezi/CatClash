@@ -16,7 +16,7 @@ int init(Game *pGame);
 void run(Game *pGame);
 void close(Game *pGame);
 void *updateScreen(void *pGameIn);
-void changePlayerTexture(SDL_Texture* playerTexture, SDL_Renderer* renderer, char direction);
+void changePlayerTexture(SDL_Texture *playerTexture, SDL_Renderer *renderer, char direction);
 
 int main(int argv, char **args)
 {
@@ -53,10 +53,10 @@ int main(int argv, char **args)
                 break;
             run(&game);
             break;
-/*        case 4:
-            if(joinServerMenu(&game))
-            break;
-*/
+            /*        case 4:
+                        if(joinServerMenu(&game))
+                        break;
+            */
         default:
             break;
         }
@@ -222,12 +222,14 @@ int init(Game *pGame)
 void run(Game *pGame)
 {
     pGame->pPacket = SDLNet_AllocPacket(512);
-    if(pGame->socketDesc = SDLNet_UDP_Open(0)){
+    if (pGame->socketDesc = SDLNet_UDP_Open(0))
+    {
         printf("UDP init\n");
     }
     // if(pGame->config.multiThreading)
     // pthread_t renderThread;
-    int oldX = 0; int oldY = 0;
+    int oldX = 0;
+    int oldY = 0;
     pthread_t movementThread;
     bool exit = false;
     pGame->config.fps = 60;
@@ -261,12 +263,15 @@ void run(Game *pGame)
                 movementPreviousTime = SDL_GetTicks();
                 if (pGame->config.multiThreading)
                 {
-                    getPlayerData(pGame);
+                    getPlayerData(pGame, pGame->players);
+                    for (int i = 0; i < MAX_PLAYERS; i++)
+                        translatePositionToScreen(pGame, pGame->players[i]);
                     pthread_join(movementThread, NULL);
-                    if(oldX != pGame->pPlayer->x || oldY != pGame->pPlayer->y){
+                    if (oldX != pGame->pPlayer->x || oldY != pGame->pPlayer->y)
+                    {
                         oldX = pGame->pPlayer->x;
                         oldY = pGame->pPlayer->y;
-                        printf("Trying to send data\n");
+                        // printf("Trying to send data\n");
                         sendData(pGame);
                     }
                     pthread_create(&movementThread, NULL, handleInput, (void *)pGame);
@@ -305,10 +310,12 @@ void run(Game *pGame)
 
 void close(Game *pGame)
 {
-    if(pGame->pPacket){
+    if (pGame->pPacket)
+    {
         SDLNet_FreePacket(pGame->pPacket);
     }
-    if(pGame->socketDesc){
+    if (pGame->socketDesc)
+    {
         SDLNet_UDP_Close(pGame->socketDesc);
     }
     if (pGame->pPlayer)
@@ -422,6 +429,10 @@ void *updateScreen(void *pGameIn)
             }
         }
     }
+    for(int i = 0; i < MAX_PLAYERS; i++){
+        SDL_RenderDrawRect(pGame->pRenderer, &pGame->players[i].rect);
+        SDL_RenderCopy(pGame->pRenderer, pGame->pPlayerTexture, NULL, &pGame->players[i].rect);
+    }
     if (pGame->state == OVER)
     {
         drawText(pGame->ui.pOverText, pGame->pRenderer);
@@ -437,10 +448,8 @@ void *updateScreen(void *pGameIn)
     SDL_RenderPresent(pGame->pRenderer);
 }
 
-
-
 // testing function for chancing player texture
-/* 
+/*
 void changePlayerTexture(SDL_Texture* playerTexture, SDL_Renderer* renderer, char direction) {
     SDL_Surface* surface = IMG_Load("resources/cat3.png");
     if (surface == NULL) {
