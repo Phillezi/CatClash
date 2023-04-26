@@ -1,4 +1,5 @@
 #include "TCPclient.h"
+#include <string.h>
 
 /*
     joinServerTCP
@@ -6,12 +7,13 @@
 */
 int joinServerTCP(Game *pGame)
 {
-    IPaddress ip;
-    if (SDLNet_ResolveHost(&ip, pGame->pClient->serverIP, pGame->pClient->port) == -1)
+    
+    if (SDLNet_ResolveHost(&pGame->pClient->ip, pGame->pClient->serverIP, pGame->pClient->port) == -1)
         return 1;
 
     SDLNet_SocketSet sockets = SDLNet_AllocSocketSet(1);
-    pGame->pClient->socketTCP = SDLNet_TCP_Open(&ip);
+    pGame->pClient->socketTCP = SDLNet_TCP_Open(&pGame->pClient->ip);
+    
     if (!pGame->pClient->socketTCP)
     {
         SDLNet_FreeSocketSet(sockets);
@@ -48,9 +50,42 @@ int joinServerTCP(Game *pGame)
             }
         }
     }
-    printf("Closing client...\n");
+    printf("Closing TCP Client, and opening udp client...\n");
+    //pGame->pClient->socketUDP = SDLNet_UDP_Open(1234);
     return 0;
     // SDLNet_TCP_Close(pGame->pClient->socketTCP);
+}
+
+void sendDataUDP(Game *pGame){
+    printf("1\n");
+    PacketData packet;// = {pGame->pPlayer->x, pGame->pPlayer->y, pGame->pPlayer->id};
+    packet.id = pGame->pPlayer->id;
+    packet.x = pGame->pPlayer->x;
+    packet.y = pGame->pPlayer->y;
+    //pGame->pPacket = malloc(sizeof(packet));
+    //memcpy(pGame->pPacket->data, &packet, sizeof(PacketData));
+
+    UDPpacket packetS;
+    memcpy(&packetS.data, &packet, sizeof(packet)+1);
+
+    packetS.address.host = pGame->pClient->ip.host;
+    packetS.address.port = pGame->pClient->ip.port;
+
+    if(!SDLNet_UDP_Send(pGame->pClient->socketUDP, -1, &packetS)){
+        printf("ERROR: could not send package\n");
+        printf("Error: %S\n", SDLNet_GetError());
+    }
+
+    //pGame->pPacket->len = sizeof(PacketData)+1;
+
+    //pGame->pPacket->address.host = pGame->pClient->ip.host;	// Set the destination host 
+    //pGame->pPacket->address.port = pGame->pClient->ip.port;	// And destination port 
+    /*
+    if(!SDLNet_UDP_Send(pGame->pClient->socketUDP, -1, pGame->pPacket)){
+        printf("ERROR: could not send package\n");
+    }
+    */
+    //free(pGame->pPacket);
 }
 
 PlayerNet *createClient(char *serverIP, int port, int id, int x, int y)

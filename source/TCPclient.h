@@ -9,4 +9,6 @@
 int joinServerTCP(Game *pGame);
 PlayerNet *createClient(char *serverIP, int port, int id, int x, int y);
 
+void sendDataUDP(Game *pGame);
+
 #endif

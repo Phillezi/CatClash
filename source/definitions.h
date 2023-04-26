@@ -93,11 +93,18 @@ typedef struct playerNet
 {
     UDPsocket socketUDP;
     TCPsocket socketTCP;
+    IPaddress ip;
     char serverIP[16];
     int port;
     int id;
     int x, y;
 } PlayerNet;
+
+typedef struct {
+    int x;
+    int y;
+    int id;
+} PacketData;
 
 struct game
 {

@@ -10,6 +10,7 @@
 #include "levelEditor.h"
 #include "pthread.h"
 // #include "client.h"
+#include "TCPclient.h"
 
 int init(Game *pGame);
 void run(Game *pGame);
@@ -211,11 +212,13 @@ int init(Game *pGame)
     }
     SDL_SetWindowIcon(pGame->pWindow, pSurface);
     SDL_FreeSurface(pSurface);
+
     return 0;
 }
 
 void run(Game *pGame)
 {
+    pGame->pClient->socketUDP = SDLNet_UDP_Open(1234);
     // if(pGame->config.multiThreading)
     // pthread_t renderThread;
     pthread_t movementThread;
@@ -252,10 +255,22 @@ void run(Game *pGame)
                 if (pGame->config.multiThreading)
                 {
                     pthread_join(movementThread, NULL);
+                    if(1)//pGame->pClient->socketUDP)
+                    {
+                        printf("SENT PACKAGE!");
+                        sendDataUDP(pGame);
+                    }
                     pthread_create(&movementThread, NULL, handleInput, (void *)pGame);
                 }
-                else
+                else{
                     handleInput(pGame);
+                    if(pGame->pClient->socketUDP)
+                    {
+                        printf("SENT PACKAGE!");
+                        sendDataUDP(pGame);
+                    }
+                }
+                    
 
                 if (pGame->pPlayer->hp <= 0)
                 {
@@ -288,6 +303,10 @@ void run(Game *pGame)
 
 void close(Game *pGame)
 {
+    if(pGame->pClient)
+        free(pGame->pClient);
+    if(pGame->pClient->socketUDP)
+        SDLNet_UDP_Close(pGame->pClient->socketUDP);
     if (pGame->pPlayer)
     {
         destroyPlayer(pGame->pPlayer);
