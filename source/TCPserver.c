@@ -100,9 +100,10 @@ int UDPserverTwo()
             }
         }
         if(SDLNet_UDP_Recv(serverSocket, pPacket)){
-            PacketData data;
-            memcpy(&data, pPacket->data, sizeof(PacketData));
-            printf("RECIVED: x:%d y:%d id:%d\n", data.x, data.y, data.id);
+            PacketData *pData = malloc(sizeof(PacketData));
+            memcpy(pData, pPacket->data, sizeof(PacketData));
+            printf("RECIVED: x:%d y:%d id:%d\n", pData->x, pData->y, pData->id);
+            free(pData);
         }
     }
 

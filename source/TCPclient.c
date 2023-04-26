@@ -57,16 +57,16 @@ int joinServerTCP(Game *pGame)
 }
 
 void sendDataUDP(Game *pGame){
-    printf("1\n");
-    PacketData packet;// = {pGame->pPlayer->x, pGame->pPlayer->y, pGame->pPlayer->id};
+    PacketData packet = {pGame->pPlayer->x, pGame->pPlayer->y, pGame->pPlayer->id};
+    /*
     packet.id = pGame->pPlayer->id;
     packet.x = pGame->pPlayer->x;
     packet.y = pGame->pPlayer->y;
-    //pGame->pPacket = malloc(sizeof(packet));
-    //memcpy(pGame->pPacket->data, &packet, sizeof(PacketData));
+    */
+    printf("Sent: x:%d y:%d id:%d\n", packet.x, packet.y, packet.id);
 
     UDPpacket packetS;
-    memcpy(&packetS.data, &packet, sizeof(packet)+1);
+    memcpy(&packetS.data, &packet, sizeof(PacketData));
 
     packetS.address.host = pGame->pClient->ip.host;
     packetS.address.port = pGame->pClient->ip.port;
@@ -75,17 +75,6 @@ void sendDataUDP(Game *pGame){
         printf("ERROR: could not send package\n");
         printf("Error: %S\n", SDLNet_GetError());
     }
-
-    //pGame->pPacket->len = sizeof(PacketData)+1;
-
-    //pGame->pPacket->address.host = pGame->pClient->ip.host;	// Set the destination host 
-    //pGame->pPacket->address.port = pGame->pClient->ip.port;	// And destination port 
-    /*
-    if(!SDLNet_UDP_Send(pGame->pClient->socketUDP, -1, pGame->pPacket)){
-        printf("ERROR: could not send package\n");
-    }
-    */
-    //free(pGame->pPacket);
 }
 
 PlayerNet *createClient(char *serverIP, int port, int id, int x, int y)

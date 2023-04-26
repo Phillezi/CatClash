@@ -348,6 +348,7 @@ int joinServerMenu(Game *pGame)
                 }
                 initMapFromTCP(pGame->map, pGame->world.tileSize);
                 getPlayerSpawnPos(pGame);
+                SDLNet_ResolveHost(&pGame->pClient->ip, text, 1234);
                 exit = true;
             }
 

@@ -218,13 +218,14 @@ int init(Game *pGame)
 
 void run(Game *pGame)
 {
-    pGame->pClient->socketUDP = SDLNet_UDP_Open(1234);
+    pGame->pClient->socketUDP = SDLNet_UDP_Open(0);
     // if(pGame->config.multiThreading)
     // pthread_t renderThread;
     pthread_t movementThread;
     bool exit = false;
     pGame->config.fps = 60;
     int frameCounter = 0, oneSecTimer = 0, previousTime = 0, movementPreviousTime = 0;
+    int oldX = 0, oldY = 0;
     while (!exit)
     {
         if (SDL_GetTicks() - oneSecTimer >= 1000) // Performance monitor
@@ -255,9 +256,10 @@ void run(Game *pGame)
                 if (pGame->config.multiThreading)
                 {
                     pthread_join(movementThread, NULL);
-                    if(1)//pGame->pClient->socketUDP)
+                    if(pGame->pPlayer->y != oldY || pGame->pPlayer->x != oldX)
                     {
-                        printf("SENT PACKAGE!");
+                        oldY = pGame->pPlayer->y;
+                        oldX = pGame->pPlayer->x;
                         sendDataUDP(pGame);
                     }
                     pthread_create(&movementThread, NULL, handleInput, (void *)pGame);
