@@ -26,10 +26,12 @@ demo:
 
 net:
 	@echo "Building Networking"
-	$(CC) $(CFLAGS) $(SRCDIR)/udpClient.c 
-	$(CC) $(CFLAGS) $(SRCDIR)/udpServer.c 
-	$(CC) udpClient.o -o udpClient.exe $(LDFLAGS)
-	$(CC) udpServer.o -o udpServer.exe $(LDFLAGS)
+	$(CC) $(CFLAGS) $(SRCDIR)/server.c 
+	$(CC) $(CFLAGS) $(SRCDIR)/text.c 
+	$(CC) $(CFLAGS) $(SRCDIR)/init.c
+	$(CC) $(CFLAGS) $(SRCDIR)/TCPserver.c
+	$(CC) $(CFLAGS) $(SRCDIR)/serverUDP.c 
+	$(CC) server.o text.o serverUDP.o init.o TCPserver.o -o server.exe $(LDFLAGS)
 
 netTCP:
 	@echo "Building Experimental networking"

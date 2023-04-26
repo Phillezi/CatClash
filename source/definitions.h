@@ -20,6 +20,7 @@
 #define MAX_CHARGE 100
 #define TILE_WIDTH 32
 #define TILE_HEIGHT 32
+#define MAX_PLAYERS 5
 
 // ADTS
 
@@ -126,5 +127,39 @@ struct game
     Config config;
 };
 typedef struct game Game;
+
+// ------------------------------ SERVER ------------------------------------
+
+enum serverState{JOINING, RUNNING, CLOSED};
+typedef enum serverState ServerState;
+
+struct info {
+    IPaddress address;
+    int id;
+}; 
+typedef struct info Info;
+
+struct server {
+    SDL_Window *pWindow;
+    SDL_Renderer *pRenderer;
+    TTF_Font *pFont;
+    Text *pSpace, *pClosed, *pJoining, *pRunning, *pIP;
+
+    ServerState state;
+    int windowWidth;
+    int windowHeight;
+
+    int nrOfClients;
+    Info clients[MAX_PLAYERS];
+
+    TCPsocket socketTCP;
+    IPaddress TCPip;
+    SDLNet_SocketSet socketSetTCP;
+
+    UDPsocket socketUDP;   // Socket descriptor
+    UDPpacket *pRecieve;    // Pointer to packet memory
+    UDPpacket *pSent;           
+}; 
+typedef struct server Server;
 
 #endif

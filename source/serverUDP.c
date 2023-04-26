@@ -10,101 +10,24 @@
 #define MAX_PLAYERS 5
 #define PORT 1234
 
-enum serverState{JOINING, RUNNING, CLOSED};
-typedef enum serverState ServerState;
-
-typedef struct info {
-    IPaddress address;
-    int id;
-} Info;
-
-typedef struct server {
-    SDL_Window *pWindow;
-    SDL_Renderer *pRenderer;
-    TTF_Font *pFont;
-    Text *pSpace, *pClosed, *pJoining, *pRunning;
-
-    ServerState state;
-    int windowWidth;
-    int windowHeight;
-
-    int nrOfClients;
-    Info clients[MAX_PLAYERS];
-    UDPsocket socketDesc;   // Socket descriptor
-    UDPpacket *pRecieve;    // Pointer to packet memory
-    UDPpacket *pSent;           
-} Server;
-
-int setup(Server *pServer);
-void run(Server *pServer);
-void close(Server *pServer);
-void addClient(Server *pServer);
+int setupUDP(Server *pServer);
+void runUDP(Server *pServer);
+void closeUDP(Server *pServer);
+//void addClient(Server *pServer);
 void send(Server *pServer, Player udpData, int id);
 int findID(Server *pServer);
 int checkExit(Server *pServer, int id);
 void recieveAndSend(Server *pServer, Player udpData);
 
-int main(int argc, char **argv) {
-    Server s;
-    if (!setup(&s)) return 1;
-    run(&s);
-    close(&s);
+int serverUDP(Server *pServer) {
+    if (!setupUDP(pServer)) return 1;
+    runUDP(pServer);
+    closeUDP(pServer);
 }
 
-int setup(Server *pServer) {
-    // Basic inits
-    if (SDL_Init(SDL_INIT_EVERYTHING)!=0) {
-        printf("Error: %s\n",SDL_GetError());
-        return 0;
-    }
-    if (TTF_Init()!=0) {
-        printf("Error: %s\n",TTF_GetError());
-        SDL_Quit();
-        return 0;
-    }
-    if (SDLNet_Init()) {
-		fprintf(stderr, "SDLNet_Init: %s\n", SDLNet_GetError());
-        TTF_Quit();
-        SDL_Quit();
-		return 0;
-	}
-
-    // Init window
-    char windowName[30];
-    sprintf(windowName, "Kittenfork Server");
-
-    SDL_DisplayMode display;
-    if (SDL_GetDesktopDisplayMode(0, &display) < 0) {
-        printf("SDL_GetDesktopDisplayMode failed: %s\n", SDL_GetError());
-        return 0;
-    }
-
-    pServer->windowWidth  = (float) display.w * 0.7; // 40% of avaliable space
-    pServer->windowHeight = (float) display.h * 0.7;
-
-    pServer->pWindow = SDL_CreateWindow(windowName,SDL_WINDOWPOS_CENTERED,SDL_WINDOWPOS_CENTERED,pServer->windowWidth,pServer->windowHeight,0);
-    if (!pServer->pWindow) {
-        printf("Error: %s\n",SDL_GetError());
-        close(pServer);
-        return 0;
-    }
-    pServer->pRenderer = SDL_CreateRenderer(pServer->pWindow, -1, SDL_RENDERER_ACCELERATED|SDL_RENDERER_PRESENTVSYNC);
-    if (!pServer->pRenderer) {
-        printf("Error: %s\n",SDL_GetError());
-        close(pServer);
-        return 0;    
-    }
-
-    // Init font
-    pServer->pFont = TTF_OpenFont("resources/fonts/RetroGaming.ttf", 100);
-    if (!pServer->pFont) {
-        printf("Error: %s\n", TTF_GetError());
-        close(pServer);
-        return 1;
-    }
-
+int setupUDP(Server *pServer) {
     // Open socket
-    if (!(pServer->socketDesc = SDLNet_UDP_Open(PORT))) {
+    if (!(pServer->socketUDP = SDLNet_UDP_Open(PORT))) {
         fprintf(stderr, "SDLNet_UDP_Open: %s\n", SDLNet_GetError());
         exit(EXIT_FAILURE);
     }
@@ -113,23 +36,10 @@ int setup(Server *pServer) {
         fprintf(stderr, "SDLNet_AllocPacket: %s\n", SDLNet_GetError());
         exit(EXIT_FAILURE); 
     }
-
-    pServer->pSpace   = createText(pServer->pRenderer, 102, 205, 170, pServer->pFont, "Press space",        pServer->windowWidth / 2, 2*(pServer->windowHeight / MAPSIZE) * 4);
-    pServer->pJoining = createText(pServer->pRenderer, 102, 205, 170, pServer->pFont, "to start hosting",   pServer->windowWidth / 2, 4*(pServer->windowHeight / MAPSIZE) * 4);
-    pServer->pRunning = createText(pServer->pRenderer, 102, 205, 170, pServer->pFont, "Server is running",  pServer->windowWidth / 2, 4*(pServer->windowHeight / MAPSIZE) * 4);
-    pServer->pClosed  = createText(pServer->pRenderer, 102, 205, 170, pServer->pFont, "to open server",     pServer->windowWidth / 2, 4*(pServer->windowHeight / MAPSIZE) * 4);
-
-    if (!pServer->pSpace || !pServer->pJoining || !pServer->pRunning || !pServer->pClosed) {
-        printf("Error: %s\n", SDL_GetError());
-        close(pServer);
-    }
-
-    pServer->state = CLOSED;
-    pServer->nrOfClients = 0;
 }
 
-void run(Server *pServer) {
-    int quit = 0, draw = 0; 
+void runUDP(Server *pServer) {
+    int quit = 0; 
     SDL_Event event;
     Player udpData;
     char prompt[12];
@@ -142,6 +52,7 @@ void run(Server *pServer) {
         Text *pPrompt = createText(pServer->pRenderer, 102, 205, 170, pServer->pFont, prompt, pServer->windowWidth / 2, 6*(pServer->windowHeight / MAPSIZE) * 4);
 
         switch (pServer->state) {
+        /*
         case CLOSED:
             drawText(pServer->pSpace, pServer->pRenderer);
             drawText(pServer->pClosed, pServer->pRenderer);
@@ -162,15 +73,16 @@ void run(Server *pServer) {
                     if (event.key.keysym.sym == SDLK_SPACE) pServer->state = RUNNING;
             }
             if(pServer->state == RUNNING) send(pServer, udpData, -1);
-            if(SDLNet_UDP_Recv(pServer->socketDesc, pServer->pRecieve)==1 && pServer->nrOfClients < MAX_PLAYERS) 
+            if(SDLNet_UDP_Recv(pServer->socketUDP, pServer->pRecieve)==1 && pServer->nrOfClients < MAX_PLAYERS) 
                 { addClient(pServer); checkExit(pServer, findID(pServer)); }
             break;
+        */
         case RUNNING:
             drawText(pServer->pRunning, pServer->pRenderer);
             drawText(pPrompt, pServer->pRenderer);
 
             if(SDL_PollEvent(&event)) if(event.type==SDL_QUIT) quit = 1;
-            if(SDLNet_UDP_Recv(pServer->socketDesc, pServer->pRecieve)==1) recieveAndSend(pServer, udpData);
+            if(SDLNet_UDP_Recv(pServer->socketUDP, pServer->pRecieve)==1) recieveAndSend(pServer, udpData);
             break;
         }
 
@@ -179,30 +91,23 @@ void run(Server *pServer) {
     }
 }
 
-void close(Server *pServer) {
-    if(pServer->pRenderer) SDL_DestroyRenderer(pServer->pRenderer);
-    if(pServer->pWindow) SDL_DestroyWindow(pServer->pWindow);
-
-    if(pServer->pFont) TTF_CloseFont(pServer->pFont);
-
+void closeUDP(Server *pServer) {
     if(pServer->pRecieve) SDLNet_FreePacket(pServer->pRecieve);
     if(pServer->pSent) SDLNet_FreePacket(pServer->pSent);
-	if(pServer->socketDesc) SDLNet_UDP_Close(pServer->socketDesc);
+	if(pServer->socketUDP) SDLNet_UDP_Close(pServer->socketUDP);
 
     SDLNet_FreePacket(pServer->pSent);
     SDLNet_FreePacket(pServer->pRecieve);
-    SDLNet_Quit();
-    TTF_Quit();    
-    SDL_Quit();
 }
 
-/* Compares port to connected players ports and if there are less than 5 players adds new players to a list */
+/* // Compares port to connected players ports and if there are less than 5 players adds new players to a list 
 void addClient(Server *pServer) {
     for (int i = 0; i < MAX_PLAYERS; i++) if (pServer->pRecieve->address.port == pServer->clients[i].address.port) return;
     pServer->clients[pServer->nrOfClients].address = pServer->pRecieve->address;    // Adds client address
     pServer->clients[pServer->nrOfClients].id = pServer->nrOfClients + 1;           // Adds client id
     pServer->nrOfClients++;
 }
+*/
 
 void send(Server *pServer, Player udpData, int id) {
     for (int i = 0; i < pServer->nrOfClients; i++){
@@ -219,7 +124,7 @@ void send(Server *pServer, Player udpData, int id) {
 
             //sprintf((char *)pSent->data, "%s", a);
             pServer->pSent->len = sizeof(Player) + 1;
-            SDLNet_UDP_Send(pServer->socketDesc, -1, pServer->pSent);
+            SDLNet_UDP_Send(pServer->socketUDP, -1, pServer->pSent);
         }
     }
 }
@@ -251,7 +156,7 @@ int checkExit(Server *pServer, int id) {
             if(id != pServer->clients[i].id) {
                 pServer->pSent->address.host = pServer->clients[i].address.host;     // Set destination host
                 pServer->pSent->address.port = pServer->clients[i].address.port;     // Set destination port
-                SDLNet_UDP_Send(pServer->socketDesc, -1, pServer->pSent);
+                SDLNet_UDP_Send(pServer->socketUDP, -1, pServer->pSent);
             }
         }
         return 0;
