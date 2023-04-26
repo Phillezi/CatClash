@@ -135,9 +135,11 @@ void runUDP(Server *pServer)
             drawText(pServer->pRunning, pServer->pRenderer);
             drawText(pPrompt, pServer->pRenderer);
 
-            if (SDL_PollEvent(&event))
+            while (SDL_PollEvent(&event)){
                 if (event.type == SDL_QUIT)
                     quit = 1;
+            }
+                
             if (SDLNet_UDP_Recv(pServer->socketUDP, pServer->pRecieve) == 1)
             {
                 // printf("Recived msg\n");
@@ -146,14 +148,26 @@ void runUDP(Server *pServer)
                 Player data;
                 memcpy(&data, pServer->pRecieve->data, sizeof(Player));
                 printf("Recived: id: %d, x: %d, y: %d from %d:%d\n", data.id, data.x, data.y, pServer->pRecieve->address.host, pServer->pRecieve->address.port);
-                checkClient(pServer, data);
+                //if(pServer->clients[MAX_PLAYERS].address.port == 8888)
+                    checkClient(pServer, data);
                 for (int i = 0; i < pServer->nrOfClients; i++)
                 {
                     if (pServer->clients[i].id != data.id && pServer->clients[i].address.port != 8888)
                     {
-                        memcpy(pServer->pSent, pServer->pRecieve, sizeof(pServer->pRecieve));
+                        /*
+                        pServer->pRecieve->address.port = pServer->clients[i].address.port;
+                        pServer->pRecieve->address.host = pServer->clients[i].address.host;
+                        if(!SDLNet_UDP_Send(pServer->socketUDP, -1, pServer->pRecieve)){
+                            printf("Error: Could not send package\n");
+                        }
+                        */
+                        
+                        memcpy(pServer->pSent, pServer->pRecieve, sizeof(*pServer->pRecieve));
                         pServer->pSent->address.port = pServer->clients[i].address.port;
                         pServer->pSent->address.host = pServer->clients[i].address.host;
+                        //Player test;
+                        //memcpy(&test, &pServer->pSent->data, sizeof(Player));
+                        //printf("Trying to send: id: %d, x: %d, y: %d, to: %d:%d\n", test.id, test.x, test.y, pServer->pSent->address.host, pServer->pSent->address.port);
 
                         if(!SDLNet_UDP_Send(pServer->socketUDP, -1, pServer->pSent)){
                             printf("Error: Could not send package\n");
