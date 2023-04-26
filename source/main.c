@@ -15,6 +15,7 @@ int init(Game *pGame);
 void run(Game *pGame);
 void close(Game *pGame);
 void *updateScreen(void *pGameIn);
+void changePlayerTexture(SDL_Texture* playerTexture, SDL_Renderer* renderer, char direction);
 
 int main(int argv, char **args)
 {
@@ -358,7 +359,9 @@ void *updateScreen(void *pGameIn)
             SDL_RenderCopy(pGame->pRenderer, pGame->pPlayerTexture, NULL, &pGame->pPlayer->rect);
             break;
         case 'S':
-            SDL_RenderCopy(pGame->pRenderer, pGame->pPlayerTexture, NULL, &pGame->pPlayer->rect);
+            //SDL_RenderCopy(pGame->pRenderer, pGame->pPlayerTexture, NULL, &pGame->pPlayer->rect);
+            pGame->pPlayerTexture = SDL_CreateTextureFromSurface(pGame->pRenderer, IMG_Load("resources/cat3.png"));
+            changePlayerTexture(pGame->pRenderer, pGame->pPlayerTexture, "S");
             break;
 
         case 'D':
@@ -406,4 +409,57 @@ void *updateScreen(void *pGameIn)
     SDL_RenderFillRect(pGame->pRenderer, &pGame->ui.chargebar);
 
     SDL_RenderPresent(pGame->pRenderer);
+}
+
+
+
+// testing function for chancing player texture 
+void changePlayerTexture(SDL_Texture* playerTexture, SDL_Renderer* renderer, char direction) {
+    SDL_Surface* surface = IMG_Load("resources/cat3.png");
+    if (surface == NULL) {
+        printf("Error: could not load image. SDL error: %s\n", SDL_GetError());
+        return;
+    }
+
+    int playerWidth = 32;
+    int playerHeight = 32;
+
+    int row = 0;
+    int col = 0;
+
+    switch (direction) {
+        case 'W':
+            row = 0;
+            col = 0;
+            break;
+        case 'S':
+            row = 1;
+            col = 0;
+            break;
+        case 'D':
+            row = 2;
+            col = 0;
+            break;
+        case 'A':
+            row = 3;
+            col = 0;
+            break;
+        default:
+            return;
+    }
+
+    SDL_Rect playerRect = { col * playerWidth, row * playerHeight, playerWidth, playerHeight };
+
+    SDL_Texture* newTexture = SDL_CreateTextureFromSurface(renderer, surface);
+    if (newTexture == NULL) {
+        printf("Error: could not create new texture. SDL error: %s\n", SDL_GetError());
+        SDL_FreeSurface(surface);
+        return;
+    }
+
+    SDL_DestroyTexture(playerTexture);
+
+    playerTexture = newTexture;
+
+    SDL_FreeSurface(surface);
 }
