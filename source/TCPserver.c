@@ -10,7 +10,7 @@
 #define PORT 1234
 
 int setupTCP(Server *pServer);
-void runTCP(Server *pServer, Tile map[], char mapName[]);
+int runTCP(Server *pServer, Tile map[], char mapName[]);
 void closeTCP(Server *pServer);
 int mmapSelection(Server *pServer, Tile map[]);
 int getStringFromUser(char text[], SDL_Event event);
@@ -19,10 +19,12 @@ int TCPserver(Server *pServer)
 {
     Tile map[1024];
     char mapName[100];
+    int quit = 0;
 
     if (!setupTCP(pServer)) return 1;
-    runTCP(pServer, map, mapName);
+    if (runTCP(pServer, map, mapName)) quit = 1;
     closeTCP(pServer);
+    return quit;
 }
 
 int setupTCP(Server *pServer) {
@@ -60,7 +62,7 @@ int setupTCP(Server *pServer) {
     return 1;
 }
 
-void runTCP(Server *pServer, Tile map[], char mapName[]) {
+int runTCP(Server *pServer, Tile map[], char mapName[]) {
     int quit = 0, tileSize = 0; 
     SDL_Event event;
     Player udpData;
@@ -76,9 +78,8 @@ void runTCP(Server *pServer, Tile map[], char mapName[]) {
         switch (pServer->state) 
         {
         case CLOSED: 
-            while (mmapSelection(pServer, map));
-            
-            pServer->state = JOINING;
+            if(!mmapSelection(pServer, map)) pServer->state = JOINING;
+            else return 1; 
             break;
         case JOINING:
                 drawText(pServer->pJoining, pServer->pRenderer);
@@ -97,7 +98,7 @@ void runTCP(Server *pServer, Tile map[], char mapName[]) {
                 }
                 
                 if(SDL_PollEvent(&event)) { 
-                if (event.type==SDL_QUIT) quit = 1; 
+                if (event.type==SDL_QUIT) return 1; 
                 if (event.type==SDL_KEYDOWN && pServer->nrOfClients >= 2) 
                     if (event.key.keysym.sym == SDLK_SPACE) { pServer->state = RUNNING; quit = 1; }
             }

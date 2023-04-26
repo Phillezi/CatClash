@@ -9,8 +9,7 @@ void universalClose(Server *pServer);
 int main(int argc, char **argv) {
     Server s;
     if(!universalSetup(&s)) return 1;
-    TCPserver(&s);
-    serverUDP(&s);
+    if (!TCPserver(&s)) serverUDP(&s);
     universalClose(&s);
     return 0;
 }

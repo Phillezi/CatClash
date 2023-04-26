@@ -77,6 +77,9 @@ void runUDP(Server *pServer) {
                 { addClient(pServer); checkExit(pServer, findID(pServer)); }
             break;
         */
+        case JOINING: 
+            quit = 1;
+            break;
         case RUNNING:
             drawText(pServer->pRunning, pServer->pRenderer);
             drawText(pPrompt, pServer->pRenderer);
