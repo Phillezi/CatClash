@@ -6,7 +6,6 @@
 #include <stdbool.h>
 #include "definitions.h"
 
-int ANVEJservInit(Game *pGame);
 int joinServerTCP(Game *pGame);
 PlayerNet *createClient(char *serverIP, int port, int id, int x, int y);
 

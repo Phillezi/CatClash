@@ -18,8 +18,6 @@ int main(int argc, char **argv)
         scanf(" %100s", mapName);
     } while(initMap(map, mapName, 16));
     
-    
-
     int playerCount = 0, playerId = 0;
 
     IPaddress ip;

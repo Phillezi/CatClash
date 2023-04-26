@@ -1,21 +1,5 @@
 #include "TCPclient.h"
 
-int ANVEJservInit(Game *pGame)
-{
-    if (SDLNet_Init())
-    {
-        return 1;
-    }
-    pGame->pClient = createClient("localhost", 1234, 0, 100, 100);
-
-    joinServerTCP(pGame);
-
-
-    free(pGame->pClient);
-    SDLNet_Quit();
-    return 0;
-}
-
 /*
     joinServerTCP
     This function retrives a map from a server hosted at the adress given by pGame->pClient->serverIP
@@ -28,7 +12,8 @@ int joinServerTCP(Game *pGame)
 
     SDLNet_SocketSet sockets = SDLNet_AllocSocketSet(1);
     pGame->pClient->socketTCP = SDLNet_TCP_Open(&ip);
-    if(!pGame->pClient->socketTCP){
+    if (!pGame->pClient->socketTCP)
+    {
         SDLNet_FreeSocketSet(sockets);
         return 1;
     }
@@ -42,10 +27,15 @@ int joinServerTCP(Game *pGame)
             if (SDLNet_SocketReady(pGame->pClient->socketTCP))
             {
                 int bytesRecv = SDLNet_TCP_Recv(pGame->pClient->socketTCP, pGame->map, sizeof(pGame->map));
-                if(bytesRecv != sizeof(pGame->map)){
-                    printf("PACKET LOSS");
+                if (bytesRecv != sizeof(pGame->map))
+                {
+                    printf("PACKET LOSS\n");
+                    exit = true;
+                    SDLNet_TCP_Close(pGame->pClient->socketTCP);
+                    SDLNet_FreeSocketSet(sockets);
+                    return 1;
                 }
-                    
+
                 printf("Recieved message\n");
                 exit = true;
                 SDLNet_TCP_Close(pGame->pClient->socketTCP);
@@ -55,7 +45,7 @@ int joinServerTCP(Game *pGame)
     }
     printf("Closing client...\n");
     return 0;
-    //SDLNet_TCP_Close(pGame->pClient->socketTCP);
+    // SDLNet_TCP_Close(pGame->pClient->socketTCP);
 }
 
 PlayerNet *createClient(char *serverIP, int port, int id, int x, int y)
