@@ -89,6 +89,16 @@ enum gameState
 };
 typedef enum gameState GameState;
 
+typedef struct playerNet
+{
+    UDPsocket socketUDP;
+    TCPsocket socketTCP;
+    char serverIP[16];
+    int port;
+    int id;
+    int x, y;
+} PlayerNet;
+
 struct game
 {
     UiE ui;
@@ -104,6 +114,8 @@ struct game
     UDPsocket socketDesc;
     IPaddress serverAddress;
     UDPpacket *pPacket;
+
+    PlayerNet *pClient;
 
     //    Player player;
     Player *pPlayer;

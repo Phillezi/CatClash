@@ -49,6 +49,7 @@ int main(int argv, char **args)
         case 3:
             if (joinServerMenu(&game))
                 break;
+            run(&game);
             break;
         default:
             break;

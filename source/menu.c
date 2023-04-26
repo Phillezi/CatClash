@@ -8,6 +8,7 @@
 #include <SDL2/SDL_image.h>
 #include <SDL2/SDL_ttf.h>
 #include "ioHandler.h"
+#include "TCPclient.h"
 
 int menu(Game *pGame)
 {
@@ -325,37 +326,27 @@ int joinServerMenu(Game *pGame)
             }
             else if (getStringFromUser(text, event))
             {
-                exit = true;
-                /*
-                if (!tryConnectTcp(text))
+                if (SDLNet_Init())
                 {
-                    close(pGame);
-                    clientTCP(text);
+                    printf("Error: %s\n", SDL_GetError());
                     exit = true;
+                    freeText(pIpText);
+                    freeText(pPrompt);
+                    freeText(pPrompt2);
+                    return 1;
                 }
-                */
-
-                /*
-                // NET INIT
-                if (!(pGame->socketDesc = SDLNet_UDP_Open(0)))
+                pGame->pClient = createClient(text, 1234, 0, 100, 100);
+                if (joinServerTCP(pGame))
                 {
-                    fprintf(stderr, "SDLNet_UDP_Open: %s\n", SDLNet_GetError());
-                    exit(EXIT_FAILURE);
+                    printf("Error: Could not join server\n");
+                    exit = true;
+                    freeText(pIpText);
+                    freeText(pPrompt);
+                    freeText(pPrompt2);
+                    return 1;
                 }
-                if (SDLNet_ResolveHost(&pGame->serverAddress, text, 1234))
-                {
-                    fprintf(stderr, "SDLNet_ResolveHost: %s\n", SDLNet_GetError());
-                    exit(EXIT_FAILURE);
-                }
-                if (!(pGame->pPacket = SDLNet_AllocPacket(512)))
-                {
-                    fprintf(stderr, "SDLNet_AllocPacket: %s\n", SDLNet_GetError());
-                    exit(EXIT_FAILURE);
-                }
-                pGame->nrOfPlayers++;
-                pGame->pPacket->address.host = pGame->serverAddress.host;
-                pGame->pPacket->address.port = pGame->serverAddress.port;
-                */
+                getPlayerSpawnPos(pGame);
+                exit = true;
             }
 
             else
@@ -450,7 +441,7 @@ int testSelectMenu(Game *pGame)
             pText[i] = createText(pGame->pRenderer, 0, 0, 0, pGame->ui.pFpsFont, strArr[i], pGame->windowWidth / 2, (pGame->windowHeight / 2) + ((i - selected) * pGame->world.tileSize / 2));
         }
     }
-    initMap(pGame->map, strArr[selected], pGame->world.tileSize/10);
+    initMap(pGame->map, strArr[selected], pGame->world.tileSize / 10);
 
     bool exit = false;
     int previousTime = 0;
@@ -486,7 +477,7 @@ int testSelectMenu(Game *pGame)
                                 pText[i] = createText(pGame->pRenderer, 0, 0, 0, pGame->ui.pFpsFont, strArr[i], pGame->windowWidth / 2, (pGame->windowHeight / 2) + ((i - selected) * pGame->world.tileSize / 2));
                             }
                         }
-                        initMap(pGame->map, strArr[selected], pGame->world.tileSize/10);
+                        initMap(pGame->map, strArr[selected], pGame->world.tileSize / 10);
                     }
                 }
                 else if (event.wheel.y > 0 && event.type == SDL_MOUSEWHEEL || event.key.keysym.sym == SDLK_UP) // scroll down
@@ -504,7 +495,7 @@ int testSelectMenu(Game *pGame)
                                 pText[i] = createText(pGame->pRenderer, 0, 0, 0, pGame->ui.pFpsFont, strArr[i], pGame->windowWidth / 2, (pGame->windowHeight / 2) + ((i - selected) * pGame->world.tileSize / 2));
                             }
                         }
-                        initMap(pGame->map, strArr[selected], pGame->world.tileSize/10);
+                        initMap(pGame->map, strArr[selected], pGame->world.tileSize / 10);
                     }
                 }
                 else if (event.key.keysym.sym == SDLK_RETURN || event.button.button == SDL_BUTTON_LEFT)
@@ -528,9 +519,10 @@ int testSelectMenu(Game *pGame)
 
             SDL_SetRenderDrawColor(pGame->pRenderer, 255, 255, 255, 255);
             SDL_RenderClear(pGame->pRenderer);
-            for(int i = 0; i < MAPSIZE *MAPSIZE; i++){
-                if(pGame->map[i].type > 0)
-                    SDL_RenderCopy(pGame->pRenderer, pGame->pTileTextures[pGame->map[i].type-1], NULL, &pGame->map[i].wall);
+            for (int i = 0; i < MAPSIZE * MAPSIZE; i++)
+            {
+                if (pGame->map[i].type > 0)
+                    SDL_RenderCopy(pGame->pRenderer, pGame->pTileTextures[pGame->map[i].type - 1], NULL, &pGame->map[i].wall);
             }
             for (int i = 0; i < len; i++)
             {
