@@ -106,7 +106,7 @@ void runUDP(Server *pServer)
                 // send(pServer, udpData, 0); // temp test
                 //recieveAndSend(pServer, udpData);
                 Player data;
-                memcpy(&data, pServer->pRecieve, sizeof(Player));
+                memcpy(&data, pServer->pRecieve->data, sizeof(Player));
                 printf("Recived: id: %d, x: %d, y: %d\n", data.id, data.x, data.y);
             }
             break;

@@ -1,9 +1,9 @@
 #include "clientUDP.h"
 
 void sendData(Game *pGame) {
-    memcpy(pGame->pPacket->data, pGame->pPlayer, sizeof(Player)+1);
+    memcpy(pGame->pPacket->data, pGame->pPlayer, sizeof(Player));
 
-    pGame->pPacket->len = sizeof(Player)+1;
+    pGame->pPacket->len = sizeof(Player);
 
     pGame->pPacket->address.host = pGame->serverAddress.host;	// Set the destination host 
     pGame->pPacket->address.port = pGame->serverAddress.port;	// And destination port 
