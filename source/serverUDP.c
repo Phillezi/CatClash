@@ -149,9 +149,9 @@ void runUDP(Server *pServer)
                 checkClient(pServer, data);
                 for (int i = 0; i < pServer->nrOfClients; i++)
                 {
-                    if (pServer->clients[i].id != data.id)
+                    if (pServer->clients[i].id != data.id && pServer->clients[i].address.port != 8888)
                     {
-                        memcpy(&pServer->pSent->data, pServer->pRecieve, sizeof(pServer->pRecieve));
+                        memcpy(pServer->pSent, pServer->pRecieve, sizeof(pServer->pRecieve));
                         pServer->pSent->address.port = pServer->clients[i].address.port;
                         pServer->pSent->address.host = pServer->clients[i].address.host;
 
