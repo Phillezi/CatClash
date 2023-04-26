@@ -340,11 +340,13 @@ int joinServerMenu(Game *pGame)
                 {
                     printf("Error: Could not join server\n");
                     exit = true;
+                    free(pGame->pClient);
                     freeText(pIpText);
                     freeText(pPrompt);
                     freeText(pPrompt2);
                     return 1;
                 }
+                free(pGame->pClient);
                 getPlayerSpawnPos(pGame);
                 exit = true;
             }
