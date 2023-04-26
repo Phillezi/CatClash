@@ -19,6 +19,39 @@ int findID(Server *pServer);
 int checkExit(Server *pServer, int id);
 void recieveAndSend(Server *pServer, Player udpData);
 
+void checkClient(Server *pServer, Player data)
+{
+    for (int i = 0; i < 5; i++)
+    {
+        if (pServer->clients[i].address.port == pServer->pRecieve->address.port && pServer->clients[i].address.host == pServer->pRecieve->address.host) // is this the sender?
+        {
+            // sender is known
+            printf("Sender is known (%d)\n", i);
+            return;
+        }
+        else                                                                                                            // no
+        {
+            if ((pServer->clients[i].address.port == 8888) && (pServer->clients[i].address.host == 8888))               // is it a empty slot?
+            {
+                pServer->clients[i].address.port = pServer->pRecieve->address.port;                                     // Save client in slot
+                pServer->clients[i].address.host = pServer->pRecieve->address.host;
+                pServer->clients[i].id = data.id;
+                return;
+            }
+            else                                                                                                        // not the sender nor empty slot
+            {
+                printf("Sender is not %d ( %d:%d )\n", i, pServer->clients[i].address.host, pServer->clients[i].address.port);
+                memcpy(&pServer->pSent->data, pServer->pRecieve->data, sizeof(Player));
+                pServer->pSent->address.port = pServer->clients[i].address.port;
+                pServer->pSent->address.host = pServer->clients[i].address.host;
+                pServer->pSent->len = pServer->pRecieve->len;
+
+                SDLNet_UDP_Send(pServer->socketUDP, -1, pServer->pSent);                                                // Send to them since they arnn't the sender nor empty
+            }
+        }
+    }
+}
+
 int serverUDP(Server *pServer)
 {
     if (!setupUDP(pServer))
@@ -42,8 +75,10 @@ int setupUDP(Server *pServer)
         exit(EXIT_FAILURE);
     }
 
-    for(int i = 0; i < 5; i++){
-        pServer->clients[i].address.port = 0;
+    for (int i = 0; i < 5; i++)
+    {
+        pServer->clients[i].address.port = 8888;
+        pServer->clients[i].address.host = 8888;
         pServer->clients[i].id = 0;
     }
 }
@@ -102,12 +137,15 @@ void runUDP(Server *pServer)
                     quit = 1;
             if (SDLNet_UDP_Recv(pServer->socketUDP, pServer->pRecieve) == 1)
             {
-                //printf("Recived msg\n");
-                // send(pServer, udpData, 0); // temp test
-                //recieveAndSend(pServer, udpData);
+                // printf("Recived msg\n");
+                //  send(pServer, udpData, 0); // temp test
+                // recieveAndSend(pServer, udpData);
                 Player data;
                 memcpy(&data, pServer->pRecieve->data, sizeof(Player));
-                printf("Recived: id: %d, x: %d, y: %d\n", data.id, data.x, data.y);
+                printf("Recived: id: %d, x: %d, y: %d from %d:%d\n", data.id, data.x, data.y, pServer->pRecieve->address.host, pServer->pRecieve->address.port);
+                checkClient(pServer, data);
+
+                // SDLNet_UDP_Send(pServer->socketUDP, -1, pServer->pRecieve);
             }
             break;
         }
