@@ -28,7 +28,7 @@ int main(int argc, char **argv)
     TCPsocket server = SDLNet_TCP_Open(&ip);
 
     printf("Server is up and running\n");
-    printf("Server is hosted at: %d:%d\n", ip.host, PORT);
+    printf("Server is hosted at: %s:%d\n", SDLNet_ResolveIP(&ip), PORT);
 
     int running = 1;
     int tileSize = 0;
