@@ -10,6 +10,7 @@
 #include "levelEditor.h"
 #include "pthread.h"
 // #include "client.h"
+#include "clientUDP.h"
 
 int init(Game *pGame);
 void run(Game *pGame);
@@ -220,8 +221,13 @@ int init(Game *pGame)
 
 void run(Game *pGame)
 {
+    pGame->pPacket = SDLNet_AllocPacket(512);
+    if(pGame->socketDesc = SDLNet_UDP_Open(0)){
+        printf("UDP init\n");
+    }
     // if(pGame->config.multiThreading)
     // pthread_t renderThread;
+    int oldX = 0; int oldY = 0;
     pthread_t movementThread;
     bool exit = false;
     pGame->config.fps = 60;
@@ -255,7 +261,14 @@ void run(Game *pGame)
                 movementPreviousTime = SDL_GetTicks();
                 if (pGame->config.multiThreading)
                 {
+                    getPlayerData(pGame);
                     pthread_join(movementThread, NULL);
+                    if(oldX != pGame->pPlayer->x || oldY != pGame->pPlayer->y){
+                        oldX = pGame->pPlayer->x;
+                        oldY = pGame->pPlayer->y;
+                        printf("Trying to send data\n");
+                        sendData(pGame);
+                    }
                     pthread_create(&movementThread, NULL, handleInput, (void *)pGame);
                 }
                 else
@@ -292,6 +305,12 @@ void run(Game *pGame)
 
 void close(Game *pGame)
 {
+    if(pGame->pPacket){
+        SDLNet_FreePacket(pGame->pPacket);
+    }
+    if(pGame->socketDesc){
+        SDLNet_UDP_Close(pGame->socketDesc);
+    }
     if (pGame->pPlayer)
     {
         destroyPlayer(pGame->pPlayer);

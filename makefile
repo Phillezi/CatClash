@@ -14,7 +14,8 @@ all:
 	$(CC) $(CFLAGS) $(SRCDIR)/levelEditor.c
 	$(CC) $(CFLAGS) $(SRCDIR)/ioHandler.c
 	$(CC) $(CFLAGS) $(SRCDIR)/TCPclient.c 
-	$(CC) main.o init.o text.o player.o menu.o levelEditor.o ioHandler.o TCPclient.o -o main.exe $(LDFLAGS)
+	$(CC) $(CFLAGS) $(SRCDIR)/clientUDP.c 
+	$(CC) main.o init.o text.o player.o menu.o levelEditor.o ioHandler.o TCPclient.o clientUDP.o -o main.exe $(LDFLAGS)
 
 demo:
 	@echo "Building demo"

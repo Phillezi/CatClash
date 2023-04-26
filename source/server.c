@@ -42,8 +42,8 @@ int universalSetup(Server *pServer) {
         return 0;
     }
 
-    pServer->windowWidth  = (float) display.w * 0.7; // 40% of avaliable space
-    pServer->windowHeight = (float) display.h * 0.7;
+    pServer->windowWidth  = (float) display.w * 0.4; // 40% of avaliable space
+    pServer->windowHeight = (float) display.h * 0.4;
 
     pServer->pWindow = SDL_CreateWindow(windowName,SDL_WINDOWPOS_CENTERED,SDL_WINDOWPOS_CENTERED,pServer->windowWidth,pServer->windowHeight,0);
     if (!pServer->pWindow) {

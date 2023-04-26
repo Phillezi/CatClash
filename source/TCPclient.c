@@ -40,6 +40,15 @@ int joinServerTCP(Game *pGame)
                 }
                 if (i == MAPSIZE * MAPSIZE)
                 {
+                    bytesRecv = SDLNet_TCP_Recv(pGame->pClient->socketTCP, &pGame->pPlayer->id, sizeof(int));
+                    if (bytesRecv != sizeof(int))
+                    {
+                        printf("PACKET LOSS\n");
+                        exit = true;
+                        SDLNet_TCP_Close(pGame->pClient->socketTCP);
+                        SDLNet_FreeSocketSet(sockets);
+                        return 1;
+                    }
                     printf("Recieved message\n");
                     exit = true;
                     SDLNet_TCP_Close(pGame->pClient->socketTCP);

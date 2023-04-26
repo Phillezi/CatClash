@@ -6,5 +6,6 @@
 
 void sendData(Game *pGame);
 void retrieveData(Game *pGame);
+int getPlayerData(Game *pGame);
 
 #endif

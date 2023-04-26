@@ -8,7 +8,9 @@ void sendData(Game *pGame) {
     pGame->pPacket->address.host = pGame->serverAddress.host;	// Set the destination host 
     pGame->pPacket->address.port = pGame->serverAddress.port;	// And destination port 
 
-    SDLNet_UDP_Send(pGame->socketDesc, -1, pGame->pPacket);
+    if(!SDLNet_UDP_Send(pGame->socketDesc, -1, pGame->pPacket)){
+        printf("Could not send package\n");
+    }
 }
 
 void retrieveData(Game *pGame) {
@@ -30,4 +32,11 @@ void retrieveData(Game *pGame) {
         printf("UDP Packet incoming \tid: %d\tx: %d\ty: %d\n", udpData.id, udpData.x, udpData.y);
         //if (pGame->nrOfPlayers+1 == udpData.id && pGame->nrOfPlayers < MAX_PLAYERS) pGame->nrOfPlayers++;     // Increments nrOfPlayers if new id is one higher than current nrOfPlayers
     }
+}
+
+int getPlayerData(Game *pGame){
+    if(SDLNet_UDP_Recv(pGame->socketDesc, pGame->pPacket)){
+        printf("NEW MSG\n");
+    }
+    return 0;
 }
