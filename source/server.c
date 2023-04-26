@@ -58,18 +58,19 @@ int universalSetup(Server *pServer) {
         return 0;    
     }
 
+    pServer->fontSize = (float)pServer->windowWidth / 20;
     // Init font
-    pServer->pFont = TTF_OpenFont("resources/fonts/RetroGaming.ttf", 100);
+    pServer->pFont = TTF_OpenFont("resources/fonts/RetroGaming.ttf", pServer->fontSize);
     if (!pServer->pFont) {
         printf("Error: %s\n", TTF_GetError());
         universalClose(pServer);
         return 1;
     }
 
-    pServer->pSpace   = createText(pServer->pRenderer, 102, 205, 170, pServer->pFont, "Press space",        pServer->windowWidth / 2, 2*(pServer->windowHeight / MAPSIZE) * 4);
-    pServer->pJoining = createText(pServer->pRenderer, 102, 205, 170, pServer->pFont, "Hosted at",          pServer->windowWidth / 2, 2*(pServer->windowHeight / MAPSIZE) * 4);
-    pServer->pRunning = createText(pServer->pRenderer, 102, 205, 170, pServer->pFont, "Server is running",  pServer->windowWidth / 2, 4*(pServer->windowHeight / MAPSIZE) * 4);
-    pServer->pClosed  = createText(pServer->pRenderer, 102, 205, 170, pServer->pFont, "to open server",     pServer->windowWidth / 2, 4*(pServer->windowHeight / MAPSIZE) * 4);
+    pServer->pSpace   = createText(pServer->pRenderer, 102, 205, 170, pServer->pFont, "Press space",        pServer->windowWidth / 2, 2*pServer->fontSize);
+    pServer->pJoining = createText(pServer->pRenderer, 102, 205, 170, pServer->pFont, "Hosted at",          pServer->windowWidth / 2, 2*pServer->fontSize);
+    pServer->pRunning = createText(pServer->pRenderer, 102, 205, 170, pServer->pFont, "Server is running",  pServer->windowWidth / 2, 4*pServer->fontSize);
+    pServer->pClosed  = createText(pServer->pRenderer, 102, 205, 170, pServer->pFont, "to open server",     pServer->windowWidth / 2, 4*pServer->fontSize);
 
     if (!pServer->pSpace || !pServer->pJoining || !pServer->pRunning || !pServer->pClosed) {
         printf("Error: %s\n", SDL_GetError());

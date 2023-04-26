@@ -46,7 +46,7 @@ int setupTCP(Server *pServer) {
     char ip[30];
     sprintf(ip, "%s:%d", SDLNet_ResolveIP(&pServer->TCPip), PORT);
 
-    pServer->pIP = createText(pServer->pRenderer, 102, 205, 170, pServer->pFont, ip, pServer->windowWidth / 2, 4*(pServer->windowHeight / MAPSIZE) * 4);
+    pServer->pIP = createText(pServer->pRenderer, 102, 205, 170, pServer->pFont, ip, pServer->windowWidth / 2, 3*(pServer->fontSize));
 
     if (!pServer->pIP) {
         printf("Error: %s\n", SDL_GetError());
@@ -73,7 +73,7 @@ int runTCP(Server *pServer, Tile map[], char mapName[]) {
         SDL_RenderClear(pServer->pRenderer);
 
         sprintf(prompt, "Clients: %d", pServer->nrOfClients);
-        Text *pPrompt = createText(pServer->pRenderer, 102, 205, 170, pServer->pFont, prompt, pServer->windowWidth / 2, 6*(pServer->windowHeight / MAPSIZE) * 4);
+        Text *pPrompt = createText(pServer->pRenderer, 102, 205, 170, pServer->pFont, prompt, pServer->windowWidth / 2, 4*(pServer->fontSize));
 
         switch (pServer->state) 
         {
@@ -119,9 +119,9 @@ void closeTCP(Server *pServer) {
 int mmapSelection(Server *pServer, Tile map[]) {
     int previousTime = 0;
     int quit = 0;
-    Text *pPrompt = createText(pServer->pRenderer, 0, 0, 0, pServer->pFont, "Enter a map",pServer->windowWidth / 2, 1*(pServer->windowHeight / MAPSIZE) * 4);
-    Text *pPrompt2 = createText(pServer->pRenderer, 0, 0, 0, pServer->pFont, "to host:", pServer->windowWidth / 2, 3*(pServer->windowHeight / MAPSIZE) * 4);
-    Text *pMap = createText(pServer->pRenderer, 0, 0, 0, pServer->pFont, ":",               pServer->windowWidth / 2,  pServer->windowHeight / 2);
+    Text *pPrompt = createText(pServer->pRenderer, 0, 0, 0, pServer->pFont, "Enter a map",pServer->windowWidth / 2, 1*(pServer->fontSize));
+    Text *pPrompt2 = createText(pServer->pRenderer, 0, 0, 0, pServer->pFont, "to host:", pServer->windowWidth / 2, 2*(pServer->fontSize));
+    Text *pMap = createText(pServer->pRenderer, 0, 0, 0, pServer->pFont, ":",               pServer->windowWidth / 2,  4*(pServer->fontSize));
 
     char text[31] = {0};
     while (!quit) {
@@ -143,7 +143,7 @@ int mmapSelection(Server *pServer, Tile map[]) {
                 } else {
                     if (text[0]) {
                         freeText(pMap);
-                        pMap = createText(pServer->pRenderer, 0, 0, 0, pServer->pFont, text, pServer->windowWidth / 2, pServer->windowHeight / 2);
+                        pMap = createText(pServer->pRenderer, 0, 0, 0, pServer->pFont, text, pServer->windowWidth / 2, 4*(pServer->fontSize));
                     }
                 }
             }

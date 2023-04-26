@@ -148,6 +148,7 @@ struct server {
     ServerState state;
     int windowWidth;
     int windowHeight;
+    int fontSize;
 
     int nrOfClients;
     Info clients[MAX_PLAYERS];

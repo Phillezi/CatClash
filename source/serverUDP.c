@@ -49,7 +49,7 @@ void runUDP(Server *pServer) {
         SDL_RenderClear(pServer->pRenderer);
 
         sprintf(prompt, "Clients: %d", pServer->nrOfClients);
-        Text *pPrompt = createText(pServer->pRenderer, 102, 205, 170, pServer->pFont, prompt, pServer->windowWidth / 2, 6*(pServer->windowHeight / MAPSIZE) * 4);
+        Text *pPrompt = createText(pServer->pRenderer, 102, 205, 170, pServer->pFont, prompt, pServer->windowWidth / 2, 4*(pServer->windowHeight / MAPSIZE) * 4);
 
         switch (pServer->state) {
         /*
