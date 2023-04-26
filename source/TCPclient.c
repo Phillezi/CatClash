@@ -54,6 +54,7 @@ int joinServerTCP(Game *pGame)
         }
     }
     printf("Closing client...\n");
+    return 0;
     //SDLNet_TCP_Close(pGame->pClient->socketTCP);
 }
 
