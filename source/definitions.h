@@ -37,6 +37,9 @@ typedef struct tile Tile;
     includes: int id, str name (max 20 chars + NULL),
     int hp, int x, y, SDL_Rect rect
 */
+enum playerState{ALIVE, DEAD};
+typedef enum playerState PlayerState;
+
 struct player
 {
     char prevKeyPressed;
@@ -44,6 +47,7 @@ struct player
     int id;                      // The id of the player (Multiplayer purposes)
     char name[MAX_NAME_LEN + 1]; // The name of the player (Multiplayer purposes)
     int hp;                      // Health-points
+    PlayerState state;           // State of the player (alive or dead)
     int x, y;                    // Position in game
     SDL_Rect rect;               // Screen position and size
 };
