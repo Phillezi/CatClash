@@ -49,12 +49,12 @@ int menu(Game *pGame)
                     if (selectedMode > 0)
                         selectedMode--;
                     else
-                        selectedMode = 3;
+                        selectedMode = 4;
                 }
                 else if (event.key.keysym.sym == SDLK_DOWN)
                 {
 
-                    if (selectedMode < 3)
+                    if (selectedMode < 4)
                         selectedMode++;
                     else
                         selectedMode = 0;
