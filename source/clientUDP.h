@@ -5,7 +5,7 @@
 #include <SDL2/SDL_net.h>
 
 void sendData(Game *pGame);
-void retrieveData(Game *pGame);
+//void retrieveData(Game *pGame);
 int getPlayerData(Game *pGame, Player players[]);
 
 #endif

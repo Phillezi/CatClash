@@ -72,7 +72,7 @@ int setupUDP(Server *pServer)
         exit(EXIT_FAILURE);
     }
     // Make space for future packets
-    if (!((pServer->pSent = SDLNet_AllocPacket(512)) && (pServer->pRecieve = SDLNet_AllocPacket(512))))
+    if (!((pServer->pSent = SDLNet_AllocPacket(64)) && (pServer->pRecieve = SDLNet_AllocPacket(512))))
     {
         fprintf(stderr, "SDLNet_AllocPacket: %s\n", SDLNet_GetError());
         exit(EXIT_FAILURE);
@@ -162,12 +162,18 @@ void runUDP(Server *pServer)
                         }
                         */
                         
-                        memcpy(pServer->pSent, pServer->pRecieve, sizeof(*pServer->pRecieve));
+                        /*memcpy(pServer->pSent, pServer->pRecieve, sizeof(*pServer->pRecieve));
                         pServer->pSent->address.port = pServer->clients[i].address.port;
                         pServer->pSent->address.host = pServer->clients[i].address.host;
+                        */
                         //Player test;
                         //memcpy(&test, &pServer->pSent->data, sizeof(Player));
                         //printf("Trying to send: id: %d, x: %d, y: %d, to: %d:%d\n", test.id, test.x, test.y, pServer->pSent->address.host, pServer->pSent->address.port);
+                        memcpy(pServer->pSent->data, &data, sizeof(Player));
+                        pServer->pSent->address.port = pServer->clients[i].address.port;
+                        pServer->pSent->address.host = pServer->clients[i].address.host;
+                        pServer->pSent->len = sizeof(Player);
+                        printf("Trying to send to: %d:%d\n", pServer->pSent->address.host, pServer->pSent->address.port);
 
                         if(!SDLNet_UDP_Send(pServer->socketUDP, -1, pServer->pSent)){
                             printf("Error: Could not send package\n");
