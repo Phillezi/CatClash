@@ -335,15 +335,18 @@ void destroyPlayer(Player *pPlayer)
     free(pPlayer);
 }
 
-void translatePositionToScreen(Game *pGame, Player player)
+void translatePositionToScreen(Game *pGame)
 {
     float scaleY = (float)pGame->map[0].wall.h / pGame->world.tileSize;
     float scaleX = (float)pGame->map[0].wall.w / pGame->world.tileSize;
     int offsetX = pGame->map[0].wall.x - pGame->map[0].x;
     int offsetY = pGame->map[0].wall.y - pGame->map[0].y;
-    player.rect.x = ((float)player.x * scaleX) + offsetX;
-    player.rect.y = ((float)player.y * scaleY) + offsetY;
+    for (int i = 0; i < MAX_PLAYERS; i++)
+    {
+        pGame->players[i].rect.x = ((float)pGame->players[i].x * scaleX) + offsetX;
+        pGame->players[i].rect.y = ((float)pGame->players[i].y * scaleY) + offsetY;
 
-    player.rect.h = (pGame->world.tileSize / 2) + ((pGame->world.tileSize / 2) * (1 - (float)player.charge / MAX_CHARGE));
-    player.rect.y += pGame->world.tileSize - player.rect.h;
+        pGame->players[i].rect.h = (pGame->world.tileSize / 2) + ((pGame->world.tileSize / 2) * (1 - (float)pGame->players[i].charge / MAX_CHARGE));
+        pGame->players[i].rect.y += pGame->world.tileSize - pGame->players[i].rect.h;
+    }
 }

@@ -91,8 +91,8 @@ int init(Game *pGame)
         return 1;
     }
 
-    pGame->windowWidth = (float)displayMode.w * 0.7; // 70% of avaliable space
-    pGame->windowHeight = (float)displayMode.h * 0.7;
+    pGame->windowWidth = (float)displayMode.w * 0.4; // 70% of avaliable space
+    pGame->windowHeight = (float)displayMode.h * 0.4;
 
     pGame->world.tileSize = (pGame->windowHeight / MAPSIZE) * 4;
 
@@ -264,8 +264,6 @@ void run(Game *pGame)
                 if (pGame->config.multiThreading)
                 {
                     getPlayerData(pGame, pGame->players);
-                    for (int i = 0; i < MAX_PLAYERS; i++)
-                        translatePositionToScreen(pGame, pGame->players[i]);
                     pthread_join(movementThread, NULL);
                     if (oldX != pGame->pPlayer->x || oldY != pGame->pPlayer->y)
                     {
@@ -430,6 +428,7 @@ void *updateScreen(void *pGameIn)
         }
     }
     SDL_SetRenderDrawColor(pGame->pRenderer, 0, 0, 255, 255);
+    translatePositionToScreen(pGame);
     for(int i = 0; i < MAX_PLAYERS; i++){
         SDL_RenderDrawRect(pGame->pRenderer, &pGame->players[i].rect);
         SDL_RenderCopy(pGame->pRenderer, pGame->pPlayerTexture, NULL, &pGame->players[i].rect);

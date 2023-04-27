@@ -11,6 +11,6 @@ SDL_Rect findSpawnTile(Tile map[]);
 void getPlayerSpawnPos(Game *pGame);
 Player *createPlayer(int id, char *name, int tileSize);
 void destroyPlayer(Player *pPlayer);
-void translatePositionToScreen(Game *pGame, Player player);
+void translatePositionToScreen(Game *pGame);
 
 #endif
