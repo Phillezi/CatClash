@@ -429,6 +429,7 @@ void *updateScreen(void *pGameIn)
             }
         }
     }
+    SDL_SetRenderDrawColor(pGame->pRenderer, 0, 0, 255, 255);
     for(int i = 0; i < MAX_PLAYERS; i++){
         SDL_RenderDrawRect(pGame->pRenderer, &pGame->players[i].rect);
         SDL_RenderCopy(pGame->pRenderer, pGame->pPlayerTexture, NULL, &pGame->players[i].rect);

@@ -341,8 +341,8 @@ void translatePositionToScreen(Game *pGame, Player player)
     float scaleX = (float)pGame->map[0].wall.w / pGame->world.tileSize;
     int offsetX = pGame->map[0].wall.x - pGame->map[0].x;
     int offsetY = pGame->map[0].wall.y - pGame->map[0].y;
-    player.rect.x = ((float)player.x * scaleX) - offsetX;
-    player.rect.y = ((float)player.y * scaleY) - offsetY;
+    player.rect.x = ((float)player.x * scaleX) + offsetX;
+    player.rect.y = ((float)player.y * scaleY) + offsetY;
 
     player.rect.h = (pGame->world.tileSize / 2) + ((pGame->world.tileSize / 2) * (1 - (float)player.charge / MAX_CHARGE));
     player.rect.y += pGame->world.tileSize - player.rect.h;
