@@ -359,11 +359,11 @@ void *updateScreen(void *pGameIn)
             SDL_RenderCopy(pGame->pRenderer, pGame->pPlayerTexture, NULL, &pGame->pPlayer->rect);
             break;
         case 'S':
-            SDL_RenderCopy(pGame->pRenderer, pGame->pPlayerTexture, NULL, &pGame->pPlayer->rect);
-            /*
+            //SDL_RenderCopy(pGame->pRenderer, pGame->pPlayerTexture, NULL, &pGame->pPlayer->rect);
+            
             pGame->pPlayerTexture = SDL_CreateTextureFromSurface(pGame->pRenderer, IMG_Load("resources/cat3.png"));
             changePlayerTexture(pGame->pRenderer, pGame->pPlayerTexture, "S");
-            */
+            
             break;
 
         case 'D':
@@ -416,7 +416,7 @@ void *updateScreen(void *pGameIn)
 
 
 // testing function for chancing player texture
-/* 
+
 void changePlayerTexture(SDL_Texture* playerTexture, SDL_Renderer* renderer, char direction) {
     SDL_Surface* surface = IMG_Load("resources/cat3.png");
     if (surface == NULL) {
@@ -426,32 +426,10 @@ void changePlayerTexture(SDL_Texture* playerTexture, SDL_Renderer* renderer, cha
 
     int playerWidth = 32;
     int playerHeight = 32;
-
-    int row = 0;
-    int col = 0;
-
-    switch (direction) {
-        case 'W':
-            row = 0;
-            col = 0;
-            break;
-        case 'S':
-            row = 1;
-            col = 0;
-            break;
-        case 'D':
-            row = 2;
-            col = 0;
-            break;
-        case 'A':
-            row = 3;
-            col = 0;
-            break;
-        default:
-            return;
-    }
-
-    SDL_Rect playerRect = { col * playerWidth, row * playerHeight, playerWidth, playerHeight };
+    int row;
+    int col;
+    
+   // SDL_Rect playerRect = { col * playerWidth, row * playerHeight, playerWidth, playerHeight };
 
     SDL_Texture* newTexture = SDL_CreateTextureFromSurface(renderer, surface);
     if (newTexture == NULL) {
@@ -465,5 +443,5 @@ void changePlayerTexture(SDL_Texture* playerTexture, SDL_Renderer* renderer, cha
     playerTexture = newTexture;
 
     SDL_FreeSurface(surface);
+
 }
-*/
