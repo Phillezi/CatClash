@@ -27,7 +27,7 @@ void checkClient(Server *pServer, Player data)
         if (pServer->clients[i].address.port == pServer->pRecieve->address.port && pServer->clients[i].address.host == pServer->pRecieve->address.host) // is this the sender?
         {
             // sender is known
-            printf("Sender is known (%d)\n", i);
+            //printf("Sender is known (%d)\n", i);
             return;
         }
         else // no
@@ -41,7 +41,7 @@ void checkClient(Server *pServer, Player data)
             }
             else // not the sender nor empty slot
             {
-                printf("Sender is not %d ( %d:%d )\n", i, pServer->clients[i].address.host, pServer->clients[i].address.port);
+                //printf("Sender is not %d ( %d:%d )\n", i, pServer->clients[i].address.host, pServer->clients[i].address.port);
                 /*
                 memcpy(&pServer->pSent->data, pServer->pRecieve->data, sizeof(Player));
                 pServer->pSent->address.port = pServer->clients[i].address.port;
@@ -147,12 +147,14 @@ void runUDP(Server *pServer)
                 // recieveAndSend(pServer, udpData);
                 Player data;
                 memcpy(&data, pServer->pRecieve->data, sizeof(Player));
-                printf("Recived: id: %d, x: %d, y: %d from %d:%d\n", data.id, data.x, data.y, pServer->pRecieve->address.host, pServer->pRecieve->address.port);
+                //printf("Recived: id: %d, x: %d, y: %d from %d:%d\n", data.id, data.x, data.y, pServer->pRecieve->address.host, pServer->pRecieve->address.port);
                 //if(pServer->clients[MAX_PLAYERS].address.port == 8888)
                     checkClient(pServer, data);
+
+                memcpy(pServer->pSent, pServer->pRecieve, sizeof(*pServer->pRecieve));
                 for (int i = 0; i < pServer->nrOfClients; i++)
                 {
-                    if (pServer->clients[i].id != data.id && pServer->clients[i].address.port != 8888)
+                    if (pServer->clients[i].address.host != pServer->pRecieve->address.host)// && (pServer->clients[i].address.port != 8888))
                     {
                         /*
                         pServer->pRecieve->address.port = pServer->clients[i].address.port;
@@ -162,7 +164,6 @@ void runUDP(Server *pServer)
                         }
                         */
                         
-                        memcpy(pServer->pSent, pServer->pRecieve, sizeof(*pServer->pRecieve));
                         pServer->pSent->address.port = pServer->clients[i].address.port;
                         pServer->pSent->address.host = pServer->clients[i].address.host;
                         //Player test;
@@ -171,6 +172,9 @@ void runUDP(Server *pServer)
 
                         if(!SDLNet_UDP_Send(pServer->socketUDP, -1, pServer->pSent)){
                             printf("Error: Could not send package\n");
+                        }
+                        else{
+                            printf("SENT!\n");
                         }
                     }
                 }

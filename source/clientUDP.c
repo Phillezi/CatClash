@@ -46,8 +46,8 @@ int getPlayerData(Game *pGame, Player players[])
     {
         if (SDLNet_UDP_Recv(pGame->socketDesc, pGame->pPacket))
         {
-            memcpy(&players[i], pGame->pPacket->data, sizeof(Player));
             printf("Recived package\n");
+            memcpy(&players[i], &pGame->pPacket->data, sizeof(Player));
         }
     }
 

@@ -11,6 +11,7 @@
 #include "pthread.h"
 // #include "client.h"
 #include "clientUDP.h"
+#include <string.h>
 
 int init(Game *pGame);
 void run(Game *pGame);
@@ -230,6 +231,7 @@ void run(Game *pGame)
     // pthread_t renderThread;
     int oldX = 0;
     int oldY = 0;
+    int lastUDPTransmit = 0;
     pthread_t movementThread;
     bool exit = false;
     pGame->config.fps = 60;
@@ -251,6 +253,16 @@ void run(Game *pGame)
         int deltaTime = SDL_GetTicks() - previousTime;
         if (deltaTime >= (1000 / FPS))
         {
+            UDPpacket *recvData = SDLNet_AllocPacket(512);
+            if (SDLNet_UDP_Recv(pGame->socketDesc, recvData) == 1)
+                        {
+                            printf("Recived package\n");
+                            Player tmp;
+                            memcpy(&tmp, &recvData->data, sizeof(Player));
+                            pGame->players[tmp.id] = tmp;
+                            
+                        }
+                        SDLNet_FreePacket(recvData);
             /*
             if (pGame->config.multiThreading){
                 pthread_create(&renderThread, NULL, updateScreen, (void *)pGame);
@@ -263,17 +275,23 @@ void run(Game *pGame)
                 movementPreviousTime = SDL_GetTicks();
                 if (pGame->config.multiThreading)
                 {
-                    getPlayerData(pGame, pGame->players);
-                    for (int i = 0; i < MAX_PLAYERS; i++)
-                        translatePositionToScreen(pGame, pGame->players[i]);
                     pthread_join(movementThread, NULL);
-                    if (oldX != pGame->pPlayer->x || oldY != pGame->pPlayer->y)
+                    int udpDeltaTime = SDL_GetTicks() - lastUDPTransmit;
+                    if (udpDeltaTime >= 1000 / 10)
                     {
-                        oldX = pGame->pPlayer->x;
-                        oldY = pGame->pPlayer->y;
-                        // printf("Trying to send data\n");
-                        sendData(pGame);
+                        lastUDPTransmit = SDL_GetTicks();
+                        if (oldX + 10 <= pGame->pPlayer->x || oldY + 10 <= pGame->pPlayer->y)
+                        {
+                            oldX = pGame->pPlayer->x;
+                            oldY = pGame->pPlayer->y;
+                            // printf("Trying to send data\n");
+                            sendData(pGame);
+                        }
+                        
+                        for (int i = 0; i < MAX_PLAYERS; i++)
+                            translatePositionToScreen(pGame, pGame->players[i]);
                     }
+
                     pthread_create(&movementThread, NULL, handleInput, (void *)pGame);
                 }
                 else
@@ -429,7 +447,8 @@ void *updateScreen(void *pGameIn)
             }
         }
     }
-    for(int i = 0; i < MAX_PLAYERS; i++){
+    for (int i = 0; i < MAX_PLAYERS; i++)
+    {
         SDL_RenderDrawRect(pGame->pRenderer, &pGame->players[i].rect);
         SDL_RenderCopy(pGame->pRenderer, pGame->pPlayerTexture, NULL, &pGame->players[i].rect);
     }
