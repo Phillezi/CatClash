@@ -150,6 +150,8 @@ struct server {
     TTF_Font *pFont;
     Text *pSpace, *pClosed, *pJoining, *pRunning, *pIP;
 
+    Text *pClientText[MAX_PLAYERS];
+
     ServerState state;
     int windowWidth;
     int windowHeight;
@@ -161,6 +163,7 @@ struct server {
     TCPsocket socketTCP;
     IPaddress TCPip;
     SDLNet_SocketSet socketSetTCP;
+    Tile map[1024];
 
     UDPsocket socketUDP;   // Socket descriptor
     UDPpacket *pRecieve;    // Pointer to packet memory

@@ -15,7 +15,8 @@ all:
 	$(CC) $(CFLAGS) $(SRCDIR)/ioHandler.c
 	$(CC) $(CFLAGS) $(SRCDIR)/TCPclient.c 
 	$(CC) $(CFLAGS) $(SRCDIR)/clientUDP.c 
-	$(CC) main.o init.o text.o player.o menu.o levelEditor.o ioHandler.o TCPclient.o clientUDP.o -o main.exe $(LDFLAGS)
+	$(CC) $(CFLAGS) $(SRCDIR)/multiThreadedServer.c 
+	$(CC) main.o init.o text.o player.o menu.o levelEditor.o ioHandler.o TCPclient.o clientUDP.o multiThreadedServer.o -o main.exe $(LDFLAGS)
 
 demo:
 	@echo "Building demo"
@@ -34,19 +35,12 @@ net:
 	$(CC) $(CFLAGS) $(SRCDIR)/serverUDP.c 
 	$(CC) server.o text.o serverUDP.o init.o TCPserver.o -o server.exe $(LDFLAGS)
 
-netTCP:
+netThread:
 	@echo "Building Experimental networking"
-	$(CC) $(CFLAGS) $(SRCDIR)/main.c 
-	$(CC) $(CFLAGS) $(SRCDIR)/init.c
-	$(CC) $(CFLAGS) $(SRCDIR)/text.c
-	$(CC) $(CFLAGS) $(SRCDIR)/player.c  
-	$(CC) $(CFLAGS) $(SRCDIR)/menu.c    
-	$(CC) $(CFLAGS) $(SRCDIR)/levelEditor.c
-	$(CC) $(CFLAGS) $(SRCDIR)/ioHandler.c
-	$(CC) $(CFLAGS) $(SRCDIR)/TCPclient.c 
-	$(CC) main.o init.o text.o player.o menu.o levelEditor.o ioHandler.o TCPclient.o -o main.exe $(LDFLAGS)
-	$(CC) $(CFLAGS) $(SRCDIR)/TCPserver.c 
-	$(CC) TCPserver.o init.o -o TCPserver.exe $(LDFLAGS)
+	$(CC) $(CFLAGS) $(SRCDIR)/multiThreadedServer.c 
+	$(CC) $(CFLAGS) $(SRCDIR)/init.c 
+	$(CC) $(CFLAGS) $(SRCDIR)/text.c 
+	$(CC) multiThreadedServer.o init.o text.o -o MTserver.exe $(LDFLAGS)
 
 netUDP:
 	@echo "Building Networking"

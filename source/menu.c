@@ -4,6 +4,7 @@
 #include "player.h"
 #include "init.h"
 #include <stdbool.h>
+#include <string.h>
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_image.h>
 #include <SDL2/SDL_ttf.h>
@@ -15,7 +16,7 @@ int menu(Game *pGame)
     int selectedMode = 0, previousTime = 0;
     int r = rand() % 255 + 1, g = rand() % 255 + 1, b = rand() % 255 + 1;
     int rAdd = 1, gAdd = 1, bAdd = 1;
-    int playW, levelEditW, quitW, joinServerW, catSelectW;
+    int playW, levelEditW, quitW, joinServerW, catSelectW, hostW;
     // Text *pPlay = malloc(sizeof(Text)), *pLvlEdit = malloc(sizeof(Text)), *pQuit = malloc(sizeof(Text));
     Text *pPlay = createText(pGame->pRenderer, 200, 200, 200, pGame->ui.pFpsFont, "Play", pGame->windowWidth / 2, pGame->windowHeight / 4);
     TTF_SizeText(pGame->ui.pFpsFont, "Play", &playW, NULL);
@@ -25,8 +26,10 @@ int menu(Game *pGame)
     TTF_SizeText(pGame->ui.pFpsFont, "QUIT", &quitW, NULL);
     Text *pJoinServer = createText(pGame->pRenderer, 200, 200, 200, pGame->ui.pFpsFont, "Join Server", pGame->windowWidth / 2, (pGame->windowHeight / 4) + (3 * pGame->world.tileSize));
     TTF_SizeText(pGame->ui.pFpsFont, "Join Server", &joinServerW, NULL);
-    Text *pCatSelect = createText(pGame->pRenderer, 200, 200, 200, pGame->ui.pFpsFont, "Cat Selection", pGame->windowHeight/2, (pGame->windowHeight/4)+ pGame->world.tileSize);
+    Text *pCatSelect = createText(pGame->pRenderer, 200, 200, 200, pGame->ui.pFpsFont, "Cat Selection", pGame->windowHeight / 2, (pGame->windowHeight / 4) + (4 * pGame->world.tileSize));
     TTF_SizeText(pGame->ui.pFpsFont, "Cat Selection", &catSelectW, NULL);
+    Text *pHost = createText(pGame->pRenderer, 200, 200, 200, pGame->ui.pFpsFont, "Host Server", pGame->windowHeight / 2, (pGame->windowHeight / 4) + (5 * pGame->world.tileSize));
+    TTF_SizeText(pGame->ui.pFpsFont, "Host Server", &hostW, NULL);
     while (true)
     {
         SDL_Event event;
@@ -39,9 +42,23 @@ int menu(Game *pGame)
                 freeText(pQuit);
                 freeText(pJoinServer);
                 freeText(pCatSelect);
+                freeText(pHost);
                 return 2;
             }
+            else if (event.type == SDL_WINDOWEVENT && event.window.event == SDL_WINDOWEVENT_CLOSE)
+            {
 
+                if (SDL_GetWindowID(pGame->pWindow) == event.window.windowID)
+                {
+                    freeText(pPlay);
+                    freeText(pLvlEdit);
+                    freeText(pQuit);
+                    freeText(pJoinServer);
+                    freeText(pCatSelect);
+                    freeText(pHost);
+                    return 2;
+                }
+            }
             else if (event.type == SDL_KEYDOWN)
             {
                 if (event.key.keysym.sym == SDLK_UP)
@@ -49,12 +66,12 @@ int menu(Game *pGame)
                     if (selectedMode > 0)
                         selectedMode--;
                     else
-                        selectedMode = 4;
+                        selectedMode = 5;
                 }
                 else if (event.key.keysym.sym == SDLK_DOWN)
                 {
 
-                    if (selectedMode < 4)
+                    if (selectedMode < 5)
                         selectedMode++;
                     else
                         selectedMode = 0;
@@ -66,6 +83,7 @@ int menu(Game *pGame)
                     freeText(pQuit);
                     freeText(pJoinServer);
                     freeText(pCatSelect);
+                    freeText(pHost);
                     return selectedMode;
                 }
             }
@@ -78,7 +96,8 @@ int menu(Game *pGame)
                 int topOfSecondRowY = (pGame->windowHeight / 4) + pGame->world.tileSize;
                 int topOfThirdRowY = (pGame->windowHeight / 4) + (2 * pGame->world.tileSize);
                 int topOfFourthRowY = (pGame->windowHeight / 4) + (3 * pGame->world.tileSize);
-                int topOfFifthRowY = (pGame->windowHeight / 4) + ( 4 * pGame->world.tileSize);
+                int topOfFifthRowY = (pGame->windowHeight / 4) + (4 * pGame->world.tileSize);
+                int topOfSixthRowY = (pGame->windowHeight / 4) + (5 * pGame->world.tileSize);
                 if (centerOfScreenX - (playW / 2) < mouseX && mouseX < centerOfScreenX + (playW / 2) && topOfFirstRowY - (pGame->world.tileSize / 2) < mouseY && mouseY < topOfFirstRowY + (pGame->world.tileSize / 2))
                 {
                     selectedMode = 0;
@@ -89,6 +108,7 @@ int menu(Game *pGame)
                         freeText(pQuit);
                         freeText(pJoinServer);
                         freeText(pCatSelect);
+                        freeText(pHost);
                         return selectedMode;
                     }
                 }
@@ -103,6 +123,7 @@ int menu(Game *pGame)
                         freeText(pQuit);
                         freeText(pJoinServer);
                         freeText(pCatSelect);
+                        freeText(pHost);
                         return selectedMode;
                     }
                 }
@@ -116,6 +137,7 @@ int menu(Game *pGame)
                         freeText(pQuit);
                         freeText(pJoinServer);
                         freeText(pCatSelect);
+                        freeText(pHost);
                         return selectedMode;
                     }
                 }
@@ -129,6 +151,7 @@ int menu(Game *pGame)
                         freeText(pQuit);
                         freeText(pJoinServer);
                         freeText(pCatSelect);
+                        freeText(pHost);
                         return selectedMode;
                     }
                 }
@@ -142,6 +165,21 @@ int menu(Game *pGame)
                         freeText(pQuit);
                         freeText(pJoinServer);
                         freeText(pCatSelect);
+                        freeText(pHost);
+                        return selectedMode;
+                    }
+                }
+                else if (centerOfScreenX - (hostW / 2) < mouseX && mouseX < centerOfScreenX + (hostW / 2) && topOfSixthRowY - (pGame->world.tileSize / 2) < mouseY && mouseY < topOfSixthRowY + (pGame->world.tileSize / 2))
+                {
+                    selectedMode = 5;
+                    if (buttons & SDL_BUTTON(SDL_BUTTON_LEFT))
+                    {
+                        freeText(pPlay);
+                        freeText(pLvlEdit);
+                        freeText(pQuit);
+                        freeText(pJoinServer);
+                        freeText(pCatSelect);
+                        freeText(pHost);
                         return selectedMode;
                     }
                 }
@@ -200,11 +238,13 @@ int menu(Game *pGame)
             freeText(pQuit);
             freeText(pJoinServer);
             freeText(pCatSelect);
+            freeText(pHost);
             pPlay = createText(pGame->pRenderer, r, g, b, pGame->ui.pFpsFont, "Play", pGame->windowWidth / 2, pGame->windowHeight / 4);
             pLvlEdit = createText(pGame->pRenderer, 200, 200, 200, pGame->ui.pFpsFont, "Edit level", pGame->windowWidth / 2, (pGame->windowHeight / 4) + pGame->world.tileSize);
             pQuit = createText(pGame->pRenderer, 200, 200, 200, pGame->ui.pFpsFont, "QUIT", pGame->windowWidth / 2, (pGame->windowHeight / 4) + (2 * pGame->world.tileSize));
             pJoinServer = createText(pGame->pRenderer, 200, 200, 200, pGame->ui.pFpsFont, "Join Server", pGame->windowWidth / 2, (pGame->windowHeight / 4) + (3 * pGame->world.tileSize));
             pCatSelect = createText(pGame->pRenderer, 200, 200, 200, pGame->ui.pFpsFont, "Cat Selection", pGame->windowWidth / 2, (pGame->windowHeight / 4) + (4 * pGame->world.tileSize));
+            pHost = createText(pGame->pRenderer, 200, 200, 200, pGame->ui.pFpsFont, "Host Server", pGame->windowHeight / 2, (pGame->windowHeight / 4) + (5 * pGame->world.tileSize));
             break;
         case 1:
             freeText(pPlay);
@@ -212,11 +252,13 @@ int menu(Game *pGame)
             freeText(pQuit);
             freeText(pJoinServer);
             freeText(pCatSelect);
+            freeText(pHost);
             pPlay = createText(pGame->pRenderer, 200, 200, 200, pGame->ui.pFpsFont, "Play", pGame->windowWidth / 2, pGame->windowHeight / 4);
             pLvlEdit = createText(pGame->pRenderer, r, g, b, pGame->ui.pFpsFont, "Edit level", pGame->windowWidth / 2, (pGame->windowHeight / 4) + pGame->world.tileSize);
             pQuit = createText(pGame->pRenderer, 200, 200, 200, pGame->ui.pFpsFont, "QUIT", pGame->windowWidth / 2, (pGame->windowHeight / 4) + (2 * pGame->world.tileSize));
             pJoinServer = createText(pGame->pRenderer, 200, 200, 200, pGame->ui.pFpsFont, "Join Server", pGame->windowWidth / 2, (pGame->windowHeight / 4) + (3 * pGame->world.tileSize));
             pCatSelect = createText(pGame->pRenderer, 200, 200, 200, pGame->ui.pFpsFont, "Cat Selection", pGame->windowWidth / 2, (pGame->windowHeight / 4) + (4 * pGame->world.tileSize));
+            pHost = createText(pGame->pRenderer, 200, 200, 200, pGame->ui.pFpsFont, "Host Server", pGame->windowHeight / 2, (pGame->windowHeight / 4) + (5 * pGame->world.tileSize));
             break;
         case 2:
             freeText(pPlay);
@@ -224,11 +266,13 @@ int menu(Game *pGame)
             freeText(pQuit);
             freeText(pJoinServer);
             freeText(pCatSelect);
+            freeText(pHost);
             pPlay = createText(pGame->pRenderer, 200, 200, 200, pGame->ui.pFpsFont, "Play", pGame->windowWidth / 2, pGame->windowHeight / 4);
             pLvlEdit = createText(pGame->pRenderer, 200, 200, 200, pGame->ui.pFpsFont, "Edit level", pGame->windowWidth / 2, (pGame->windowHeight / 4) + pGame->world.tileSize);
             pQuit = createText(pGame->pRenderer, r, g, b, pGame->ui.pFpsFont, "QUIT", pGame->windowWidth / 2, (pGame->windowHeight / 4) + (2 * pGame->world.tileSize));
             pJoinServer = createText(pGame->pRenderer, 200, 200, 200, pGame->ui.pFpsFont, "Join Server", pGame->windowWidth / 2, (pGame->windowHeight / 4) + (3 * pGame->world.tileSize));
             pCatSelect = createText(pGame->pRenderer, 200, 200, 200, pGame->ui.pFpsFont, "Cat Selection", pGame->windowWidth / 2, (pGame->windowHeight / 4) + (4 * pGame->world.tileSize));
+            pHost = createText(pGame->pRenderer, 200, 200, 200, pGame->ui.pFpsFont, "Host Server", pGame->windowHeight / 2, (pGame->windowHeight / 4) + (5 * pGame->world.tileSize));
             break;
         case 3:
             freeText(pPlay);
@@ -236,11 +280,13 @@ int menu(Game *pGame)
             freeText(pQuit);
             freeText(pJoinServer);
             freeText(pCatSelect);
+            freeText(pHost);
             pPlay = createText(pGame->pRenderer, 200, 200, 200, pGame->ui.pFpsFont, "Play", pGame->windowWidth / 2, pGame->windowHeight / 4);
             pLvlEdit = createText(pGame->pRenderer, 200, 200, 200, pGame->ui.pFpsFont, "Edit level", pGame->windowWidth / 2, (pGame->windowHeight / 4) + pGame->world.tileSize);
             pQuit = createText(pGame->pRenderer, 200, 200, 200, pGame->ui.pFpsFont, "QUIT", pGame->windowWidth / 2, (pGame->windowHeight / 4) + (2 * pGame->world.tileSize));
             pJoinServer = createText(pGame->pRenderer, r, g, b, pGame->ui.pFpsFont, "Join Server", pGame->windowWidth / 2, (pGame->windowHeight / 4) + (3 * pGame->world.tileSize));
             pCatSelect = createText(pGame->pRenderer, 200, 200, 200, pGame->ui.pFpsFont, "Cat Selection", pGame->windowWidth / 2, (pGame->windowHeight / 4) + (4 * pGame->world.tileSize));
+            pHost = createText(pGame->pRenderer, 200, 200, 200, pGame->ui.pFpsFont, "Host Server", pGame->windowHeight / 2, (pGame->windowHeight / 4) + (5 * pGame->world.tileSize));
             break;
         case 4:
             freeText(pPlay);
@@ -248,12 +294,28 @@ int menu(Game *pGame)
             freeText(pQuit);
             freeText(pJoinServer);
             freeText(pCatSelect);
+            freeText(pHost);
             pPlay = createText(pGame->pRenderer, 200, 200, 200, pGame->ui.pFpsFont, "Play", pGame->windowWidth / 2, pGame->windowHeight / 4);
             pLvlEdit = createText(pGame->pRenderer, 200, 200, 200, pGame->ui.pFpsFont, "Edit level", pGame->windowWidth / 2, (pGame->windowHeight / 4) + pGame->world.tileSize);
             pQuit = createText(pGame->pRenderer, 200, 200, 200, pGame->ui.pFpsFont, "QUIT", pGame->windowWidth / 2, (pGame->windowHeight / 4) + (2 * pGame->world.tileSize));
             pJoinServer = createText(pGame->pRenderer, 200, 200, 200, pGame->ui.pFpsFont, "Join Server", pGame->windowWidth / 2, (pGame->windowHeight / 4) + (3 * pGame->world.tileSize));
             pCatSelect = createText(pGame->pRenderer, r, g, b, pGame->ui.pFpsFont, "Cat Selection", pGame->windowWidth / 2, (pGame->windowHeight / 4) + (4 * pGame->world.tileSize));
-            break; 
+            pHost = createText(pGame->pRenderer, 200, 200, 200, pGame->ui.pFpsFont, "Host Server", pGame->windowHeight / 2, (pGame->windowHeight / 4) + (5 * pGame->world.tileSize));
+            break;
+        case 5:
+            freeText(pPlay);
+            freeText(pLvlEdit);
+            freeText(pQuit);
+            freeText(pJoinServer);
+            freeText(pCatSelect);
+            freeText(pHost);
+            pPlay = createText(pGame->pRenderer, 200, 200, 200, pGame->ui.pFpsFont, "Play", pGame->windowWidth / 2, pGame->windowHeight / 4);
+            pLvlEdit = createText(pGame->pRenderer, 200, 200, 200, pGame->ui.pFpsFont, "Edit level", pGame->windowWidth / 2, (pGame->windowHeight / 4) + pGame->world.tileSize);
+            pQuit = createText(pGame->pRenderer, 200, 200, 200, pGame->ui.pFpsFont, "QUIT", pGame->windowWidth / 2, (pGame->windowHeight / 4) + (2 * pGame->world.tileSize));
+            pJoinServer = createText(pGame->pRenderer, 200, 200, 200, pGame->ui.pFpsFont, "Join Server", pGame->windowWidth / 2, (pGame->windowHeight / 4) + (3 * pGame->world.tileSize));
+            pCatSelect = createText(pGame->pRenderer, 200, 200, 200, pGame->ui.pFpsFont, "Cat Selection", pGame->windowWidth / 2, (pGame->windowHeight / 4) + (4 * pGame->world.tileSize));
+            pHost = createText(pGame->pRenderer, r, g, b, pGame->ui.pFpsFont, "Host Server", pGame->windowHeight / 2, (pGame->windowHeight / 4) + (5 * pGame->world.tileSize));
+            break;
         }
 
         SDL_SetRenderDrawColor(pGame->pRenderer, 255, 255, 255, 255);
@@ -263,6 +325,7 @@ int menu(Game *pGame)
         drawText(pQuit, pGame->pRenderer);
         drawText(pJoinServer, pGame->pRenderer);
         drawText(pCatSelect, pGame->pRenderer);
+        drawText(pHost, pGame->pRenderer);
         SDL_RenderPresent(pGame->pRenderer);
     }
     freeText(pPlay);
@@ -270,6 +333,7 @@ int menu(Game *pGame)
     freeText(pQuit);
     freeText(pJoinServer);
     freeText(pCatSelect);
+    freeText(pHost);
     return 0;
 }
 
@@ -473,7 +537,7 @@ int getStringFromUser(char text[], SDL_Event event)
     return strEnd;
 }
 
-int testSelectMenu(Game *pGame)
+int testSelectMenu(Game *pGame, char *mapName)
 {
     int len = 0;
     int selected = 0;
@@ -586,5 +650,6 @@ int testSelectMenu(Game *pGame)
     for (int i = 0; i < len; i++)
         freeText(pText[i]);
     freeTextList(strArr, len);
+    strcpy(mapName, strArr[selected]);
     return 0;
 }

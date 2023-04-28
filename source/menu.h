@@ -6,6 +6,6 @@ int menu(Game *pGame);
 int mapSelection(Game *pGame);
 int joinServerMenu(Game *pGame);
 int getStringFromUser(char text[], SDL_Event event);
-int testSelectMenu(Game *pGame);
+int testSelectMenu(Game *pGame, char *mapName);
 
 #endif

@@ -11,6 +11,7 @@
 #include "pthread.h"
 // #include "client.h"
 #include "clientUDP.h"
+#include "multiThreadedServer.h"
 
 int init(Game *pGame);
 void run(Game *pGame);
@@ -20,6 +21,8 @@ void *updateScreen(void *pGameIn);
 int main(int argv, char **args)
 {
     Game game;
+    pthread_t serverThread;
+    char mapName[31];
     if (init(&game))
     {
         close(&game);
@@ -32,18 +35,23 @@ int main(int argv, char **args)
         case 0:
             // if (mapSelection(&game))
             //     break;
-            if (testSelectMenu(&game))
+            if (testSelectMenu(&game, mapName))
                 break;
             run(&game);
             break;
         case 1:
             // if (mapSelection(&game))
             //     break;
-            if (testSelectMenu(&game))
+            if (testSelectMenu(&game, mapName))
                 break;
             levelEditor(&game);
             break;
         case 2:
+            if (serverThread)
+            {
+                pthread_cancel(serverThread);
+                pthread_join(serverThread, NULL);
+            }
             close(&game);
             return 0;
             break;
@@ -56,6 +64,12 @@ int main(int argv, char **args)
                         if(joinServerMenu(&game))
                         break;
             */
+        case 5:
+            if (testSelectMenu(&game, mapName))
+                break;
+            pthread_create(&serverThread, NULL, MThostServer, (void *)mapName);
+            break;
+
         default:
             break;
         }
@@ -229,6 +243,7 @@ void run(Game *pGame)
     // pthread_t renderThread;
     int oldX = 0;
     int oldY = 0;
+    int oldCharge = 0;
     pthread_t movementThread;
     bool exit = false;
     pGame->config.fps = 60;
@@ -264,17 +279,29 @@ void run(Game *pGame)
                 {
                     getPlayerData(pGame, pGame->players);
                     pthread_join(movementThread, NULL);
-                    if (oldX != pGame->pPlayer->x || oldY != pGame->pPlayer->y)
+                    if (oldX != pGame->pPlayer->x || oldY != pGame->pPlayer->y || oldCharge != pGame->pPlayer->charge)
                     {
                         oldX = pGame->pPlayer->x;
                         oldY = pGame->pPlayer->y;
+                        oldCharge = pGame->pPlayer->charge;
                         // printf("Trying to send data\n");
                         sendData(pGame);
                     }
                     pthread_create(&movementThread, NULL, handleInput, (void *)pGame);
                 }
                 else
+                {
+                    getPlayerData(pGame, pGame->players);
                     handleInput(pGame);
+                    if (oldX != pGame->pPlayer->x || oldY != pGame->pPlayer->y || oldCharge != pGame->pPlayer->charge)
+                    {
+                        oldX = pGame->pPlayer->x;
+                        oldY = pGame->pPlayer->y;
+                        oldCharge = pGame->pPlayer->charge;
+                        // printf("Trying to send data\n");
+                        sendData(pGame);
+                    }
+                }
 
                 if (pGame->pPlayer->hp <= 0)
                 {
@@ -293,6 +320,12 @@ void run(Game *pGame)
             updateScreen(pGame);
             frameCounter++;
         }
+        const Uint8 *currentKeyStates = SDL_GetKeyboardState(NULL);
+        if (currentKeyStates[SDL_SCANCODE_ESCAPE])
+        {
+            exit = true;
+            break;
+        }
         SDL_Event event;
         while (SDL_PollEvent(&event))
         {
@@ -300,6 +333,15 @@ void run(Game *pGame)
             {
                 exit = true;
                 break;
+            }
+            else if (event.type == SDL_WINDOWEVENT && event.window.event == SDL_WINDOWEVENT_CLOSE)
+            {
+
+                if (SDL_GetWindowID(pGame->pWindow) == event.window.windowID)
+                {
+                    exit = true;
+                    break;
+                }
             }
         }
     }
@@ -338,7 +380,10 @@ void close(Game *pGame)
     if (pGame->ui.pOverText)
         freeText(pGame->ui.pOverText);
     if (pGame->ui.pFpsText)
-        freeText(pGame->ui.pFpsText);
+        freeText(pGame->ui.pFpsText);  
+    TTF_Quit();
+
+    SDLNet_Quit();
 
     if (pGame->pRenderer)
         SDL_DestroyRenderer(pGame->pRenderer);
@@ -426,10 +471,15 @@ void *updateScreen(void *pGameIn)
         }
     }
     SDL_SetRenderDrawColor(pGame->pRenderer, 0, 0, 255, 255);
+
     translatePositionToScreen(pGame);
-    for(int i = 0; i < MAX_PLAYERS; i++){
-        SDL_RenderDrawRect(pGame->pRenderer, &pGame->players[i].rect);
-        SDL_RenderCopy(pGame->pRenderer, pGame->pPlayerTexture, NULL, &pGame->players[i].rect);
+    for (int i = 0; i < MAX_PLAYERS; i++)
+    {
+        if (pGame->players[i].x != 0)
+        {
+            SDL_RenderDrawRect(pGame->pRenderer, &pGame->players[i].rect);
+            SDL_RenderCopy(pGame->pRenderer, pGame->pPlayerTexture, NULL, &pGame->players[i].rect);
+        }
     }
     if (pGame->state == OVER)
     {
