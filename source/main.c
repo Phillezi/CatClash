@@ -16,7 +16,6 @@ int init(Game *pGame);
 void run(Game *pGame);
 void close(Game *pGame);
 void *updateScreen(void *pGameIn);
-int changePlayerTexture(SDL_Renderer *pRenderer, SDL_Window *pWindow, SDL_Texture **pTexturePlayer, char direction);
 
 int main(int argv, char **args)
 {
