@@ -350,3 +350,54 @@ void translatePositionToScreen(Game *pGame)
         pGame->players[i].rect.y += pGame->world.tileSize - pGame->players[i].rect.h;
     }
 }
+
+int changePlayerTexture(SDL_Renderer *pRenderer, SDL_Window *pWindow, SDL_Texture **pTexturePlayer, char direction)
+{
+    SDL_Rect srcRect;
+    srcRect.x = 611; // test img X starting point
+    srcRect.y = 485; // test img Y starting point
+    srcRect.w = 24;
+    srcRect.h = 24;
+
+    switch (direction) {
+        case 'W':
+            srcRect.x = 516;
+            srcRect.y = 320;
+            break;
+        case 'S':
+            srcRect.x = 612;
+            srcRect.y = 33;
+            break;
+        case 'D':
+            srcRect.x = 611;
+            srcRect.y = 480;
+            break;
+        case 'A':
+            srcRect.x = 611;
+            srcRect.y = 95;
+            break;
+        default:
+            break;
+    }
+
+    SDL_Surface *pSurface = IMG_Load("resources/cat3.png");
+    if (!pSurface)
+    {
+        return -1;
+    }
+    SDL_Surface *pCroppedSurface = SDL_CreateRGBSurface(0, 24, 24, pSurface->format->BitsPerPixel,
+                                                        pSurface->format->Rmask, pSurface->format->Gmask,
+                                                        pSurface->format->Bmask, pSurface->format->Amask);
+
+    SDL_BlitSurface(pSurface, &srcRect, pCroppedSurface, NULL);
+    SDL_FreeSurface(pSurface);
+
+    *pTexturePlayer = SDL_CreateTextureFromSurface(pRenderer, pCroppedSurface);
+    SDL_FreeSurface(pCroppedSurface);
+
+    if (!pTexturePlayer)
+    {
+        return -1;
+    }
+    return 0;
+}
