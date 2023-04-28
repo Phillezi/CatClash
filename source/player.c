@@ -373,8 +373,8 @@ int changePlayerTexture(SDL_Renderer *pRenderer, SDL_Window *pWindow, SDL_Textur
             srcRect.y = 480;
             break;
         case 'A':
-            srcRect.x = 611;
-            srcRect.y = 95;
+            srcRect.x = 613;
+            srcRect.y = 96;
             break;
         default:
             break;
