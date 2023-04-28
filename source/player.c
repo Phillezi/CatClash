@@ -422,23 +422,23 @@ void loadMedia(SDL_Renderer *pRenderer, SDL_Texture **pPlayerTexture, SDL_Rect g
     int w = 24, h = 24;
 
     // IDLE
-    gSpriteClips[ 0 ].x = 41-5;
+    gSpriteClips[ 0 ].x = 36;
     gSpriteClips[ 0 ].y = 33;
     gSpriteClips[ 0 ].w = 24;
     gSpriteClips[ 0 ].h = 24;
     
-    gSpriteClips[ 1 ].x = 41-5;
+    gSpriteClips[ 1 ].x = 36;
     gSpriteClips[ 1 ].y = 290;
     gSpriteClips[ 1 ].w = 24;
     gSpriteClips[ 1 ].h = 24;
     
     gSpriteClips[ 2 ].x = 5;
-    gSpriteClips[ 2 ].y = 484;
+    gSpriteClips[ 2 ].y = 482;
     gSpriteClips[ 2 ].w = 24;
     gSpriteClips[ 2 ].h = 24;
 
     // RUNNING DOWN
-    int x[4] = {649-5, 681-5, 713-5, 745-5};
+    int x[4] = {644, 676, 708, 740};
     int y[2] = {32, 63};
 
     gSpriteClips[ 3 ].x = x[0];
