@@ -112,6 +112,7 @@ struct game
 
     SDL_Texture *pTileTextures[TILES];
     SDL_Texture *pPlayerTexture;
+    SDL_Rect gSpriteClips[27];
 
     int windowWidth, windowHeight;
     int movementAmount;

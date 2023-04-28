@@ -229,6 +229,8 @@ int init(Game *pGame)
     }
     SDL_SetWindowIcon(pGame->pWindow, pSurface);
     SDL_FreeSurface(pSurface);
+    
+    loadMedia(pGame->pRenderer, &pGame->pPlayerTexture, pGame->gSpriteClips);    
     return 0;
 }
 
@@ -423,29 +425,34 @@ void *updateScreen(void *pGameIn)
     }
     if (pGame->pPlayer)
     {
+        static int frame = 0;
+        static int counter = 10;
         SDL_RendererFlip flip = SDL_FLIP_HORIZONTAL;
         SDL_SetRenderDrawColor(pGame->pRenderer, 0, 0, 0, 255);
         SDL_RenderDrawRect(pGame->pRenderer, &pGame->pPlayer->rect);
         switch (pGame->pPlayer->prevKeyPressed)
         {
         case 'W':
-            changePlayerTexture(pGame->pRenderer, pGame->pWindow, &pGame->pPlayerTexture, 'W');
-            SDL_RenderCopy(pGame->pRenderer, pGame->pPlayerTexture, NULL, &pGame->pPlayer->rect);
+            //changePlayerTexture(pGame->pRenderer, pGame->pWindow, &pGame->pPlayerTexture, 'W');
+            SDL_RenderCopyEx(pGame->pRenderer, pGame->pPlayerTexture, &pGame->gSpriteClips[frame+3+8], &pGame->pPlayer->rect, 0, NULL, SDL_FLIP_NONE);
             break;
         case 'S':
-            changePlayerTexture(pGame->pRenderer, pGame->pWindow, &pGame->pPlayerTexture, 'S');
-            SDL_RenderCopy(pGame->pRenderer, pGame->pPlayerTexture, NULL, &pGame->pPlayer->rect);
+            //changePlayerTexture(pGame->pRenderer, pGame->pWindow, &pGame->pPlayerTexture, 'S');
+            SDL_RenderCopyEx(pGame->pRenderer, pGame->pPlayerTexture, &pGame->gSpriteClips[frame+3], &pGame->pPlayer->rect, 0, NULL, SDL_FLIP_NONE);
             break;
         case 'D':
-            changePlayerTexture(pGame->pRenderer, pGame->pWindow, &pGame->pPlayerTexture, 'D');
-            SDL_RenderCopy(pGame->pRenderer, pGame->pPlayerTexture, NULL, &pGame->pPlayer->rect);
+            //changePlayerTexture(pGame->pRenderer, pGame->pWindow, &pGame->pPlayerTexture, 'D');
+            SDL_RenderCopyEx(pGame->pRenderer, pGame->pPlayerTexture, &pGame->gSpriteClips[frame+3+8+8], &pGame->pPlayer->rect, 0, NULL, SDL_FLIP_NONE);
             break;
         case 'A':
-            changePlayerTexture(pGame->pRenderer, pGame->pWindow, &pGame->pPlayerTexture, 'A');
-            SDL_RenderCopy(pGame->pRenderer, pGame->pPlayerTexture, NULL, &pGame->pPlayer->rect);
+            //changePlayerTexture(pGame->pRenderer, pGame->pWindow, &pGame->pPlayerTexture, 'A');
+            SDL_RenderCopyEx(pGame->pRenderer, pGame->pPlayerTexture, &pGame->gSpriteClips[frame+3+8+8], &pGame->pPlayer->rect, 0, NULL, flip);
             break;
             // default  : SDL_RenderCopy(pGame->pRenderer, pGame->pPlayerTexture, NULL, &pGame->pPlayer->rect); break;
         }
+        if (counter > 0) counter--;
+        else { frame++; counter = 10; }
+        if (frame % 8 == 0) frame %= 8;
     }
 
     for (int i = (((pGame->pPlayer->y) / pGame->map[0].wall.w) * MAPSIZE) + ((pGame->pPlayer->x - 1) / pGame->map[0].wall.w) + 2; i < MAPSIZE * MAPSIZE; i++)
