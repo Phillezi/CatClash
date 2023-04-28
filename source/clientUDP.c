@@ -4,6 +4,7 @@ void sendData(Game *pGame)
 {
     PlayerUdpPkg pkg;
     pkg.id = pGame->pPlayer->id;
+    pkg.idle = pGame->pPlayer->idle;
     pkg.x = pGame->pPlayer->x;
     pkg.y = pGame->pPlayer->y;
     pkg.direction = pGame->pPlayer->prevKeyPressed;
@@ -60,6 +61,7 @@ int getPlayerData(Game *pGame, Player players[])
                     players[tmp.id - 1].x = tmp.x;
                     players[tmp.id - 1].y = tmp.y;
                     players[tmp.id - 1].id = tmp.id;
+                    players[tmp.id - 1].idle = tmp.idle;
                     players[tmp.id - 1].prevKeyPressed = tmp.direction;
                 }
             }
@@ -68,9 +70,10 @@ int getPlayerData(Game *pGame, Player players[])
                 players[tmp.id - 1].x = tmp.x;
                 players[tmp.id - 1].y = tmp.y;
                 players[tmp.id - 1].id = tmp.id;
+                players[tmp.id - 1].idle = tmp.idle;
                 players[tmp.id - 1].prevKeyPressed = tmp.direction;
             }
-            printf("Recived package\n");
+            //printf("Recived package\n");
         }
     }
 

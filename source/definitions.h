@@ -178,6 +178,7 @@ struct udpPlayerPackage{
     int x,y;
     char direction;
     Uint8 id;
+    Uint8 idle;
 };
 typedef struct udpPlayerPackage PlayerUdpPkg;
 

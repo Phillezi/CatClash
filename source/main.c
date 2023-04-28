@@ -282,6 +282,7 @@ void run(Game *pGame)
                 {
                     static int idle = 0;
                     getPlayerData(pGame, pGame->players);
+                    translatePositionToScreen(pGame);
                     pthread_join(movementThread, NULL);
                     if (oldX != pGame->pPlayer->x || oldY != pGame->pPlayer->y || oldCharge != pGame->pPlayer->charge)
                     {
@@ -499,7 +500,7 @@ void *updateScreen(void *pGameIn)
     }
     SDL_SetRenderDrawColor(pGame->pRenderer, 0, 0, 255, 255);
 
-    translatePositionToScreen(pGame);
+    
     for (int i = 0; i < MAX_PLAYERS; i++)
     {
         if (pGame->players[i].x != 0)
