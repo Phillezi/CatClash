@@ -36,14 +36,14 @@ int main(int argv, char **args)
         case 0:
             // if (mapSelection(&game))
             //     break;
-            if (testSelectMenu(&game, NULL))
+            if (testSelectMenu(&game, mapName))
                 break;
             run(&game);
             break;
         case 1:
             // if (mapSelection(&game))
             //     break;
-            if (testSelectMenu(&game, NULL))
+            if (testSelectMenu(&game, mapName))
                 break;
             levelEditor(&game);
             break;
@@ -383,7 +383,7 @@ void close(Game *pGame)
     if (pGame->ui.pFpsText)
         freeText(pGame->ui.pFpsText);  
     TTF_Quit();
-    
+
     SDLNet_Quit();
 
     if (pGame->pRenderer)
