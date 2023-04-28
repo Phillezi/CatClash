@@ -159,6 +159,7 @@ struct server {
 
     int nrOfClients;
     Info clients[MAX_PLAYERS];
+    Player playerData[MAX_PLAYERS];
 
     TCPsocket socketTCP;
     IPaddress TCPip;
@@ -170,5 +171,12 @@ struct server {
     UDPpacket *pSent;           
 }; 
 typedef struct server Server;
+
+struct udpPlayerPackage{
+    int x,y;
+    char direction;
+    Uint8 id;
+};
+typedef struct udpPlayerPackage PlayerUdpPkg;
 
 #endif

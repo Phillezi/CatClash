@@ -5,9 +5,7 @@ void *MThostServer(void *mapName)
     Threads threads;
 
     pthread_setcancelstate(PTHREAD_CANCEL_ENABLE, NULL);
-
     pthread_setcanceltype(PTHREAD_CANCEL_ASYNCHRONOUS, NULL);
-
     pthread_cleanup_push(closeThreads, (void *)&threads);
 
     bool exit = false;
@@ -186,9 +184,14 @@ void *MTtcpServer(void *pServerIn)
             for (int i = 0; i < MAPSIZE * MAPSIZE; i++)
                 SDLNet_TCP_Send(tmpClient, &pServer->map[i].type, sizeof(pServer->map[i].type)); // send map to client
             SDLNet_TCP_Send(tmpClient, &pServer->nrOfClients, sizeof(int));
-            /*
-                Ta emot Player struct här
-            */
+            int bytesRecv = SDLNet_TCP_Recv(tmpClient, &pServer->playerData[pServer->nrOfClients], sizeof(Player));
+            if(bytesRecv != sizeof(Player)){
+                printf("Error when reciving Player struct over TCP\n");
+                debugPrint();
+            }
+            for(int i = 0; i < pServer->nrOfClients; i++){
+                SDLNet_TCP_Send(tmpClient, &pServer->playerData[i], sizeof(Player));
+            }
             /*
                 Skicka Player data till alla som har anslutit sig här
                 Dvs spara alla tmpSockets i socketSetTCP och iterera genom listan och skicka till alla
@@ -221,7 +224,7 @@ int MTsetupUDP(Server *pServer)
         return 1;
     }
 
-    if (!((pServer->pSent = SDLNet_AllocPacket(sizeof(Player))) && (pServer->pRecieve = SDLNet_AllocPacket(512))))
+    if (!((pServer->pSent = SDLNet_AllocPacket(sizeof(PlayerUdpPkg))) && (pServer->pRecieve = SDLNet_AllocPacket(sizeof(PlayerUdpPkg)))))
     {
         fprintf(stderr, "SDLNet_AllocPacket: %s\n", SDLNet_GetError());
         return 1;
@@ -237,7 +240,7 @@ int MTsetupUDP(Server *pServer)
     return 0;
 }
 
-void MTcheckUdpClient(Server *pServer, Player data)
+void MTcheckUdpClient(Server *pServer, PlayerUdpPkg data)
 {
     for (int i = 0; i < MAX_PLAYERS; i++)
     {
@@ -254,7 +257,7 @@ void MTcheckUdpClient(Server *pServer, Player data)
                 pServer->clients[i].address.host = pServer->pRecieve->address.host;
                 pServer->clients[i].id = data.id;
                 char buffer[32];
-                sprintf(buffer, "%d %s", data.id, data.name);
+                sprintf(buffer, "%d %s", data.id, pServer->playerData[data.id].name);
                 pServer->pClientText[i] = createText(pServer->pRenderer, 255, 255, 255, pServer->pFont, buffer, pServer->windowWidth / 2, i * pServer->fontSize + 3 * pServer->fontSize);
                 return;
             }
@@ -280,11 +283,11 @@ void *MTudpServer(void *pServerIn)
     */
     if (SDLNet_UDP_Recv(pServer->socketUDP, pServer->pRecieve) == 1)
     {
-        Player data;
+        PlayerUdpPkg data;
         /*
         Ta emot mindre(i bytes) structar som innehåller bara x y riktning och id
         */
-        memcpy(&data, pServer->pRecieve->data, sizeof(Player));
+        memcpy(&data, pServer->pRecieve->data, sizeof(PlayerUdpPkg));
         MTcheckUdpClient(pServer, data);
         for (int i = 0; i < pServer->nrOfClients; i++)
         {
@@ -293,10 +296,10 @@ void *MTudpServer(void *pServerIn)
                 /*
                 Skicka mindre(i bytes) structar som innehåller bara x y riktning och id
                 */
-                memcpy(pServer->pSent->data, &data, sizeof(Player));
+                memcpy(pServer->pSent->data, &data, sizeof(PlayerUdpPkg));
                 pServer->pSent->address.port = pServer->clients[i].address.port;
                 pServer->pSent->address.host = pServer->clients[i].address.host;
-                pServer->pSent->len = sizeof(Player);
+                pServer->pSent->len = sizeof(PlayerUdpPkg);
 
                 if (!SDLNet_UDP_Send(pServer->socketUDP, -1, pServer->pSent))
                 {

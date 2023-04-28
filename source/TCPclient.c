@@ -49,6 +49,28 @@ int joinServerTCP(Game *pGame)
                         SDLNet_FreeSocketSet(sockets);
                         return 1;
                     }
+                    int bytesSent = SDLNet_TCP_Send(pGame->pClient->socketTCP, pGame->pPlayer, sizeof(Player));
+                    if (bytesSent != sizeof(Player))
+                    {
+                        printf("Error when sending Player structure over TCP\n");
+                        exit = true;
+                        SDLNet_TCP_Close(pGame->pClient->socketTCP);
+                        SDLNet_FreeSocketSet(sockets);
+                        return 1;
+                    }
+                    for (int i = 0; i < pGame->pPlayer->id; i++)
+                    {
+                        bytesRecv = SDLNet_TCP_Recv(pGame->pClient->socketTCP, &pGame->players[i], sizeof(int));
+                        if (bytesRecv != sizeof(int))
+                        {
+                            printf("PACKET LOSS\n");
+                            exit = true;
+                            SDLNet_TCP_Close(pGame->pClient->socketTCP);
+                            SDLNet_FreeSocketSet(sockets);
+                            return 1;
+                        }
+                    }
+
                     printf("Recieved message\n");
                     exit = true;
                     SDLNet_TCP_Close(pGame->pClient->socketTCP);

@@ -2,9 +2,14 @@
 
 void sendData(Game *pGame)
 {
-    memcpy(pGame->pPacket->data, pGame->pPlayer, sizeof(Player));
+    PlayerUdpPkg pkg;
+    pkg.id = pGame->pPlayer->id;
+    pkg.x = pGame->pPlayer->x;
+    pkg.y = pGame->pPlayer->y;
+    pkg.direction = pGame->pPlayer->prevKeyPressed;
+    memcpy(pGame->pPacket->data, &pkg, sizeof(PlayerUdpPkg));
 
-    pGame->pPacket->len = sizeof(Player);
+    pGame->pPacket->len = sizeof(PlayerUdpPkg);
 
     pGame->pPacket->address.host = pGame->serverAddress.host; // Set the destination host
     pGame->pPacket->address.port = pGame->serverAddress.port; // And destination port
@@ -46,15 +51,25 @@ int getPlayerData(Game *pGame, Player players[])
     {
         if (SDLNet_UDP_Recv(pGame->socketDesc, pGame->pPacket))
         {
-            Player tmp;
-            memcpy(&tmp, pGame->pPacket->data, sizeof(Player));
+            PlayerUdpPkg tmp;
+            memcpy(&tmp, pGame->pPacket->data, sizeof(PlayerUdpPkg));
             if (!pGame->pPlayer->id)
             {
                 if (tmp.id - 1 < MAX_PLAYERS)
-                    players[tmp.id - 1] = tmp;
+                {
+                    players[tmp.id - 1].x = tmp.x;
+                    players[tmp.id - 1].y = tmp.y;
+                    players[tmp.id - 1].id = tmp.id;
+                    players[tmp.id - 1].prevKeyPressed = tmp.direction;
+                }
             }
             else if (tmp.id - 1 < MAX_PLAYERS)
-                players[tmp.id] = tmp;
+            {
+                players[tmp.id - 1].x = tmp.x;
+                players[tmp.id - 1].y = tmp.y;
+                players[tmp.id - 1].id = tmp.id;
+                players[tmp.id - 1].prevKeyPressed = tmp.direction;
+            }
             printf("Recived package\n");
         }
     }

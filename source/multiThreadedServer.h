@@ -30,7 +30,7 @@ int MTsetupTCP(Server *pServer);
 void *MTtcpServer(void *pServerIn);
 
 int MTsetupUDP(Server *pServer);
-void MTcheckUdpClient(Server *pServer, Player data);
+void MTcheckUdpClient(Server *pServer, PlayerUdpPkg data);
 void *MTudpServer(void *pServerIn);
 
 void MTupdateServerScreen(Server *pServer);

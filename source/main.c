@@ -234,7 +234,7 @@ int init(Game *pGame)
 
 void run(Game *pGame)
 {
-    pGame->pPacket = SDLNet_AllocPacket(512);
+    pGame->pPacket = SDLNet_AllocPacket(sizeof(PlayerUdpPkg));
     if (pGame->socketDesc = SDLNet_UDP_Open(0))
     {
         printf("UDP init\n");
