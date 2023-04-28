@@ -13,6 +13,6 @@ Player *createPlayer(int id, char *name, int tileSize);
 void destroyPlayer(Player *pPlayer);
 void translatePositionToScreen(Game *pGame);
 int changePlayerTexture(SDL_Renderer *pRenderer, SDL_Window *pWindow, SDL_Texture **pTexturePlayer, char direction);
-void loadMedia(SDL_Renderer *gRenderer, SDL_Texture **mCat, SDL_Rect gSpriteClips[]);
+void loadMedia(SDL_Renderer *pRenderer, SDL_Texture **pPlayerTexture, SDL_Rect gSpriteClips[]);
 
 #endif

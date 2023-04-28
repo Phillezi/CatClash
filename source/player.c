@@ -128,6 +128,7 @@ void *handleInput(void *pGameIn) // Game *pGame)
     {
         for (int i = 0; i < pGame->movementAmount; i++)
         {
+            pGame->pPlayer->idle = 1;
             if (currentKeyStates[SDL_SCANCODE_W] || currentKeyStates[SDL_SCANCODE_UP])
             {
 
@@ -135,53 +136,55 @@ void *handleInput(void *pGameIn) // Game *pGame)
                 {
                     pGame->pPlayer->prevKeyPressed = 'W';
                     movePlayer(pGame->pPlayer, 'W');
+                    pGame->pPlayer->idle = 0;
                 }
                 else
                 {
                     // printf("COLLISION W\n");
                 }
             }
-            else if (currentKeyStates[SDL_SCANCODE_A] || currentKeyStates[SDL_SCANCODE_LEFT])
+            if (currentKeyStates[SDL_SCANCODE_A] || currentKeyStates[SDL_SCANCODE_LEFT])
             {
 
                 if (!checkCollision(*pGame->pPlayer, pGame->map, 'A', pGame->world.tileSize))
                 {
                     pGame->pPlayer->prevKeyPressed = 'A';
                     movePlayer(pGame->pPlayer, 'A');
+                    pGame->pPlayer->idle = 0;
                 }
                 else
                 {
                     // printf("COLLISION A\n");
                 }
             }
-            else if (currentKeyStates[SDL_SCANCODE_S] || currentKeyStates[SDL_SCANCODE_DOWN])
+            if (currentKeyStates[SDL_SCANCODE_S] || currentKeyStates[SDL_SCANCODE_DOWN])
             {
 
                 if (!checkCollision(*pGame->pPlayer, pGame->map, 'S', pGame->world.tileSize))
                 {
                     pGame->pPlayer->prevKeyPressed = 'S';
                     movePlayer(pGame->pPlayer, 'S');
+                    pGame->pPlayer->idle = 0;
                 }
                 else
                 {
                     // printf("COLLISION S\n");
                 }
             }
-            else if (currentKeyStates[SDL_SCANCODE_D] || currentKeyStates[SDL_SCANCODE_RIGHT])
+            if (currentKeyStates[SDL_SCANCODE_D] || currentKeyStates[SDL_SCANCODE_RIGHT])
             {
 
                 if (!checkCollision(*pGame->pPlayer, pGame->map, 'D', pGame->world.tileSize))
                 {
                     pGame->pPlayer->prevKeyPressed = 'D';
                     movePlayer(pGame->pPlayer, 'D');
+                    pGame->pPlayer->idle = 0;
                 }
                 else
                 {
                     // printf("COLLISION D\n");
                 }
-            }
-            else if (pGame->pPlayer->prevKeyPressed == 'W')
-                pGame->pPlayer->prevKeyPressed = '';
+            }            
 
             /*
             if (!checkCollision(*pPlayer, map, *pPrevKeypressed))
@@ -411,21 +414,21 @@ int changePlayerTexture(SDL_Renderer *pRenderer, SDL_Window *pWindow, SDL_Textur
     return 0;
 }
 
-void loadMedia(SDL_Renderer *gRenderer, SDL_Texture **mCat, SDL_Rect gSpriteClips[]){
+void loadMedia(SDL_Renderer *pRenderer, SDL_Texture **pPlayerTexture, SDL_Rect gSpriteClips[]){
     
     SDL_Surface* gCatSurface = IMG_Load("resources/cat3.PNG");
-    *mCat = SDL_CreateTextureFromSurface(gRenderer, gCatSurface);
+    *pPlayerTexture = SDL_CreateTextureFromSurface(pRenderer, gCatSurface);
     
     int w = 24, h = 24;
 
     // IDLE
-    gSpriteClips[ 0 ].x = 41;
-    gSpriteClips[ 0 ].y = 32;
+    gSpriteClips[ 0 ].x = 41-5;
+    gSpriteClips[ 0 ].y = 33;
     gSpriteClips[ 0 ].w = 24;
     gSpriteClips[ 0 ].h = 24;
     
-    gSpriteClips[ 1 ].x = 41;
-    gSpriteClips[ 1 ].y = 291;
+    gSpriteClips[ 1 ].x = 41-5;
+    gSpriteClips[ 1 ].y = 290;
     gSpriteClips[ 1 ].w = 24;
     gSpriteClips[ 1 ].h = 24;
     
