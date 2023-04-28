@@ -186,6 +186,13 @@ void *MTtcpServer(void *pServerIn)
             for (int i = 0; i < MAPSIZE * MAPSIZE; i++)
                 SDLNet_TCP_Send(tmpClient, &pServer->map[i].type, sizeof(pServer->map[i].type)); // send map to client
             SDLNet_TCP_Send(tmpClient, &pServer->nrOfClients, sizeof(int));
+            /*
+                Ta emot Player struct här
+            */
+            /*
+                Skicka Player data till alla som har anslutit sig här
+                Dvs spara alla tmpSockets i socketSetTCP och iterera genom listan och skicka till alla
+            */
             SDLNet_TCP_Close(tmpClient); // close client
             char buffer[31];
             sprintf(buffer, "%d Players Connected", pServer->nrOfClients);
@@ -266,15 +273,26 @@ void *MTudpServer(void *pServerIn)
     pthread_testcancel();
 
     Server *pServer = (Server *)pServerIn;
+    /*
+    Kolla om alla i clients har skickat ett meddelande inom ett visst intervall (keep alive signaler ksk behöver skickas från klientsidan)
+    Om servern inte har tagit emot ett meddelande från en klient så har den timeat ut och då bör den platsen i clientArrayen sättas till tom
+    dvs port och host bör sättas till 8888
+    */
     if (SDLNet_UDP_Recv(pServer->socketUDP, pServer->pRecieve) == 1)
     {
         Player data;
+        /*
+        Ta emot mindre(i bytes) structar som innehåller bara x y riktning och id
+        */
         memcpy(&data, pServer->pRecieve->data, sizeof(Player));
         MTcheckUdpClient(pServer, data);
         for (int i = 0; i < pServer->nrOfClients; i++)
         {
             if (pServer->clients[i].id != data.id && pServer->clients[i].address.port != 8888)
             {
+                /*
+                Skicka mindre(i bytes) structar som innehåller bara x y riktning och id
+                */
                 memcpy(pServer->pSent->data, &data, sizeof(Player));
                 pServer->pSent->address.port = pServer->clients[i].address.port;
                 pServer->pSent->address.host = pServer->clients[i].address.host;
