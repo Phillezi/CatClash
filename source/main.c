@@ -49,6 +49,11 @@ int main(int argv, char **args)
             break;
         case 2:
             close(&game);
+            if (serverThread)
+            {
+                pthread_cancel(serverThread);
+                pthread_join(serverThread, NULL);
+            }
             return 0;
             break;
         case 3:
@@ -63,8 +68,8 @@ int main(int argv, char **args)
         case 5:
             if (testSelectMenu(&game, mapName))
                 break;
+            // MThostServer((void *)mapName);
             pthread_create(&serverThread, NULL, MThostServer, (void *)mapName);
-            pthread_detach(serverThread);
             break;
 
         default:
@@ -316,6 +321,12 @@ void run(Game *pGame)
             // else
             updateScreen(pGame);
             frameCounter++;
+        }
+        const Uint8 *currentKeyStates = SDL_GetKeyboardState(NULL);
+        if (currentKeyStates[SDL_SCANCODE_ESCAPE])
+        {
+            exit = true;
+            break;
         }
         SDL_Event event;
         while (SDL_PollEvent(&event))

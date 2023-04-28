@@ -13,6 +13,15 @@
 #define MAX_PLAYERS 5
 #define PORT 1234
 
+struct threadIDS
+{
+    pthread_t tcp;
+    pthread_t udp;
+    Server server;
+};
+typedef struct threadIDS Threads;
+
+void closeThreads(void *pThreadsIn);
 void *MThostServer(void *mapName);
 void debugPrint();
 int MTsetup(Server *pServer);

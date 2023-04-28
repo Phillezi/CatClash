@@ -2,15 +2,26 @@
 
 void *MThostServer(void *mapName)
 {
-    Server server;
-    pthread_t tcpThread;
-    pthread_t udpThread;
+    Threads threads;
+
+    pthread_setcancelstate(PTHREAD_CANCEL_ENABLE, NULL);
+
+    pthread_setcanceltype(PTHREAD_CANCEL_ASYNCHRONOUS, NULL);
+
+    pthread_cleanup_push(closeThreads, (void *)&threads);
+
     bool exit = false;
-    initMap(server.map, (char *)mapName, 16);
-    if (!MTsetup(&server))
+    initMap(threads.server.map, (char *)mapName, 16);
+    if (!MTsetup(&threads.server))
     {
         while (!exit)
         {
+            pthread_create(&threads.tcp, NULL, MTtcpServer, (void *)&threads.server);
+            pthread_create(&threads.udp, NULL, MTudpServer, (void *)&threads.server);
+            MTupdateServerScreen(&threads.server); // VSYNC är på dvs kommer den vara blockerande
+            pthread_join(threads.tcp, NULL);
+            pthread_join(threads.udp, NULL);
+            pthread_testcancel();
             SDL_Event event;
             while (SDL_PollEvent(&event))
             {
@@ -20,14 +31,29 @@ void *MThostServer(void *mapName)
                     break;
                 }
             }
-            pthread_create(&tcpThread, NULL, MTtcpServer, (void *)&server);
-            pthread_create(&udpThread, NULL, MTudpServer, (void *)&server);
-            MTupdateServerScreen(&server); // VSYNC är på dvs kommer den vara blockerande
-            pthread_join(tcpThread, NULL);
-            pthread_join(udpThread, NULL);
         }
     }
-    MTclose(&server);
+    pthread_cancel(threads.tcp);
+    pthread_cancel(threads.udp);
+    pthread_join(threads.tcp, NULL);
+    pthread_join(threads.udp, NULL);
+    MTclose(&threads.server);
+    pthread_cleanup_pop(0);
+    pthread_exit(NULL);
+}
+
+void closeThreads(void *pThreadsIn)
+{
+    Threads *pT = (Threads *)pThreadsIn;
+    printf("Cleaning up Threads...\n");
+    pthread_cancel(pT->tcp);
+    pthread_cancel(pT->udp);
+    pthread_join(pT->tcp, NULL);
+    pthread_join(pT->udp, NULL);
+    printf("Done: Cleaning up Threads!\n");
+    printf("Cleaning up server...\n");
+    MTclose(&pT->server);
+    printf("Done: Cleaning up server!\n");
 }
 
 void debugPrint()
@@ -57,14 +83,14 @@ int MTsetup(Server *pServer)
     pServer->fontSize = pServer->windowHeight / 10;
 
     pServer->pWindow = SDL_CreateWindow("TCP & UDP SERVER", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, pServer->windowWidth, pServer->windowHeight, 0);
-    if(!pServer->pWindow)
+    if (!pServer->pWindow)
     {
         debugPrint();
         return 1;
     }
 
     pServer->pRenderer = SDL_CreateRenderer(pServer->pWindow, -1, SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC);
-    if(!pServer->pRenderer)
+    if (!pServer->pRenderer)
     {
         debugPrint();
         return 1;
@@ -78,7 +104,7 @@ int MTsetup(Server *pServer)
     }
 
     pServer->pFont = TTF_OpenFont("resources/fonts/RetroGaming.ttf", pServer->fontSize);
-    if(!pServer->pFont)
+    if (!pServer->pFont)
     {
         debugPrint();
         return 1;
@@ -133,6 +159,12 @@ void *MTtcpServer(void *pServerIn)
 {
     Server *pServer = (Server *)pServerIn;
 
+    pthread_setcancelstate(PTHREAD_CANCEL_ENABLE, NULL);
+
+    pthread_setcanceltype(PTHREAD_CANCEL_ASYNCHRONOUS, NULL);
+
+    pthread_testcancel();
+
     TCPsocket tmpClient = SDLNet_TCP_Accept(pServer->socketTCP);
     if (tmpClient)
     {
@@ -146,13 +178,14 @@ void *MTtcpServer(void *pServerIn)
             SDLNet_TCP_Close(tmpClient); // close client
             char buffer[31];
             sprintf(buffer, "%d Players Connected", pServer->nrOfClients);
-            pServer->pJoining = createText(pServer->pRenderer, 255, 255, 255, pServer->pFont, buffer, pServer->windowWidth/2, 2*pServer->fontSize);
+            pServer->pJoining = createText(pServer->pRenderer, 255, 255, 255, pServer->pFont, buffer, pServer->windowWidth / 2, 2 * pServer->fontSize);
         }
         else
         {
             printf("MAX players reached\n");
         }
     }
+    pthread_exit(NULL);
     /*
     for(pServer->nrOfClients; pServer->nrOfClients > 0; pServer->nrOfClients--)
     {
@@ -203,7 +236,7 @@ void MTcheckUdpClient(Server *pServer, Player data)
                 pServer->clients[i].id = data.id;
                 char buffer[32];
                 sprintf(buffer, "%d %s", data.id, data.name);
-                pServer->pClientText[i] = createText(pServer->pRenderer, 255, 255, 255, pServer->pFont, buffer, pServer->windowWidth/2, i*pServer->fontSize + 3*pServer->fontSize);
+                pServer->pClientText[i] = createText(pServer->pRenderer, 255, 255, 255, pServer->pFont, buffer, pServer->windowWidth / 2, i * pServer->fontSize + 3 * pServer->fontSize);
                 return;
             }
         }
@@ -212,6 +245,12 @@ void MTcheckUdpClient(Server *pServer, Player data)
 
 void *MTudpServer(void *pServerIn)
 {
+    pthread_setcancelstate(PTHREAD_CANCEL_ENABLE, NULL);
+
+    pthread_setcanceltype(PTHREAD_CANCEL_ASYNCHRONOUS, NULL);
+
+    pthread_testcancel();
+
     Server *pServer = (Server *)pServerIn;
     if (SDLNet_UDP_Recv(pServer->socketUDP, pServer->pRecieve) == 1)
     {
@@ -233,18 +272,19 @@ void *MTudpServer(void *pServerIn)
                 }
             }
         }
-
     }
+    pthread_exit(NULL);
 }
 
-void MTupdateServerScreen(Server *pServer){
+void MTupdateServerScreen(Server *pServer)
+{
     SDL_SetRenderDrawColor(pServer->pRenderer, 20, 20, 20, 255);
     SDL_RenderClear(pServer->pRenderer);
 
-    if(pServer->pJoining)
+    if (pServer->pJoining)
         drawText(pServer->pJoining, pServer->pRenderer);
-    for(int i = 0; i < MAX_PLAYERS; i++)
-        if(pServer->pClientText[i])
+    for (int i = 0; i < MAX_PLAYERS; i++)
+        if (pServer->pClientText[i])
             drawText(pServer->pClientText[i], pServer->pRenderer);
 
     SDL_RenderPresent(pServer->pRenderer);
@@ -270,26 +310,26 @@ void MTclose(Server *pServer)
     SDLNet_Quit();
 
     // CLOSE TTF
-    for(int i = 0; i < MAX_PLAYERS; i++)
-        if(pServer->pClientText[i])
+    for (int i = 0; i < MAX_PLAYERS; i++)
+        if (pServer->pClientText[i])
             freeText(pServer->pClientText[i]);
 
-    if(pServer->pJoining)
+    if (pServer->pJoining)
         freeText(pServer->pJoining);
-    
-    if(pServer->pIP)
+
+    if (pServer->pIP)
         freeText(pServer->pIP);
 
-    if(pServer->pFont)
+    if (pServer->pFont)
         TTF_CloseFont(pServer->pFont);
 
     TTF_Quit();
 
     // CLOSE SDL
-    if(pServer->pRenderer)
+    if (pServer->pRenderer)
         SDL_DestroyRenderer(pServer->pRenderer);
 
-    if(pServer->pWindow)
+    if (pServer->pWindow)
         SDL_DestroyWindow(pServer->pWindow);
 
     SDL_Quit();
