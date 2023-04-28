@@ -280,6 +280,7 @@ void run(Game *pGame)
                 movementPreviousTime = SDL_GetTicks();
                 if (pGame->config.multiThreading)
                 {
+                    static int idle = 0;
                     getPlayerData(pGame, pGame->players);
                     pthread_join(movementThread, NULL);
                     if (oldX != pGame->pPlayer->x || oldY != pGame->pPlayer->y || oldCharge != pGame->pPlayer->charge)
@@ -289,7 +290,9 @@ void run(Game *pGame)
                         oldCharge = pGame->pPlayer->charge;
                         // printf("Trying to send data\n");
                         sendData(pGame);
+                        idle = 1;
                     }
+                    else if (idle) { sendData(pGame); idle = 0; }
                     pthread_create(&movementThread, NULL, handleInput, (void *)pGame);
                 }
                 else
@@ -501,8 +504,54 @@ void *updateScreen(void *pGameIn)
     {
         if (pGame->players[i].x != 0)
         {
+            SDL_SetRenderDrawColor(pGame->pRenderer, 0, 0, 255, 255);
             SDL_RenderDrawRect(pGame->pRenderer, &pGame->players[i].rect);
             SDL_RenderCopy(pGame->pRenderer, pGame->pPlayerTexture, NULL, &pGame->players[i].rect);
+            SDL_RendererFlip flip = SDL_FLIP_HORIZONTAL;
+
+            static int frame = 0;
+            static int counter = 10;
+
+            switch (pGame->players[i].prevKeyPressed)
+            {
+            case 'W':
+                //changePlayerTexture(pGame->pRenderer, pGame->pWindow, &pGame->pPlayerTexture, 'W');
+                if (pGame->players[i].idle) { 
+                    frame = 0; counter = 10;
+                    SDL_RenderCopyEx(pGame->pRenderer, pGame->pPlayerTexture, &pGame->gSpriteClips[1], &pGame->players[i].rect, 0, NULL, SDL_FLIP_NONE);
+                } 
+                else SDL_RenderCopyEx(pGame->pRenderer, pGame->pPlayerTexture, &pGame->gSpriteClips[frame+3+8], &pGame->players[i].rect, 0, NULL, SDL_FLIP_NONE);
+                break;
+            case 'S':
+                //changePlayerTexture(pGame->pRenderer, pGame->pWindow, &pGame->pPlayerTexture, 'S');
+                if (pGame->players[i].idle) { 
+                    frame = 0; counter = 10;
+                    SDL_RenderCopyEx(pGame->pRenderer, pGame->pPlayerTexture, &pGame->gSpriteClips[0], &pGame->players[i].rect, 0, NULL, SDL_FLIP_NONE);
+                } 
+                else SDL_RenderCopyEx(pGame->pRenderer, pGame->pPlayerTexture, &pGame->gSpriteClips[frame+3], &pGame->players[i].rect, 0, NULL, SDL_FLIP_NONE);
+                break;
+            case 'D':
+                //changePlayerTexture(pGame->pRenderer, pGame->pWindow, &pGame->pPlayerTexture, 'D');
+                if (pGame->players[i].idle) { 
+                    frame = 0; counter = 10;
+                    SDL_RenderCopyEx(pGame->pRenderer, pGame->pPlayerTexture, &pGame->gSpriteClips[2], &pGame->players[i].rect, 0, NULL, SDL_FLIP_NONE);
+                } 
+                else SDL_RenderCopyEx(pGame->pRenderer, pGame->pPlayerTexture, &pGame->gSpriteClips[frame+3+8+8], &pGame->players[i].rect, 0, NULL, SDL_FLIP_NONE);
+                break;
+            case 'A':
+                //changePlayerTexture(pGame->pRenderer, pGame->pWindow, &pGame->pPlayerTexture, 'A');
+                if (pGame->players[i].idle) { 
+                    frame = 0; counter = 10;
+                    SDL_RenderCopyEx(pGame->pRenderer, pGame->pPlayerTexture, &pGame->gSpriteClips[2], &pGame->players[i].rect, 0, NULL, flip);
+                } 
+                else SDL_RenderCopyEx(pGame->pRenderer, pGame->pPlayerTexture, &pGame->gSpriteClips[frame+3+8+8], &pGame->players[i].rect, 0, NULL, flip);
+                break;
+                // default  : SDL_RenderCopy(pGame->pRenderer, pGame->pPlayerTexture, NULL, &pGame->pPlayer->rect); break;
+            }
+            if (counter > 0) counter--;
+            else { frame++; counter = 10; }
+            if (frame % 8 == 0) frame %= 8;
+
         }
     }
     if (pGame->state == OVER)

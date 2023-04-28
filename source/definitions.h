@@ -42,8 +42,8 @@ typedef enum playerState PlayerState;
 
 struct player
 {
-    Uint8 idle;
     char prevKeyPressed;
+    int idle;
     int charge;
     int id;                      // The id of the player (Multiplayer purposes)
     char name[MAX_NAME_LEN + 1]; // The name of the player (Multiplayer purposes)
