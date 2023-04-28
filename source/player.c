@@ -128,6 +128,7 @@ void *handleInput(void *pGameIn) // Game *pGame)
     {
         for (int i = 0; i < pGame->movementAmount; i++)
         {
+            pGame->pPlayer->idle = 1;
             if (currentKeyStates[SDL_SCANCODE_W] || currentKeyStates[SDL_SCANCODE_UP])
             {
 
@@ -135,6 +136,7 @@ void *handleInput(void *pGameIn) // Game *pGame)
                 {
                     pGame->pPlayer->prevKeyPressed = 'W';
                     movePlayer(pGame->pPlayer, 'W');
+                    pGame->pPlayer->idle = 0;
                 }
                 else
                 {
@@ -148,6 +150,7 @@ void *handleInput(void *pGameIn) // Game *pGame)
                 {
                     pGame->pPlayer->prevKeyPressed = 'A';
                     movePlayer(pGame->pPlayer, 'A');
+                    pGame->pPlayer->idle = 0;
                 }
                 else
                 {
@@ -161,6 +164,7 @@ void *handleInput(void *pGameIn) // Game *pGame)
                 {
                     pGame->pPlayer->prevKeyPressed = 'S';
                     movePlayer(pGame->pPlayer, 'S');
+                    pGame->pPlayer->idle = 0;
                 }
                 else
                 {
@@ -174,12 +178,13 @@ void *handleInput(void *pGameIn) // Game *pGame)
                 {
                     pGame->pPlayer->prevKeyPressed = 'D';
                     movePlayer(pGame->pPlayer, 'D');
+                    pGame->pPlayer->idle = 0;
                 }
                 else
                 {
                     // printf("COLLISION D\n");
                 }
-            }
+            }            
 
             /*
             if (!checkCollision(*pPlayer, map, *pPrevKeypressed))
@@ -407,4 +412,159 @@ int changePlayerTexture(SDL_Renderer *pRenderer, SDL_Window *pWindow, SDL_Textur
         return -1;
     }
     return 0;
+}
+
+void loadMedia(SDL_Renderer *pRenderer, SDL_Texture **pPlayerTexture, SDL_Rect gSpriteClips[]){
+    
+    SDL_Surface* gCatSurface = IMG_Load("resources/cat3.PNG");
+    *pPlayerTexture = SDL_CreateTextureFromSurface(pRenderer, gCatSurface);
+    
+    int w = 24, h = 24;
+
+    // IDLE
+    gSpriteClips[ 0 ].x = 36;
+    gSpriteClips[ 0 ].y = 33;
+    gSpriteClips[ 0 ].w = 24;
+    gSpriteClips[ 0 ].h = 24;
+    
+    gSpriteClips[ 1 ].x = 36;
+    gSpriteClips[ 1 ].y = 290;
+    gSpriteClips[ 1 ].w = 24;
+    gSpriteClips[ 1 ].h = 24;
+    
+    gSpriteClips[ 2 ].x = 5;
+    gSpriteClips[ 2 ].y = 482;
+    gSpriteClips[ 2 ].w = 24;
+    gSpriteClips[ 2 ].h = 24;
+
+    // RUNNING DOWN
+    int x[4] = {644, 676, 708, 740};
+    int y[2] = {32, 63};
+
+    gSpriteClips[ 3 ].x = x[0];
+    gSpriteClips[ 3 ].y = y[1];
+    gSpriteClips[ 3 ].w = w;
+    gSpriteClips[ 3 ].h = h;
+    
+    gSpriteClips[ 4 ].x = x[1];
+    gSpriteClips[ 4 ].y = y[1];
+    gSpriteClips[ 4 ].w = w;
+    gSpriteClips[ 4 ].h = h;
+    
+    gSpriteClips[ 5 ].x = x[2];
+    gSpriteClips[ 5 ].y = y[1];
+    gSpriteClips[ 5 ].w = w;
+    gSpriteClips[ 5 ].h = h;
+    
+    gSpriteClips[ 6 ].x = x[3];
+    gSpriteClips[ 6 ].y = y[1];
+    gSpriteClips[ 6 ].w = w;
+    gSpriteClips[ 6 ].h = h;
+    
+    gSpriteClips[ 7 ].x = x[0];
+    gSpriteClips[ 7 ].y = y[0];
+    gSpriteClips[ 7 ].w = w;
+    gSpriteClips[ 7 ].h = h;
+
+    gSpriteClips[ 8 ].x = x[1];
+    gSpriteClips[ 8 ].y = y[0];
+    gSpriteClips[ 8 ].w = w;
+    gSpriteClips[ 8 ].h = h;
+    
+    gSpriteClips[ 9 ].x = x[2];
+    gSpriteClips[ 9 ].y = y[0];
+    gSpriteClips[ 9 ].w = w;
+    gSpriteClips[ 9 ].h = h;
+    
+    gSpriteClips[ 10 ].x = x[3];
+    gSpriteClips[ 10 ].y = y[0];
+    gSpriteClips[ 10 ].w = w;
+    gSpriteClips[ 10 ].h = h;   
+
+    // RUNNING UP
+    y[0] = 289, y[1] = 321;
+
+    gSpriteClips[ 11 ].x = x[0];
+    gSpriteClips[ 11 ].y = y[1];
+    gSpriteClips[ 11 ].w = w;
+    gSpriteClips[ 11 ].h = h;
+    
+    gSpriteClips[ 12 ].x = x[1];
+    gSpriteClips[ 12 ].y = y[1];
+    gSpriteClips[ 12 ].w = w;
+    gSpriteClips[ 12 ].h = h;
+    
+    gSpriteClips[ 13 ].x = x[2];
+    gSpriteClips[ 13 ].y = y[1];
+    gSpriteClips[ 13 ].w = w;
+    gSpriteClips[ 13 ].h = h;
+
+    gSpriteClips[ 14 ].x = x[3];
+    gSpriteClips[ 14 ].y = y[1];
+    gSpriteClips[ 14 ].w = w;
+    gSpriteClips[ 14 ].h = h;
+
+    gSpriteClips[ 15 ].x = x[0];
+    gSpriteClips[ 15 ].y = y[0];
+    gSpriteClips[ 15 ].w = w;
+    gSpriteClips[ 15 ].h = h;
+
+    gSpriteClips[ 16 ].x = x[1];
+    gSpriteClips[ 16 ].y = y[0];
+    gSpriteClips[ 16 ].w = w;
+    gSpriteClips[ 16 ].h = h;
+
+    gSpriteClips[ 17 ].x = x[2];
+    gSpriteClips[ 17 ].y = y[0];
+    gSpriteClips[ 17 ].w = w;
+    gSpriteClips[ 17 ].h = h;
+
+    gSpriteClips[ 18 ].x = x[3];
+    gSpriteClips[ 18 ].y = y[0];
+    gSpriteClips[ 18 ].w = w;
+    gSpriteClips[ 18 ].h = h; 
+
+    // RUNNING LEFT/RIGHT
+    x[0] = 642, x[1] = 674, x[2] = 706, x[3] = 738;
+    y[0] = 482, y[1] = 512;
+
+    gSpriteClips[ 19 ].x = x[0];
+    gSpriteClips[ 19 ].y = y[1];
+    gSpriteClips[ 19 ].w = w;
+    gSpriteClips[ 19 ].h = h;
+    
+    gSpriteClips[ 20 ].x = x[1];
+    gSpriteClips[ 20 ].y = y[1];
+    gSpriteClips[ 20 ].w = w;
+    gSpriteClips[ 20 ].h = h;
+    
+    gSpriteClips[ 21 ].x = x[2];
+    gSpriteClips[ 21 ].y = y[1];
+    gSpriteClips[ 21 ].w = w;
+    gSpriteClips[ 21 ].h = h;
+    
+    gSpriteClips[ 22 ].x = x[3];
+    gSpriteClips[ 22 ].y = y[1];
+    gSpriteClips[ 22 ].w = w;
+    gSpriteClips[ 22 ].h = h;
+    
+    gSpriteClips[ 23 ].x = x[0];
+    gSpriteClips[ 23 ].y = y[0];
+    gSpriteClips[ 23 ].w = w;
+    gSpriteClips[ 23 ].h = h;
+    
+    gSpriteClips[ 24 ].x = x[1];
+    gSpriteClips[ 24 ].y = y[0];
+    gSpriteClips[ 24 ].w = w;
+    gSpriteClips[ 24 ].h = h;
+    
+    gSpriteClips[ 25 ].x = x[2];
+    gSpriteClips[ 25 ].y = y[0];
+    gSpriteClips[ 25 ].w = w;
+    gSpriteClips[ 25 ].h = h;
+    
+    gSpriteClips[ 26 ].x = x[3];
+    gSpriteClips[ 26 ].y = y[0];
+    gSpriteClips[ 26 ].w = w;
+    gSpriteClips[ 26 ].h = h;  
 }

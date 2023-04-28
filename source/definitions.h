@@ -43,6 +43,7 @@ typedef enum playerState PlayerState;
 struct player
 {
     char prevKeyPressed;
+    int idle;
     int charge;
     int id;                      // The id of the player (Multiplayer purposes)
     char name[MAX_NAME_LEN + 1]; // The name of the player (Multiplayer purposes)
@@ -112,6 +113,7 @@ struct game
 
     SDL_Texture *pTileTextures[TILES];
     SDL_Texture *pPlayerTexture;
+    SDL_Rect gSpriteClips[27];
 
     int windowWidth, windowHeight;
     int movementAmount;

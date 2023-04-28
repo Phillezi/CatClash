@@ -229,6 +229,9 @@ int init(Game *pGame)
     }
     SDL_SetWindowIcon(pGame->pWindow, pSurface);
     SDL_FreeSurface(pSurface);
+    
+    loadMedia(pGame->pRenderer, &pGame->pPlayerTexture, pGame->gSpriteClips);
+    pGame->pPlayer->idle = 1;    
     return 0;
 }
 
@@ -277,6 +280,7 @@ void run(Game *pGame)
                 movementPreviousTime = SDL_GetTicks();
                 if (pGame->config.multiThreading)
                 {
+                    static int idle = 0;
                     getPlayerData(pGame, pGame->players);
                     pthread_join(movementThread, NULL);
                     if (oldX != pGame->pPlayer->x || oldY != pGame->pPlayer->y || oldCharge != pGame->pPlayer->charge)
@@ -286,7 +290,9 @@ void run(Game *pGame)
                         oldCharge = pGame->pPlayer->charge;
                         // printf("Trying to send data\n");
                         sendData(pGame);
+                        idle = 1;
                     }
+                    else if (idle) { sendData(pGame); idle = 0; } // Send one last data packet så other players know you are idle
                     pthread_create(&movementThread, NULL, handleInput, (void *)pGame);
                 }
                 else
@@ -423,29 +429,50 @@ void *updateScreen(void *pGameIn)
     }
     if (pGame->pPlayer)
     {
+        static int frame = 0;
+        static int counter = 10;
         SDL_RendererFlip flip = SDL_FLIP_HORIZONTAL;
         SDL_SetRenderDrawColor(pGame->pRenderer, 0, 0, 0, 255);
         SDL_RenderDrawRect(pGame->pRenderer, &pGame->pPlayer->rect);
         switch (pGame->pPlayer->prevKeyPressed)
         {
         case 'W':
-            changePlayerTexture(pGame->pRenderer, pGame->pWindow, &pGame->pPlayerTexture, 'W');
-            SDL_RenderCopy(pGame->pRenderer, pGame->pPlayerTexture, NULL, &pGame->pPlayer->rect);
+            //changePlayerTexture(pGame->pRenderer, pGame->pWindow, &pGame->pPlayerTexture, 'W');
+            if (pGame->pPlayer->idle) { 
+                frame = 0; counter = 10;
+                SDL_RenderCopyEx(pGame->pRenderer, pGame->pPlayerTexture, &pGame->gSpriteClips[1], &pGame->pPlayer->rect, 0, NULL, SDL_FLIP_NONE);
+            } 
+            else SDL_RenderCopyEx(pGame->pRenderer, pGame->pPlayerTexture, &pGame->gSpriteClips[frame+3+8], &pGame->pPlayer->rect, 0, NULL, SDL_FLIP_NONE);
             break;
         case 'S':
-            changePlayerTexture(pGame->pRenderer, pGame->pWindow, &pGame->pPlayerTexture, 'S');
-            SDL_RenderCopy(pGame->pRenderer, pGame->pPlayerTexture, NULL, &pGame->pPlayer->rect);
+            //changePlayerTexture(pGame->pRenderer, pGame->pWindow, &pGame->pPlayerTexture, 'S');
+            if (pGame->pPlayer->idle) { 
+                frame = 0; counter = 10;
+                SDL_RenderCopyEx(pGame->pRenderer, pGame->pPlayerTexture, &pGame->gSpriteClips[0], &pGame->pPlayer->rect, 0, NULL, SDL_FLIP_NONE);
+            } 
+            else SDL_RenderCopyEx(pGame->pRenderer, pGame->pPlayerTexture, &pGame->gSpriteClips[frame+3], &pGame->pPlayer->rect, 0, NULL, SDL_FLIP_NONE);
             break;
         case 'D':
-            changePlayerTexture(pGame->pRenderer, pGame->pWindow, &pGame->pPlayerTexture, 'D');
-            SDL_RenderCopy(pGame->pRenderer, pGame->pPlayerTexture, NULL, &pGame->pPlayer->rect);
+            //changePlayerTexture(pGame->pRenderer, pGame->pWindow, &pGame->pPlayerTexture, 'D');
+            if (pGame->pPlayer->idle) { 
+                frame = 0; counter = 10;
+                SDL_RenderCopyEx(pGame->pRenderer, pGame->pPlayerTexture, &pGame->gSpriteClips[2], &pGame->pPlayer->rect, 0, NULL, SDL_FLIP_NONE);
+            } 
+            else SDL_RenderCopyEx(pGame->pRenderer, pGame->pPlayerTexture, &pGame->gSpriteClips[frame+3+8+8], &pGame->pPlayer->rect, 0, NULL, SDL_FLIP_NONE);
             break;
         case 'A':
-            changePlayerTexture(pGame->pRenderer, pGame->pWindow, &pGame->pPlayerTexture, 'A');
-            SDL_RenderCopy(pGame->pRenderer, pGame->pPlayerTexture, NULL, &pGame->pPlayer->rect);
+            //changePlayerTexture(pGame->pRenderer, pGame->pWindow, &pGame->pPlayerTexture, 'A');
+            if (pGame->pPlayer->idle) { 
+                frame = 0; counter = 10;
+                SDL_RenderCopyEx(pGame->pRenderer, pGame->pPlayerTexture, &pGame->gSpriteClips[2], &pGame->pPlayer->rect, 0, NULL, flip);
+            } 
+            else SDL_RenderCopyEx(pGame->pRenderer, pGame->pPlayerTexture, &pGame->gSpriteClips[frame+3+8+8], &pGame->pPlayer->rect, 0, NULL, flip);
             break;
             // default  : SDL_RenderCopy(pGame->pRenderer, pGame->pPlayerTexture, NULL, &pGame->pPlayer->rect); break;
         }
+        if (counter > 0) counter--;
+        else { frame++; counter = 10; }
+        if (frame % 8 == 0) frame %= 8;
     }
 
     for (int i = (((pGame->pPlayer->y) / pGame->map[0].wall.w) * MAPSIZE) + ((pGame->pPlayer->x - 1) / pGame->map[0].wall.w) + 2; i < MAPSIZE * MAPSIZE; i++)
@@ -477,8 +504,53 @@ void *updateScreen(void *pGameIn)
     {
         if (pGame->players[i].x != 0)
         {
+            SDL_SetRenderDrawColor(pGame->pRenderer, 0, 0, 255, 255);
             SDL_RenderDrawRect(pGame->pRenderer, &pGame->players[i].rect);
-            SDL_RenderCopy(pGame->pRenderer, pGame->pPlayerTexture, NULL, &pGame->players[i].rect);
+            SDL_RendererFlip flip = SDL_FLIP_HORIZONTAL;
+
+            static int frame[MAX_PLAYERS] = {0};
+            static int counter[MAX_PLAYERS] = {10,10,10,10,10};
+
+            switch (pGame->players[i].prevKeyPressed)
+            {
+            case 'W':
+                //changePlayerTexture(pGame->pRenderer, pGame->pWindow, &pGame->pPlayerTexture, 'W');
+                if (pGame->players[i].idle) { 
+                    frame[i] = 0; counter[i] = 10;
+                    SDL_RenderCopyEx(pGame->pRenderer, pGame->pPlayerTexture, &pGame->gSpriteClips[1], &pGame->players[i].rect, 0, NULL, SDL_FLIP_NONE);
+                } 
+                else SDL_RenderCopyEx(pGame->pRenderer, pGame->pPlayerTexture, &pGame->gSpriteClips[frame[i]+3+8], &pGame->players[i].rect, 0, NULL, SDL_FLIP_NONE);
+                break;
+            case 'S':
+                //changePlayerTexture(pGame->pRenderer, pGame->pWindow, &pGame->pPlayerTexture, 'S');
+                if (pGame->players[i].idle) { 
+                    frame[i] = 0; counter[i] = 10;
+                    SDL_RenderCopyEx(pGame->pRenderer, pGame->pPlayerTexture, &pGame->gSpriteClips[0], &pGame->players[i].rect, 0, NULL, SDL_FLIP_NONE);
+                } 
+                else SDL_RenderCopyEx(pGame->pRenderer, pGame->pPlayerTexture, &pGame->gSpriteClips[frame[i]+3], &pGame->players[i].rect, 0, NULL, SDL_FLIP_NONE);
+                break;
+            case 'D':
+                //changePlayerTexture(pGame->pRenderer, pGame->pWindow, &pGame->pPlayerTexture, 'D');
+                if (pGame->players[i].idle) { 
+                    frame[i] = 0; counter[i] = 10;
+                    SDL_RenderCopyEx(pGame->pRenderer, pGame->pPlayerTexture, &pGame->gSpriteClips[2], &pGame->players[i].rect, 0, NULL, SDL_FLIP_NONE);
+                } 
+                else SDL_RenderCopyEx(pGame->pRenderer, pGame->pPlayerTexture, &pGame->gSpriteClips[frame[i]+3+8+8], &pGame->players[i].rect, 0, NULL, SDL_FLIP_NONE);
+                break;
+            case 'A':
+                //changePlayerTexture(pGame->pRenderer, pGame->pWindow, &pGame->pPlayerTexture, 'A');
+                if (pGame->players[i].idle) { 
+                    frame[i] = 0; counter[i] = 10;
+                    SDL_RenderCopyEx(pGame->pRenderer, pGame->pPlayerTexture, &pGame->gSpriteClips[2], &pGame->players[i].rect, 0, NULL, flip);
+                } 
+                else SDL_RenderCopyEx(pGame->pRenderer, pGame->pPlayerTexture, &pGame->gSpriteClips[frame[i]+3+8+8], &pGame->players[i].rect, 0, NULL, flip);
+                break;
+                // default  : SDL_RenderCopy(pGame->pRenderer, pGame->pPlayerTexture, NULL, &pGame->pPlayer->rect); break;
+            }
+            if (counter[i] > 0) counter[i]--;
+            else { frame[i]++; counter[i] = 10; }
+            if (frame[i] % 8 == 0) frame[i] %= 8;
+
         }
     }
     if (pGame->state == OVER)
