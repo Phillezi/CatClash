@@ -23,6 +23,7 @@ int main(int argv, char **args)
 {
     Game game;
     pthread_t serverThread;
+    char mapName[31];
     if (init(&game))
     {
         close(&game);
@@ -35,14 +36,14 @@ int main(int argv, char **args)
         case 0:
             // if (mapSelection(&game))
             //     break;
-            if (testSelectMenu(&game))
+            if (testSelectMenu(&game, NULL))
                 break;
             run(&game);
             break;
         case 1:
             // if (mapSelection(&game))
             //     break;
-            if (testSelectMenu(&game))
+            if (testSelectMenu(&game, NULL))
                 break;
             levelEditor(&game);
             break;
@@ -60,9 +61,9 @@ int main(int argv, char **args)
                         break;
             */
         case 5:
-            if (testSelectMenu(&game))
+            if (testSelectMenu(&game, mapName))
                 break;
-            pthread_create(&serverThread, NULL, MThostServer, (void *)game.map);
+            pthread_create(&serverThread, NULL, MThostServer, (void *)mapName);
             pthread_detach(serverThread);
             break;
 

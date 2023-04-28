@@ -4,6 +4,7 @@
 #include "player.h"
 #include "init.h"
 #include <stdbool.h>
+#include <string.h>
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_image.h>
 #include <SDL2/SDL_ttf.h>
@@ -523,7 +524,7 @@ int getStringFromUser(char text[], SDL_Event event)
     return strEnd;
 }
 
-int testSelectMenu(Game *pGame)
+int testSelectMenu(Game *pGame, char *mapName)
 {
     int len = 0;
     int selected = 0;
@@ -636,5 +637,6 @@ int testSelectMenu(Game *pGame)
     for (int i = 0; i < len; i++)
         freeText(pText[i]);
     freeTextList(strArr, len);
+    strcpy(mapName, strArr[selected]);
     return 0;
 }

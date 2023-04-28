@@ -1,12 +1,12 @@
 #include "multiThreadedServer.h"
 
-void *MThostServer(void *map)
+void *MThostServer(void *mapName)
 {
     Server server;
     pthread_t tcpThread;
     pthread_t udpThread;
     bool exit = false;
-    memcpy(server.map, (Tile *)map, sizeof((Tile *)map));
+    initMap(server.map, (char *)mapName, 16);
     if (!MTsetup(&server))
     {
         while (!exit)

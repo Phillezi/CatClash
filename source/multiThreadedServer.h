@@ -13,7 +13,7 @@
 #define MAX_PLAYERS 5
 #define PORT 1234
 
-void *MThostServer(void *map);
+void *MThostServer(void *mapName);
 void debugPrint();
 int MTsetup(Server *pServer);
 
