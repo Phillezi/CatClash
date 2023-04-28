@@ -52,9 +52,13 @@ void closeThreads(void *pThreadsIn)
     Threads *pT = (Threads *)pThreadsIn;
     printf("Cleaning up Threads...\n");
     pthread_cancel(pT->tcp);
+    printf("Cancelling TCP...\n");
     pthread_cancel(pT->udp);
+    printf("Cancelling UDP...\n");
     pthread_join(pT->tcp, NULL);
+    printf("Done: Cancelling TCP!\n");
     pthread_join(pT->udp, NULL);
+    printf("Done: Cancelling UDP!\n");
     printf("Done: Cleaning up Threads!\n");
     printf("Cleaning up server...\n");
     MTclose(&pT->server);
@@ -168,6 +172,8 @@ void *MTtcpServer(void *pServerIn)
 
     pthread_setcanceltype(PTHREAD_CANCEL_ASYNCHRONOUS, NULL);
 
+    pthread_cleanup_push(NULL, NULL);
+
     pthread_testcancel();
 
     TCPsocket tmpClient = SDLNet_TCP_Accept(pServer->socketTCP);
@@ -190,6 +196,7 @@ void *MTtcpServer(void *pServerIn)
             printf("MAX players reached\n");
         }
     }
+    pthread_cleanup_pop(0);
     pthread_exit(NULL);
     /*
     for(pServer->nrOfClients; pServer->nrOfClients > 0; pServer->nrOfClients--)
@@ -254,6 +261,8 @@ void *MTudpServer(void *pServerIn)
 
     pthread_setcanceltype(PTHREAD_CANCEL_ASYNCHRONOUS, NULL);
 
+    pthread_cleanup_push(NULL, NULL);
+
     pthread_testcancel();
 
     Server *pServer = (Server *)pServerIn;
@@ -278,6 +287,7 @@ void *MTudpServer(void *pServerIn)
             }
         }
     }
+    pthread_cleanup_pop(0);
     pthread_exit(NULL);
 }
 
@@ -312,7 +322,7 @@ void MTclose(Server *pServer)
     if (pServer->socketUDP)
         SDLNet_UDP_Close(pServer->socketUDP);
 
-    SDLNet_Quit();
+    //SDLNet_Quit();
 
     // CLOSE TTF
     for (int i = 0; i < MAX_PLAYERS; i++)
@@ -328,7 +338,7 @@ void MTclose(Server *pServer)
     if (pServer->pFont)
         TTF_CloseFont(pServer->pFont);
 
-    TTF_Quit();
+    //TTF_Quit();
 
     // CLOSE SDL
     if (pServer->pRenderer)
@@ -337,5 +347,5 @@ void MTclose(Server *pServer)
     if (pServer->pWindow)
         SDL_DestroyWindow(pServer->pWindow);
 
-    SDL_Quit();
+    //SDL_Quit();
 }

@@ -48,12 +48,12 @@ int main(int argv, char **args)
             levelEditor(&game);
             break;
         case 2:
-            close(&game);
             if (serverThread)
             {
                 pthread_cancel(serverThread);
                 pthread_join(serverThread, NULL);
             }
+            close(&game);
             return 0;
             break;
         case 3:
@@ -68,7 +68,6 @@ int main(int argv, char **args)
         case 5:
             if (testSelectMenu(&game, mapName))
                 break;
-            // MThostServer((void *)mapName);
             pthread_create(&serverThread, NULL, MThostServer, (void *)mapName);
             break;
 
@@ -382,7 +381,10 @@ void close(Game *pGame)
     if (pGame->ui.pOverText)
         freeText(pGame->ui.pOverText);
     if (pGame->ui.pFpsText)
-        freeText(pGame->ui.pFpsText);
+        freeText(pGame->ui.pFpsText);  
+    TTF_Quit();
+    
+    SDLNet_Quit();
 
     if (pGame->pRenderer)
         SDL_DestroyRenderer(pGame->pRenderer);
