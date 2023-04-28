@@ -353,6 +353,8 @@ void translatePositionToScreen(Game *pGame)
 
 int changePlayerTexture(SDL_Renderer *pRenderer, SDL_Window *pWindow, SDL_Texture **pTexturePlayer, char direction)
 {
+    static bool textureLoaded = false; 
+
     SDL_Rect srcRect;
     srcRect.x = 611; // test img X starting point
     srcRect.y = 485; // test img Y starting point
@@ -380,17 +382,21 @@ int changePlayerTexture(SDL_Renderer *pRenderer, SDL_Window *pWindow, SDL_Textur
             break;
     }
 
-    SDL_Surface *pSurface = IMG_Load("resources/cat3.png");
-    if (!pSurface)
-    {
-        return -1;
+    static SDL_Surface *pSurface = NULL; // static pointer to SDL_Surface to hold the texture
+    if (!textureLoaded) { 
+        pSurface = IMG_Load("resources/cat3.png");
+        if (!pSurface)
+        {
+            return -1;
+        }
+        textureLoaded = true; // set the flag to indicate that the texture has been loaded
     }
+
     SDL_Surface *pCroppedSurface = SDL_CreateRGBSurface(0, 24, 24, pSurface->format->BitsPerPixel,
                                                         pSurface->format->Rmask, pSurface->format->Gmask,
                                                         pSurface->format->Bmask, pSurface->format->Amask);
 
     SDL_BlitSurface(pSurface, &srcRect, pCroppedSurface, NULL);
-    SDL_FreeSurface(pSurface);
 
     *pTexturePlayer = SDL_CreateTextureFromSurface(pRenderer, pCroppedSurface);
     SDL_FreeSurface(pCroppedSurface);
