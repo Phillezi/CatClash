@@ -30,14 +30,19 @@ void *MThostServer(void *mapName)
                     exit = true;
                     break;
                 }
+                else if (event.type == SDL_WINDOWEVENT && event.window.event == SDL_WINDOWEVENT_CLOSE)
+                {
+
+                    if (SDL_GetWindowID(threads.server.pWindow) == event.window.windowID)
+                    {
+                        exit = true;
+                        break;
+                    }
+                }
             }
         }
     }
-    pthread_cancel(threads.tcp);
-    pthread_cancel(threads.udp);
-    pthread_join(threads.tcp, NULL);
-    pthread_join(threads.udp, NULL);
-    MTclose(&threads.server);
+    closeThreads((void *)&threads);
     pthread_cleanup_pop(0);
     pthread_exit(NULL);
 }

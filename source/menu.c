@@ -45,7 +45,20 @@ int menu(Game *pGame)
                 freeText(pHost);
                 return 2;
             }
+            else if (event.type == SDL_WINDOWEVENT && event.window.event == SDL_WINDOWEVENT_CLOSE)
+            {
 
+                if (SDL_GetWindowID(pGame->pWindow) == event.window.windowID)
+                {
+                    freeText(pPlay);
+                    freeText(pLvlEdit);
+                    freeText(pQuit);
+                    freeText(pJoinServer);
+                    freeText(pCatSelect);
+                    freeText(pHost);
+                    return 2;
+                }
+            }
             else if (event.type == SDL_KEYDOWN)
             {
                 if (event.key.keysym.sym == SDLK_UP)
