@@ -117,7 +117,7 @@ void *handleInput(void *pGameIn) // Game *pGame)
             else
             {
                 damage = pGame->pPlayer->charge * 2;
-                pGame->pPlayer->charge = 0;
+                pGame->pPlayer->charge = 1;
                 break;
             }
         }
