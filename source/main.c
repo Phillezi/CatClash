@@ -10,13 +10,12 @@
 #include "levelEditor.h"
 #include "pthread.h"
 // #include "client.h"
+#include "clientUDP.h"
 
 int init(Game *pGame);
 void run(Game *pGame);
 void close(Game *pGame);
 void *updateScreen(void *pGameIn);
-int changePlayerTexture(SDL_Renderer *pRenderer, SDL_Window *pWindow, SDL_Texture **pTexturePlayer, char direction);
-
 
 int main(int argv, char **args)
 {
@@ -51,7 +50,12 @@ int main(int argv, char **args)
         case 3:
             if (joinServerMenu(&game))
                 break;
+            run(&game);
             break;
+            /*        case 4:
+                        if(joinServerMenu(&game))
+                        break;
+            */
         default:
             break;
         }
@@ -86,8 +90,8 @@ int init(Game *pGame)
         return 1;
     }
 
-    pGame->windowWidth = (float)displayMode.w * 0.7; // 70% of avaliable space
-    pGame->windowHeight = (float)displayMode.h * 0.7;
+    pGame->windowWidth = (float)displayMode.w * 0.4; // 70% of avaliable space
+    pGame->windowHeight = (float)displayMode.h * 0.4;
 
     pGame->world.tileSize = (pGame->windowHeight / MAPSIZE) * 4;
 
@@ -216,8 +220,15 @@ int init(Game *pGame)
 
 void run(Game *pGame)
 {
+    pGame->pPacket = SDLNet_AllocPacket(512);
+    if (pGame->socketDesc = SDLNet_UDP_Open(0))
+    {
+        printf("UDP init\n");
+    }
     // if(pGame->config.multiThreading)
     // pthread_t renderThread;
+    int oldX = 0;
+    int oldY = 0;
     pthread_t movementThread;
     bool exit = false;
     pGame->config.fps = 60;
@@ -251,7 +262,15 @@ void run(Game *pGame)
                 movementPreviousTime = SDL_GetTicks();
                 if (pGame->config.multiThreading)
                 {
+                    getPlayerData(pGame, pGame->players);
                     pthread_join(movementThread, NULL);
+                    if (oldX != pGame->pPlayer->x || oldY != pGame->pPlayer->y)
+                    {
+                        oldX = pGame->pPlayer->x;
+                        oldY = pGame->pPlayer->y;
+                        // printf("Trying to send data\n");
+                        sendData(pGame);
+                    }
                     pthread_create(&movementThread, NULL, handleInput, (void *)pGame);
                 }
                 else
@@ -288,6 +307,14 @@ void run(Game *pGame)
 
 void close(Game *pGame)
 {
+    if (pGame->pPacket)
+    {
+        SDLNet_FreePacket(pGame->pPacket);
+    }
+    if (pGame->socketDesc)
+    {
+        SDLNet_UDP_Close(pGame->socketDesc);
+    }
     if (pGame->pPlayer)
     {
         destroyPlayer(pGame->pPlayer);
@@ -398,6 +425,12 @@ void *updateScreen(void *pGameIn)
             }
         }
     }
+    SDL_SetRenderDrawColor(pGame->pRenderer, 0, 0, 255, 255);
+    translatePositionToScreen(pGame);
+    for(int i = 0; i < MAX_PLAYERS; i++){
+        SDL_RenderDrawRect(pGame->pRenderer, &pGame->players[i].rect);
+        SDL_RenderCopy(pGame->pRenderer, pGame->pPlayerTexture, NULL, &pGame->players[i].rect);
+    }
     if (pGame->state == OVER)
     {
         drawText(pGame->ui.pOverText, pGame->pRenderer);
@@ -411,56 +444,4 @@ void *updateScreen(void *pGameIn)
     SDL_RenderFillRect(pGame->pRenderer, &pGame->ui.chargebar);
 
     SDL_RenderPresent(pGame->pRenderer);
-}
-
-
-int changePlayerTexture(SDL_Renderer *pRenderer, SDL_Window *pWindow, SDL_Texture **pTexturePlayer, char direction)
-{
-    SDL_Rect srcRect;
-    srcRect.x = 611; // test img X starting point
-    srcRect.y = 485; // test img Y starting point
-    srcRect.w = 24;
-    srcRect.h = 24;
-
-    switch (direction) {
-        case 'W':
-            srcRect.x = 520;
-            srcRect.y = 323;
-            break;
-        case 'S':
-            srcRect.x = 613;
-            srcRect.y = 33;
-            break;
-        case 'D':
-            srcRect.x = 611;
-            srcRect.y = 485;
-            break;
-        case 'A':
-            srcRect.x = 611;
-            srcRect.y = 100;
-            break;
-        default:
-            return;
-    }
-
-    SDL_Surface *pSurface = IMG_Load("resources/cat3.png");
-    if (!pSurface)
-    {
-        return -1;
-    }
-    SDL_Surface *pCroppedSurface = SDL_CreateRGBSurface(0, 24, 24, pSurface->format->BitsPerPixel,
-                                                        pSurface->format->Rmask, pSurface->format->Gmask,
-                                                        pSurface->format->Bmask, pSurface->format->Amask);
-
-    SDL_BlitSurface(pSurface, &srcRect, pCroppedSurface, NULL);
-    SDL_FreeSurface(pSurface);
-
-    *pTexturePlayer = SDL_CreateTextureFromSurface(pRenderer, pCroppedSurface);
-    SDL_FreeSurface(pCroppedSurface);
-
-    if (!pTexturePlayer)
-    {
-        return -1;
-    }
-    return 0;
 }

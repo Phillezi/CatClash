@@ -184,6 +184,20 @@ int initMap(Tile map[], char filepath[], int tileSize)
     }
     return 0;
 }
+
+int initMapFromTCP(Tile map[], int tileSize)
+{
+        for (int row = 0; row < MAPSIZE; row++)
+        {
+            for (int col = 0; col < MAPSIZE; col++)
+            {
+                map[row * MAPSIZE + col] = createTile(col, row, map[row * MAPSIZE + col].type, tileSize);
+                map[row * MAPSIZE + col].x = map[row * MAPSIZE + col].wall.x;
+                map[row * MAPSIZE + col].y = map[row * MAPSIZE + col].wall.y;
+            }
+        }
+    return 0;
+}
 /*
     createTile:
     creates a tile

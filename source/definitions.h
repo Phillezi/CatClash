@@ -20,6 +20,7 @@
 #define MAX_CHARGE 100
 #define TILE_WIDTH 32
 #define TILE_HEIGHT 32
+#define MAX_PLAYERS 5
 
 // ADTS
 
@@ -36,6 +37,9 @@ typedef struct tile Tile;
     includes: int id, str name (max 20 chars + NULL),
     int hp, int x, y, SDL_Rect rect
 */
+enum playerState{ALIVE, DEAD};
+typedef enum playerState PlayerState;
+
 struct player
 {
     char prevKeyPressed;
@@ -43,6 +47,7 @@ struct player
     int id;                      // The id of the player (Multiplayer purposes)
     char name[MAX_NAME_LEN + 1]; // The name of the player (Multiplayer purposes)
     int hp;                      // Health-points
+    PlayerState state;           // State of the player (alive or dead)
     int x, y;                    // Position in game
     SDL_Rect rect;               // Screen position and size
 };
@@ -89,6 +94,16 @@ enum gameState
 };
 typedef enum gameState GameState;
 
+typedef struct playerNet
+{
+    UDPsocket socketUDP;
+    TCPsocket socketTCP;
+    char serverIP[16];
+    int port;
+    int id;
+    int x, y;
+} PlayerNet;
+
 struct game
 {
     UiE ui;
@@ -105,7 +120,10 @@ struct game
     IPaddress serverAddress;
     UDPpacket *pPacket;
 
+    PlayerNet *pClient;
+
     //    Player player;
+    Player players[MAX_PLAYERS];
     Player *pPlayer;
     Tile map[MAPSIZE * MAPSIZE];
     World world;
@@ -114,5 +132,40 @@ struct game
     Config config;
 };
 typedef struct game Game;
+
+// ------------------------------ SERVER ------------------------------------
+
+enum serverState{JOINING, RUNNING, CLOSED};
+typedef enum serverState ServerState;
+
+struct info {
+    IPaddress address;
+    int id;
+}; 
+typedef struct info Info;
+
+struct server {
+    SDL_Window *pWindow;
+    SDL_Renderer *pRenderer;
+    TTF_Font *pFont;
+    Text *pSpace, *pClosed, *pJoining, *pRunning, *pIP;
+
+    ServerState state;
+    int windowWidth;
+    int windowHeight;
+    int fontSize;
+
+    int nrOfClients;
+    Info clients[MAX_PLAYERS];
+
+    TCPsocket socketTCP;
+    IPaddress TCPip;
+    SDLNet_SocketSet socketSetTCP;
+
+    UDPsocket socketUDP;   // Socket descriptor
+    UDPpacket *pRecieve;    // Pointer to packet memory
+    UDPpacket *pSent;           
+}; 
+typedef struct server Server;
 
 #endif
