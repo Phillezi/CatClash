@@ -94,6 +94,7 @@ void *handleInput(void *pGameIn) // Game *pGame)
     }
     if (currentKeyStates[SDL_SCANCODE_SPACE])
     {
+        pGame->pPlayer->idle = 1;
         pGame->state = START;
         if (pGame->pPlayer->charge < MAX_CHARGE)
         {
@@ -113,6 +114,7 @@ void *handleInput(void *pGameIn) // Game *pGame)
             if (checkCollision(*pGame->pPlayer, pGame->map, pGame->pPlayer->prevKeyPressed, pGame->world.tileSize) <= 0)
             {
                 movePlayer(pGame->pPlayer, pGame->pPlayer->prevKeyPressed);
+                pGame->pPlayer->idle = 0;
             }
             else
             {
