@@ -348,5 +348,6 @@ void translatePositionToScreen(Game *pGame)
 
         pGame->players[i].rect.h = (pGame->world.tileSize / 2) + ((pGame->world.tileSize / 2) * (1 - (float)pGame->players[i].charge / MAX_CHARGE));
         pGame->players[i].rect.y += pGame->world.tileSize - pGame->players[i].rect.h;
+        pGame->players[i].rect.w = pGame->world.tileSize;
     }
 }

@@ -11,6 +11,7 @@
 #include "pthread.h"
 // #include "client.h"
 #include "clientUDP.h"
+#include "multiThreadedServer.h"
 
 int init(Game *pGame);
 void run(Game *pGame);
@@ -21,6 +22,7 @@ void changePlayerTexture(SDL_Texture *playerTexture, SDL_Renderer *renderer, cha
 int main(int argv, char **args)
 {
     Game game;
+    pthread_t serverThread;
     if (init(&game))
     {
         close(&game);
@@ -57,6 +59,13 @@ int main(int argv, char **args)
                         if(joinServerMenu(&game))
                         break;
             */
+        case 5:
+            if (testSelectMenu(&game))
+                break;
+            pthread_create(&serverThread, NULL, MThostServer, (void *)game.map);
+            pthread_detach(serverThread);
+            break;
+
         default:
             break;
         }
@@ -230,6 +239,7 @@ void run(Game *pGame)
     // pthread_t renderThread;
     int oldX = 0;
     int oldY = 0;
+    int oldCharge = 0;
     pthread_t movementThread;
     bool exit = false;
     pGame->config.fps = 60;
@@ -265,17 +275,29 @@ void run(Game *pGame)
                 {
                     getPlayerData(pGame, pGame->players);
                     pthread_join(movementThread, NULL);
-                    if (oldX != pGame->pPlayer->x || oldY != pGame->pPlayer->y)
+                    if (oldX != pGame->pPlayer->x || oldY != pGame->pPlayer->y || oldCharge != pGame->pPlayer->charge)
                     {
                         oldX = pGame->pPlayer->x;
                         oldY = pGame->pPlayer->y;
+                        oldCharge = pGame->pPlayer->charge;
                         // printf("Trying to send data\n");
                         sendData(pGame);
                     }
                     pthread_create(&movementThread, NULL, handleInput, (void *)pGame);
                 }
                 else
+                {
+                    getPlayerData(pGame, pGame->players);
                     handleInput(pGame);
+                    if (oldX != pGame->pPlayer->x || oldY != pGame->pPlayer->y || oldCharge != pGame->pPlayer->charge)
+                    {
+                        oldX = pGame->pPlayer->x;
+                        oldY = pGame->pPlayer->y;
+                        oldCharge = pGame->pPlayer->charge;
+                        // printf("Trying to send data\n");
+                        sendData(pGame);
+                    }
+                }
 
                 if (pGame->pPlayer->hp <= 0)
                 {
@@ -428,10 +450,15 @@ void *updateScreen(void *pGameIn)
         }
     }
     SDL_SetRenderDrawColor(pGame->pRenderer, 0, 0, 255, 255);
+
     translatePositionToScreen(pGame);
-    for(int i = 0; i < MAX_PLAYERS; i++){
-        SDL_RenderDrawRect(pGame->pRenderer, &pGame->players[i].rect);
-        SDL_RenderCopy(pGame->pRenderer, pGame->pPlayerTexture, NULL, &pGame->players[i].rect);
+    for (int i = 0; i < MAX_PLAYERS; i++)
+    {
+        if (pGame->players[i].x != 0)
+        {
+            SDL_RenderDrawRect(pGame->pRenderer, &pGame->players[i].rect);
+            SDL_RenderCopy(pGame->pRenderer, pGame->pPlayerTexture, NULL, &pGame->players[i].rect);
+        }
     }
     if (pGame->state == OVER)
     {

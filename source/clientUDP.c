@@ -28,18 +28,17 @@ void retrieveData(Game *pGame)
                 pGame->players[i] = pGame->players[i+1];
             }
             */
- //           printf("Hello!");
+//           printf("Hello!");
 //        }
 //    }
 //    else
 //    {
 //        memcpy(&udpData, (char *)pGame->pPacket->data, sizeof(Player));
-        // memcpy(&pGame->players[udpData.id-1], (char * ) pGame->pPacket->data, sizeof(Player));    // OBS! Can't handle list atm as we lack player array
+// memcpy(&pGame->players[udpData.id-1], (char * ) pGame->pPacket->data, sizeof(Player));    // OBS! Can't handle list atm as we lack player array
 //        printf("UDP Packet incoming \tid: %d\tx: %d\ty: %d\n", udpData.id, udpData.x, udpData.y);
 //        // if (pGame->nrOfPlayers+1 == udpData.id && pGame->nrOfPlayers < MAX_PLAYERS) pGame->nrOfPlayers++;     // Increments nrOfPlayers if new id is one higher than current nrOfPlayers
 //    }
 //}
-
 
 int getPlayerData(Game *pGame, Player players[])
 {
@@ -49,9 +48,12 @@ int getPlayerData(Game *pGame, Player players[])
         {
             Player tmp;
             memcpy(&tmp, pGame->pPacket->data, sizeof(Player));
-            if(!pGame->pPlayer->id)
-                players[tmp.id-1] = tmp;
-            else
+            if (!pGame->pPlayer->id)
+            {
+                if (tmp.id - 1 < MAX_PLAYERS)
+                    players[tmp.id - 1] = tmp;
+            }
+            else if (tmp.id - 1 < MAX_PLAYERS)
                 players[tmp.id] = tmp;
             printf("Recived package\n");
         }
