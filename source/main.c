@@ -60,16 +60,14 @@ int main(int argv, char **args)
                 break;
             run(&game);
             break;
-            /*        case 4:
-                        if(joinServerMenu(&game))
-                        break;
-            */
+        case 4:
+            if(catSelMenu(&game))
+                break;   
         case 5:
             if (testSelectMenu(&game, mapName))
                 break;
             pthread_create(&serverThread, NULL, MThostServer, (void *)mapName);
             break;
-
         default:
             break;
         }

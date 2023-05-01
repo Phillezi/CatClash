@@ -653,3 +653,38 @@ int testSelectMenu(Game *pGame, char *mapName)
     strcpy(mapName, strArr[selected]);
     return 0;
 }
+
+int catSelMenu(Game *pGame)
+{
+    int previousTime = 0;
+    bool exit = false;
+    Text *pSelPrompt = createText(pGame->pRenderer, 0, 0, 0, pGame->ui.pFpsFont, "Select your cat", pGame->windowWidth / 2, (pGame->windowHeight/5));
+
+    int counter = 0;
+    char text[31] = {0};
+    while (!exit)
+    {
+        SDL_Event event;
+        while (SDL_PollEvent(&event))
+        {
+            if (event.type == SDL_QUIT || event.key.keysym.sym == SDLK_ESCAPE)
+            {
+                exit = true;
+                freeText(pSelPrompt);
+                return 1;
+            }
+
+        }
+        if (SDL_GetTicks() - previousTime >= 1000 / 60)
+        {
+            previousTime = SDL_GetTicks();
+            SDL_SetRenderDrawColor(pGame->pRenderer, 255, 255, 255, 255);
+            SDL_RenderClear(pGame->pRenderer);
+            drawText(pSelPrompt, pGame->pRenderer);
+            SDL_RenderPresent(pGame->pRenderer);
+        }
+    }
+
+    freeText(pSelPrompt);
+    return 0;
+}
