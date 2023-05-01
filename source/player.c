@@ -573,3 +573,47 @@ void loadMedia(SDL_Renderer *pRenderer, SDL_Texture **pPlayerTexture, SDL_Rect g
     gSpriteClips[26].w = w;
     gSpriteClips[26].h = h;
 }
+
+void drawPlayer(Game *pGame, Player player, int i) {
+    //SDL_SetRenderDrawColor(pGame->pRenderer, 0, 0, 255, 255);
+    SDL_RenderDrawRect(pGame->pRenderer, &player.rect);
+    SDL_RendererFlip flip = SDL_FLIP_HORIZONTAL;
+
+    static int frame[MAX_PLAYERS] = {0};
+    static int counter[MAX_PLAYERS] = {10,10,10,10,10};
+
+    switch (player.prevKeyPressed)
+    {
+    case 'W':
+        if (player.idle) { 
+            frame[i] = 0; counter[i] = 10;
+            SDL_RenderCopyEx(pGame->pRenderer, pGame->pPlayerTexture, &pGame->gSpriteClips[1], &player.rect, 0, NULL, SDL_FLIP_NONE);
+        } 
+        else SDL_RenderCopyEx(pGame->pRenderer, pGame->pPlayerTexture, &pGame->gSpriteClips[frame[i]+3+8], &player.rect, 0, NULL, SDL_FLIP_NONE);
+        break;
+    case 'S':
+        if (player.idle) { 
+            frame[i] = 0; counter[i] = 10;
+            SDL_RenderCopyEx(pGame->pRenderer, pGame->pPlayerTexture, &pGame->gSpriteClips[0], &player.rect, 0, NULL, SDL_FLIP_NONE);
+        } 
+        else SDL_RenderCopyEx(pGame->pRenderer, pGame->pPlayerTexture, &pGame->gSpriteClips[frame[i]+3], &player.rect, 0, NULL, SDL_FLIP_NONE);
+        break;
+    case 'D':
+        if (player.idle) { 
+            frame[i] = 0; counter[i] = 10;
+            SDL_RenderCopyEx(pGame->pRenderer, pGame->pPlayerTexture, &pGame->gSpriteClips[2], &player.rect, 0, NULL, SDL_FLIP_NONE);
+        } 
+        else SDL_RenderCopyEx(pGame->pRenderer, pGame->pPlayerTexture, &pGame->gSpriteClips[frame[i]+3+8+8], &player.rect, 0, NULL, SDL_FLIP_NONE);
+        break;
+    case 'A':
+        if (player.idle) { 
+            frame[i] = 0; counter[i] = 10;
+            SDL_RenderCopyEx(pGame->pRenderer, pGame->pPlayerTexture, &pGame->gSpriteClips[2], &player.rect, 0, NULL, flip);
+        } 
+        else SDL_RenderCopyEx(pGame->pRenderer, pGame->pPlayerTexture, &pGame->gSpriteClips[frame[i]+3+8+8], &player.rect, 0, NULL, flip);
+        break;
+    }
+    if (counter[i] > 0) counter[i]--;
+    else { frame[i]++; counter[i] = 10; }
+    if (frame[i] % 8 == 0) frame[i] %= 8;
+}
