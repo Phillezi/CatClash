@@ -660,8 +660,6 @@ int catSelMenu(Game *pGame)
     bool exit = false;
     Text *pSelPrompt = createText(pGame->pRenderer, 0, 0, 0, pGame->ui.pFpsFont, "Select your cat", pGame->windowWidth / 2, (pGame->windowHeight/5));
 
-    int counter = 0;
-    char text[31] = {0};
     while (!exit)
     {
         SDL_Event event;
