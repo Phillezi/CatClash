@@ -428,7 +428,7 @@ void loadMedia(SDL_Renderer *pRenderer, SDL_Texture **pPlayerTexture, SDL_Rect g
 
     // IDLE
     gSpriteClips[0].x = 36;
-    gSpriteClips[0].y = 33;
+    gSpriteClips[0].y = 34;
     gSpriteClips[0].w = 24;
     gSpriteClips[0].h = 24;
 
