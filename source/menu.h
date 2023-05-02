@@ -10,5 +10,7 @@ int testSelectMenu(Game *pGame, char *mapName);
 int catSelMenu(Game *pGame);
 void deathScreen(Game *pGame);
 int mainMenu(Game *pGame);
+void deathScreen(Game *pGame);
+void winScreen(Game *pGame);
 
 #endif

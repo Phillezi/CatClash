@@ -307,6 +307,7 @@ void run(Game *pGame)
                     }
                 }
 
+<<<<<<< Updated upstream
                 if (pGame->pPlayer->hp <= 0)
                 {
                     pGame->pPlayer->state = DEAD;
@@ -314,6 +315,8 @@ void run(Game *pGame)
                         deathScreen(pGame);
                 }
 
+=======
+>>>>>>> Stashed changes
                 pGame->ui.healthbar.w = pGame->pPlayer->hp;
                 pGame->ui.chargebar.w = pGame->pPlayer->charge;
             }
@@ -446,6 +449,13 @@ void *updateScreen(void *pGameIn)
 
     SDL_SetRenderDrawColor(pGame->pRenderer, 0, 0, 255, 255);
     SDL_RenderFillRect(pGame->pRenderer, &pGame->ui.chargebar);
+
+    if (pGame->pPlayer->hp <= 0 && pGame->pPlayer->state == ALIVE)
+            {
+                pGame->pPlayer->state = DEAD;
+                if(howManyAlive(pGame) > 1)
+                    deathScreen(pGame);
+                }
 
     SDL_RenderPresent(pGame->pRenderer);
 }

@@ -973,12 +973,24 @@ void deathScreen(Game *pGame)
     Text *pDeathText = createText(pGame->pRenderer, 0, 0, 0, pGame->ui.pFpsFont, "You Died!", pGame->windowWidth / 2, pGame->windowHeight / 5);
     pGame->pPlayer->hp = 0;
     drawText(pDeathText, pGame->pRenderer);
+<<<<<<< Updated upstream
     SDL_RenderPresent(pGame->pRenderer);
     lvlhandleZoom(pGame, -1);
     freeText(pDeathText);
 }
 
 void winScreen()
+=======
+    for(int i = 0; i < 4; i++)
+    {
+        printf("Hello WOrld");
+        lvlhandleZoom(pGame, -1);
+    }
+    freeText(pDeathText);
+}
+
+void winScreen(Game *pGame)
+>>>>>>> Stashed changes
 {
 
 }

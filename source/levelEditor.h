@@ -4,7 +4,7 @@
 #include "definitions.h"
 
 int levelEditor(Game *pGame);
-void lvlhandleZoom(Game *pGame, int mouseWheelY);
+void lvlhandleZoom(Game *pGame, float mouseWheelY);
 void lvlhandleInput(Game *pGame, int *pMouseX, int *pMouseY);
 void lvlupdateScreen(Game *pGame, int mouseX, int mouseY);
 void saveToFile(Tile map[], char fileName[]);

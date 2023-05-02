@@ -1,5 +1,6 @@
 #include "levelEditor.h"
 #include "text.h"
+#include "init.h"
 
 int levelEditor(Game *pGame)
 {
@@ -32,17 +33,10 @@ int levelEditor(Game *pGame)
         }
     }
     // Reset zoom
-    while (pGame->map[0].wall.w > pGame->world.tileSize)
-    {
-        lvlhandleZoom(pGame, -1);
-    }
-    while (pGame->map[0].wall.w < pGame->world.tileSize)
-    {
-        lvlhandleZoom(pGame, 1);
-    }
+    initMap(pGame->map, "map", pGame->world.tileSize);
     return 0;
 }
-void lvlhandleZoom(Game *pGame, int mouseWheelY)
+void lvlhandleZoom(Game *pGame, float mouseWheelY)
 {
     if (mouseWheelY < 0) // scroll up
     {
