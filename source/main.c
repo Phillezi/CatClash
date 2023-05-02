@@ -148,7 +148,7 @@ int init(Game *pGame)
             return 1;
         }
     */
-    loadTileAtlas(pGame->pRenderer, pGame->pTileTextures, "resources/texturedemo.png");
+    loadTileAtlas(pGame->pRenderer, pGame->pTileTextures, "resources/tileMap.png");
     if (!pGame->pTileTextures[0])
     {
         printf("Error: %s\n", SDL_GetError());
@@ -408,22 +408,22 @@ void *updateScreen(void *pGameIn)
     {
         if (((pGame->map[i].wall.x <= pGame->windowWidth) && (pGame->map[i].wall.x + pGame->world.tileSize >= 0)) && ((pGame->map[i].wall.y <= pGame->windowHeight) && (pGame->map[i].wall.y + pGame->world.tileSize >= 0)))
         {
-            if (pGame->map[i].type > 0)
-                SDL_RenderCopy(pGame->pRenderer, pGame->pTileTextures[pGame->map[i].type - 1], NULL, &pGame->map[i].wall);
-            else
-            {
-                if (i > MAPSIZE - 1)
-                {
-                    if (pGame->map[i - MAPSIZE].type)
-                    {
-                        temp = pGame->map[i].wall;
-                        temp.h = ((float)pGame->world.tileSize * pGame->world.angle);
-                        SDL_SetTextureColorMod(pGame->pTileTextures[(pGame->map[i - MAPSIZE].type - 1)], 150, 150, 150);
-                        SDL_RenderCopy(pGame->pRenderer, pGame->pTileTextures[(pGame->map[i - MAPSIZE].type - 1)], NULL, &temp);
-                        SDL_SetTextureColorMod(pGame->pTileTextures[(pGame->map[i - MAPSIZE].type - 1)], 255, 255, 255);
-                    }
-                }
-            }
+            // if (pGame->map[i].type > 0)
+            SDL_RenderCopy(pGame->pRenderer, pGame->pTileTextures[pGame->map[i].type], NULL, &pGame->map[i].wall);
+            // else
+            // {
+            //     if (i > MAPSIZE - 1)
+            //     {
+            //         if (pGame->map[i - MAPSIZE].type)
+            //         {
+            //             temp = pGame->map[i].wall;
+            //             temp.h = ((float)pGame->world.tileSize * pGame->world.angle);
+            //             SDL_SetTextureColorMod(pGame->pTileTextures[(pGame->map[i - MAPSIZE].type - 1)], 150, 150, 150);
+            //             SDL_RenderCopy(pGame->pRenderer, pGame->pTileTextures[(pGame->map[i - MAPSIZE].type - 1)], NULL, &temp);
+            //             SDL_SetTextureColorMod(pGame->pTileTextures[(pGame->map[i - MAPSIZE].type - 1)], 255, 255, 255);
+            //         }
+            //     }
+            // }
         }
     }
     
