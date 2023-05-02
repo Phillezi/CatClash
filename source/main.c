@@ -62,6 +62,7 @@ int main(int argv, char **args)
             break;
         case 4:
             if(catSelMenu(&game))
+                break;
                 break;   
         case 5:
             if (testSelectMenu(&game, mapName))
