@@ -764,12 +764,12 @@ int mainMenu(Game *pGame)
                     if (mode > 0)
                         mode--;
                     else
-                        mode = HOST;
+                        mode = QUIT;
                 }
                 else if (event.key.keysym.sym == SDLK_DOWN)
                 {
 
-                    if (mode < HOST)
+                    if (mode < QUIT)
                         mode++;
                     else
                         mode = PLAY;
