@@ -705,17 +705,6 @@ int catSelMenu(Game *pGame)
     return 0;
 }
 
-enum selectedMode
-{
-    PLAY,
-    EDIT,
-    QUIT,
-    JOIN,
-    CATSEL,
-    HOST
-};
-typedef enum selectedMode SelectedMode;
-
 int mainMenu(Game *pGame)
 {
     SelectedMode mode;
@@ -727,26 +716,26 @@ int mainMenu(Game *pGame)
     int rAdd = 1, gAdd = 1, bAdd = 1;
     int playW, levelEditW, quitW, joinServerW, catSelectW, hostW;
 
-    Text *pPlay = createText(pGame->pRenderer, 200, 200, 200, pGame->ui.pFpsFont, "Play", pGame->windowWidth / 2, pGame->windowHeight / 4);
+    Text *pPlay = createText(pGame->pRenderer, 200, 200, 200, pGame->ui.pFpsFont, "Play", pGame->windowWidth / 2, (pGame->windowHeight / 4) + (PLAY *pGame->world.tileSize));
     TTF_SizeText(pGame->ui.pFpsFont, "Play", &playW, NULL);
-    Text *pLvlEdit = createText(pGame->pRenderer, 200, 200, 200, pGame->ui.pFpsFont, "Edit level", pGame->windowWidth / 2, (pGame->windowHeight / 4) + pGame->world.tileSize);
+    Text *pLvlEdit = createText(pGame->pRenderer, 200, 200, 200, pGame->ui.pFpsFont, "Edit level", pGame->windowWidth / 2, (pGame->windowHeight / 4) + (EDIT *pGame->world.tileSize));
     TTF_SizeText(pGame->ui.pFpsFont, "Edit level", &levelEditW, NULL);
-    Text *pQuit = createText(pGame->pRenderer, 200, 200, 200, pGame->ui.pFpsFont, "QUIT", pGame->windowWidth / 2, (pGame->windowHeight / 4) + (2 * pGame->world.tileSize));
+    Text *pQuit = createText(pGame->pRenderer, 200, 200, 200, pGame->ui.pFpsFont, "QUIT", pGame->windowWidth / 2, (pGame->windowHeight / 4) + (QUIT * pGame->world.tileSize));
     TTF_SizeText(pGame->ui.pFpsFont, "QUIT", &quitW, NULL);
-    Text *pJoinServer = createText(pGame->pRenderer, 200, 200, 200, pGame->ui.pFpsFont, "Join Server", pGame->windowWidth / 2, (pGame->windowHeight / 4) + (3 * pGame->world.tileSize));
+    Text *pJoinServer = createText(pGame->pRenderer, 200, 200, 200, pGame->ui.pFpsFont, "Join Server", pGame->windowWidth / 2, (pGame->windowHeight / 4) + (JOIN * pGame->world.tileSize));
     TTF_SizeText(pGame->ui.pFpsFont, "Join Server", &joinServerW, NULL);
-    Text *pCatSelect = createText(pGame->pRenderer, 200, 200, 200, pGame->ui.pFpsFont, "Cat Selection", pGame->windowWidth / 2, (pGame->windowHeight / 4) + (4 * pGame->world.tileSize));
+    Text *pCatSelect = createText(pGame->pRenderer, 200, 200, 200, pGame->ui.pFpsFont, "Cat Selection", pGame->windowWidth / 2, (pGame->windowHeight / 4) + (CATSEL * pGame->world.tileSize));
     TTF_SizeText(pGame->ui.pFpsFont, "Cat Selection", &catSelectW, NULL);
-    Text *pHost = createText(pGame->pRenderer, 200, 200, 200, pGame->ui.pFpsFont, "Host Server", pGame->windowWidth / 2, (pGame->windowHeight / 4) + (5 * pGame->world.tileSize));
+    Text *pHost = createText(pGame->pRenderer, 200, 200, 200, pGame->ui.pFpsFont, "Host Server", pGame->windowWidth / 2, (pGame->windowHeight / 4) + (HOST * pGame->world.tileSize));
     TTF_SizeText(pGame->ui.pFpsFont, "Host Server", &hostW, NULL);
 
     int centerOfScreenX = pGame->windowWidth / 2;
-    int topOfFirstRowY = pGame->windowHeight / 4;
-    int topOfSecondRowY = (pGame->windowHeight / 4) + pGame->world.tileSize;
-    int topOfThirdRowY = (pGame->windowHeight / 4) + (2 * pGame->world.tileSize);
-    int topOfFourthRowY = (pGame->windowHeight / 4) + (3 * pGame->world.tileSize);
-    int topOfFifthRowY = (pGame->windowHeight / 4) + (4 * pGame->world.tileSize);
-    int topOfSixthRowY = (pGame->windowHeight / 4) + (5 * pGame->world.tileSize);
+    int playY = (pGame->windowHeight / 4) + (PLAY * pGame->world.tileSize);
+    int editY = (pGame->windowHeight / 4) + (EDIT * pGame->world.tileSize);
+    int quitY = (pGame->windowHeight / 4) + (QUIT * pGame->world.tileSize);
+    int joinY = (pGame->windowHeight / 4) + (JOIN * pGame->world.tileSize);
+    int catselY = (pGame->windowHeight / 4) + (CATSEL * pGame->world.tileSize);
+    int hostY = (pGame->windowHeight / 4) + (HOST * pGame->world.tileSize);
 
     while (!quit)
     {
@@ -794,7 +783,7 @@ int mainMenu(Game *pGame)
             {
                 int mouseX, mouseY;
                 int buttons = SDL_GetMouseState(&mouseX, &mouseY);
-                if (centerOfScreenX - (playW / 2) < mouseX && mouseX < centerOfScreenX + (playW / 2) && topOfFirstRowY - (pGame->world.tileSize / 2) < mouseY && mouseY < topOfFirstRowY + (pGame->world.tileSize / 2))
+                if (centerOfScreenX - (playW / 2) < mouseX && mouseX < centerOfScreenX + (playW / 2) && playY - (pGame->world.tileSize / 2) < mouseY && mouseY < playY + (pGame->world.tileSize / 2))
                 {
                     mode = PLAY;
                     if (buttons & SDL_BUTTON(SDL_BUTTON_LEFT))
@@ -803,7 +792,7 @@ int mainMenu(Game *pGame)
                     }
                 }
 
-                else if (centerOfScreenX - (levelEditW / 2) < mouseX && mouseX < centerOfScreenX + (levelEditW / 2) && topOfSecondRowY - (pGame->world.tileSize / 2) < mouseY && mouseY < topOfSecondRowY + (pGame->world.tileSize / 2))
+                else if (centerOfScreenX - (levelEditW / 2) < mouseX && mouseX < centerOfScreenX + (levelEditW / 2) && editY - (pGame->world.tileSize / 2) < mouseY && mouseY < editY + (pGame->world.tileSize / 2))
                 {
                     mode = EDIT;
                     if (buttons & SDL_BUTTON(SDL_BUTTON_LEFT))
@@ -811,7 +800,7 @@ int mainMenu(Game *pGame)
                         quit = true;
                     }
                 }
-                else if (centerOfScreenX - (quitW / 2) < mouseX && mouseX < centerOfScreenX + (quitW / 2) && topOfThirdRowY - (pGame->world.tileSize / 2) < mouseY && mouseY < topOfThirdRowY + (pGame->world.tileSize / 2))
+                else if (centerOfScreenX - (quitW / 2) < mouseX && mouseX < centerOfScreenX + (quitW / 2) && quitY - (pGame->world.tileSize / 2) < mouseY && mouseY < quitY + (pGame->world.tileSize / 2))
                 {
                     mode = QUIT;
                     if (buttons & SDL_BUTTON(SDL_BUTTON_LEFT))
@@ -819,7 +808,7 @@ int mainMenu(Game *pGame)
                         quit = true;
                     }
                 }
-                else if (centerOfScreenX - (joinServerW / 2) < mouseX && mouseX < centerOfScreenX + (joinServerW / 2) && topOfFourthRowY - (pGame->world.tileSize / 2) < mouseY && mouseY < topOfFourthRowY + (pGame->world.tileSize / 2))
+                else if (centerOfScreenX - (joinServerW / 2) < mouseX && mouseX < centerOfScreenX + (joinServerW / 2) && joinY - (pGame->world.tileSize / 2) < mouseY && mouseY < joinY + (pGame->world.tileSize / 2))
                 {
                     mode = JOIN;
                     if (buttons & SDL_BUTTON(SDL_BUTTON_LEFT))
@@ -827,7 +816,7 @@ int mainMenu(Game *pGame)
                         quit = true;
                     }
                 }
-                else if (centerOfScreenX - (catSelectW / 2) < mouseX && mouseX < centerOfScreenX + (catSelectW / 2) && topOfFifthRowY - (pGame->world.tileSize / 2) < mouseY && mouseY < topOfFifthRowY + (pGame->world.tileSize / 2))
+                else if (centerOfScreenX - (catSelectW / 2) < mouseX && mouseX < centerOfScreenX + (catSelectW / 2) && catselY - (pGame->world.tileSize / 2) < mouseY && mouseY < catselY + (pGame->world.tileSize / 2))
                 {
                     mode = CATSEL;
                     if (buttons & SDL_BUTTON(SDL_BUTTON_LEFT))
@@ -835,7 +824,7 @@ int mainMenu(Game *pGame)
                         quit = true;
                     }
                 }
-                else if (centerOfScreenX - (hostW / 2) < mouseX && mouseX < centerOfScreenX + (hostW / 2) && topOfSixthRowY - (pGame->world.tileSize / 2) < mouseY && mouseY < topOfSixthRowY + (pGame->world.tileSize / 2))
+                else if (centerOfScreenX - (hostW / 2) < mouseX && mouseX < centerOfScreenX + (hostW / 2) && hostY - (pGame->world.tileSize / 2) < mouseY && mouseY < hostY + (pGame->world.tileSize / 2))
                 {
                     mode = HOST;
                     if (buttons & SDL_BUTTON(SDL_BUTTON_LEFT))
@@ -852,27 +841,27 @@ int mainMenu(Game *pGame)
             {
             case PLAY:
                 freeText(pPlay);
-                pPlay = createText(pGame->pRenderer, 200, 200, 200, pGame->ui.pFpsFont, "Play", pGame->windowWidth / 2, pGame->windowHeight / 4);
+                pPlay = createText(pGame->pRenderer, 200, 200, 200, pGame->ui.pFpsFont, "Play", pGame->windowWidth / 2, playY);
                 break;
             case EDIT:
                 freeText(pLvlEdit);
-                pLvlEdit = createText(pGame->pRenderer, 200, 200, 200, pGame->ui.pFpsFont, "Edit level", pGame->windowWidth / 2, (pGame->windowHeight / 4) + pGame->world.tileSize);
+                pLvlEdit = createText(pGame->pRenderer, 200, 200, 200, pGame->ui.pFpsFont, "Edit level", pGame->windowWidth / 2, editY);
                 break;
             case QUIT:
                 freeText(pQuit);
-                pQuit = createText(pGame->pRenderer, 200, 200, 200, pGame->ui.pFpsFont, "QUIT", pGame->windowWidth / 2, (pGame->windowHeight / 4) + (2 * pGame->world.tileSize));
+                pQuit = createText(pGame->pRenderer, 200, 200, 200, pGame->ui.pFpsFont, "QUIT", pGame->windowWidth / 2, quitY);
                 break;
             case JOIN:
                 freeText(pJoinServer);
-                pJoinServer = createText(pGame->pRenderer, 200, 200, 200, pGame->ui.pFpsFont, "Join Server", pGame->windowWidth / 2, (pGame->windowHeight / 4) + (3 * pGame->world.tileSize));
+                pJoinServer = createText(pGame->pRenderer, 200, 200, 200, pGame->ui.pFpsFont, "Join Server", pGame->windowWidth / 2, joinY);
                 break;
             case CATSEL:
                 freeText(pCatSelect);
-                pCatSelect = createText(pGame->pRenderer, 200, 200, 200, pGame->ui.pFpsFont, "Cat Selection", pGame->windowWidth / 2, (pGame->windowHeight / 4) + (4 * pGame->world.tileSize));
+                pCatSelect = createText(pGame->pRenderer, 200, 200, 200, pGame->ui.pFpsFont, "Cat Selection", pGame->windowWidth / 2, catselY);
                 break;
             case HOST:
                 freeText(pHost);
-                pHost = createText(pGame->pRenderer, 200, 200, 200, pGame->ui.pFpsFont, "Host Server", pGame->windowWidth / 2, (pGame->windowHeight / 4) + (5 * pGame->world.tileSize));
+                pHost = createText(pGame->pRenderer, 200, 200, 200, pGame->ui.pFpsFont, "Host Server", pGame->windowWidth / 2, hostY);
                 break;
             default:
                 break;
@@ -927,27 +916,27 @@ int mainMenu(Game *pGame)
             {
             case PLAY:
                 freeText(pPlay);
-                pPlay = createText(pGame->pRenderer, r, g, b, pGame->ui.pFpsFont, "Play", pGame->windowWidth / 2, pGame->windowHeight / 4);
+                pPlay = createText(pGame->pRenderer, r, g, b, pGame->ui.pFpsFont, "Play", pGame->windowWidth / 2, playY);
                 break;
             case EDIT:
                 freeText(pLvlEdit);
-                pLvlEdit = createText(pGame->pRenderer, r, g, b, pGame->ui.pFpsFont, "Edit level", pGame->windowWidth / 2, (pGame->windowHeight / 4) + pGame->world.tileSize);
+                pLvlEdit = createText(pGame->pRenderer, r, g, b, pGame->ui.pFpsFont, "Edit level", pGame->windowWidth / 2, editY);
                 break;
             case QUIT:
                 freeText(pQuit);
-                pQuit = createText(pGame->pRenderer, r, g, b, pGame->ui.pFpsFont, "QUIT", pGame->windowWidth / 2, (pGame->windowHeight / 4) + (2 * pGame->world.tileSize));
+                pQuit = createText(pGame->pRenderer, r, g, b, pGame->ui.pFpsFont, "QUIT", pGame->windowWidth / 2, quitY);
                 break;
             case JOIN:
                 freeText(pJoinServer);
-                pJoinServer = createText(pGame->pRenderer, r, g, b, pGame->ui.pFpsFont, "Join Server", pGame->windowWidth / 2, (pGame->windowHeight / 4) + (3 * pGame->world.tileSize));
+                pJoinServer = createText(pGame->pRenderer, r, g, b, pGame->ui.pFpsFont, "Join Server", pGame->windowWidth / 2, joinY);
                 break;
             case CATSEL:
                 freeText(pCatSelect);
-                pCatSelect = createText(pGame->pRenderer, r, g, b, pGame->ui.pFpsFont, "Cat Selection", pGame->windowWidth / 2, (pGame->windowHeight / 4) + (4 * pGame->world.tileSize));
+                pCatSelect = createText(pGame->pRenderer, r, g, b, pGame->ui.pFpsFont, "Cat Selection", pGame->windowWidth / 2, catselY);
                 break;
             case HOST:
                 freeText(pHost);
-                pHost = createText(pGame->pRenderer, r, g, b, pGame->ui.pFpsFont, "Host Server", pGame->windowWidth / 2, (pGame->windowHeight / 4) + (5 * pGame->world.tileSize));
+                pHost = createText(pGame->pRenderer, r, g, b, pGame->ui.pFpsFont, "Host Server", pGame->windowWidth / 2, hostY);
                 break;
             default:
                 break;
