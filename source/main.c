@@ -107,8 +107,12 @@ int init(Game *pGame)
         return 1;
     }
 
-    pGame->windowWidth = (float)displayMode.w * 0.4; // 70% of avaliable space
-    pGame->windowHeight = (float)displayMode.h * 0.4;
+    //pGame->windowWidth = (float)displayMode.w * 0.4; // 70% of avaliable space
+    //pGame->windowHeight = (float)displayMode.h * 0.4;
+
+    pGame->windowWidth = 1920; // locked res
+    pGame->windowHeight = 1080;
+
 
     pGame->world.tileSize = (pGame->windowHeight / MAPSIZE) * 4;
 
