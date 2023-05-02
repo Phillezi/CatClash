@@ -30,7 +30,7 @@ int main(int argv, char **args)
     }
     while (1)
     {
-        switch (menu(&game))
+        switch (mainMenu(&game))
         {
         case 0:
             // if (mapSelection(&game))
