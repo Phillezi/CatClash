@@ -21,8 +21,11 @@ void *updateScreen(void *pGameIn);
 int main(int argv, char **args)
 {
     Game game;
-    pthread_t serverThread;
+    game.serverThread;
     char mapName[31];
+
+    game.serverIsHosted = false;
+
     if (init(&game))
     {
         close(&game);
@@ -48,11 +51,12 @@ int main(int argv, char **args)
             break;
         case QUIT:
             printf("Closing...\n");
-            if (serverThread)
+            if (game.serverIsHosted)
             {
                 printf("Closing server...\n");
-                pthread_cancel(serverThread);
-                pthread_join(serverThread, NULL);
+                pthread_cancel(game.serverThread);
+                pthread_join(game.serverThread, NULL);
+                game.serverIsHosted = false;
             }
             printf("Closing game...\n");
             close(&game);
@@ -69,9 +73,16 @@ int main(int argv, char **args)
                 break;
             break;
         case HOST:
-            if (testSelectMenu(&game, mapName))
-                break;
-            pthread_create(&serverThread, NULL, MThostServer, (void *)mapName);
+            if (game.serverIsHosted == false)
+            {
+                if (testSelectMenu(&game, mapName))
+                    break;
+                if (!pthread_create(&game.serverThread, NULL, MThostServer, (void *)mapName))
+                {
+                    game.serverIsHosted = true;
+                }
+            }
+
             break;
         default:
             break;
@@ -359,6 +370,16 @@ void run(Game *pGame)
                     exit = true;
                     break;
                 }
+                else
+                {
+                    if (pGame->serverIsHosted)
+                    {
+                        printf("Closing server...\n");
+                        pthread_cancel(pGame->serverThread);
+                        pthread_join(pGame->serverThread, NULL);
+                        pGame->serverIsHosted = false;
+                    }
+                }
             }
         }
     }
@@ -366,7 +387,7 @@ void run(Game *pGame)
 
 void close(Game *pGame)
 {
-    if(pGame->pMultiPlayer)
+    if (pGame->pMultiPlayer)
         free(pGame->pMultiPlayer);
     if (pGame->pPacket)
     {

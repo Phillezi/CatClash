@@ -15,32 +15,42 @@ void *MThostServer(void *mapName)
     {
         while (!exit)
         {
-            pthread_create(&threads.tcp, NULL, MTtcpServer, (void *)&threads.server);
-            pthread_create(&threads.udp, NULL, MTudpServer, (void *)&threads.server);
+            if (pthread_create(&threads.tcp, NULL, MTtcpServer, (void *)&threads.server))
+                printf("Could not create Thread TCP\n");
+            if (pthread_create(&threads.udp, NULL, MTudpServer, (void *)&threads.server))
+                printf("Could not create Thread UDP\n");
             int deltaTime = SDL_GetTicks() - prevTime;
-            if(deltaTime >= 1000/30){
+            if (deltaTime >= 1000 / 30)
+            {
                 prevTime = SDL_GetTicks();
                 MTupdateServerScreen(&threads.server);
             }
-            
+            pthread_testcancel();
             pthread_join(threads.tcp, NULL);
             pthread_join(threads.udp, NULL);
-            pthread_testcancel();
+
             SDL_Event event;
             while (SDL_PollEvent(&event))
             {
                 if (event.type == SDL_QUIT)
                 {
+                    printf("Server: SDL QUIT EVENT\n");
                     exit = true;
                     break;
                 }
                 else if (event.type == SDL_WINDOWEVENT && event.window.event == SDL_WINDOWEVENT_CLOSE)
                 {
+                    printf("Server: SDL window close event\n");
 
                     if (SDL_GetWindowID(threads.server.pWindow) == event.window.windowID)
                     {
+                        printf("Server: For This Window\n");
                         exit = true;
                         break;
+                    }
+                    else
+                    {
+                        debugPrint();
                     }
                 }
             }
@@ -94,6 +104,8 @@ int MTsetup(Server *pServer)
     pServer->windowHeight = (float)displayMode.h * 0.4;
 
     pServer->fontSize = pServer->windowHeight / 10;
+
+    pServer->nrOfClients = 0;
 
     pServer->pWindow = SDL_CreateWindow("TCP & UDP SERVER", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, pServer->windowWidth, pServer->windowHeight, 0);
     if (!pServer->pWindow)
@@ -207,6 +219,8 @@ void *MTtcpServer(void *pServerIn)
             SDLNet_TCP_Close(tmpClient); // close client
             char buffer[31];
             sprintf(buffer, "%d Players Connected", pServer->nrOfClients);
+            if (pServer->pJoining)
+                freeText(pServer->pJoining);
             pServer->pJoining = createText(pServer->pRenderer, 255, 255, 255, pServer->pFont, buffer, pServer->windowWidth / 2, 2 * pServer->fontSize);
         }
         else
@@ -214,6 +228,7 @@ void *MTtcpServer(void *pServerIn)
             printf("MAX players reached\n");
         }
     }
+
     pthread_cleanup_pop(0);
     pthread_exit(NULL);
     /*
@@ -350,7 +365,6 @@ void MTclose(Server *pServer)
 
     if (pServer->socketUDP)
         SDLNet_UDP_Close(pServer->socketUDP);
-
 
     // CLOSE TTF
     for (int i = 0; i < MAX_PLAYERS; i++)

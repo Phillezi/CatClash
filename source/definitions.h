@@ -5,6 +5,7 @@
 #include <SDL2/SDL_ttf.h>
 #include <stdlib.h>
 #include <stdbool.h>
+#include <pthread.h>
 
 // DEFINITIONS
 #define MAP_FILEPATH "resources/map.txt"
@@ -119,6 +120,8 @@ typedef struct playerNet
 struct game
 {
     int nrOfPlayers;
+    bool serverIsHosted;
+    pthread_t serverThread;
     Player *pMultiPlayer;
     UiE ui;
     SDL_Window *pWindow;
