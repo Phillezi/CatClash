@@ -287,7 +287,7 @@ void saveToFile(Tile map[], char fileName[])
         {
             for (int col = 0; col < MAPSIZE; col++)
             {
-                fprintf(fp, "%d ", map[row * MAPSIZE + col].type);
+                fprintf(fp, "%3d", map[row * MAPSIZE + col].type);
             }
             fprintf(fp, "\n");
         }
