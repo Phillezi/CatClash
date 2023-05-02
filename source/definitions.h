@@ -40,6 +40,17 @@ typedef struct tile Tile;
 enum playerState{ALIVE, DEAD};
 typedef enum playerState PlayerState;
 
+enum selectedMode
+{
+    PLAY,
+    EDIT,
+    JOIN,
+    HOST,
+    CATSEL,
+    QUIT
+};
+typedef enum selectedMode SelectedMode;
+
 struct player
 {
     char prevKeyPressed;

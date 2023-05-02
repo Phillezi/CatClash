@@ -30,23 +30,23 @@ int main(int argv, char **args)
     }
     while (1)
     {
-        switch (menu(&game))
+        switch (mainMenu(&game))
         {
-        case 0:
+        case PLAY:
             // if (mapSelection(&game))
             //     break;
             if (testSelectMenu(&game, mapName))
                 break;
             run(&game);
             break;
-        case 1:
+        case EDIT:
             // if (mapSelection(&game))
             //     break;
             if (testSelectMenu(&game, mapName))
                 break;
             levelEditor(&game);
             break;
-        case 2:
+        case QUIT:
             if (serverThread)
             {
                 pthread_cancel(serverThread);
@@ -55,15 +55,16 @@ int main(int argv, char **args)
             close(&game);
             return 0;
             break;
-        case 3:
+        case JOIN:
             if (joinServerMenu(&game))
                 break;
             run(&game);
             break;
-        case 4:
+        case CATSEL:
             if(catSelMenu(&game))
+                break;
                 break;   
-        case 5:
+        case HOST:
             if (testSelectMenu(&game, mapName))
                 break;
             pthread_create(&serverThread, NULL, MThostServer, (void *)mapName);
