@@ -410,20 +410,20 @@ void *updateScreen(void *pGameIn)
         {
             if (pGame->map[i].type > 0)
                 SDL_RenderCopy(pGame->pRenderer, pGame->pTileTextures[pGame->map[i].type], NULL, &pGame->map[i].wall);
-            // else
-            // {
-            //     if (i > MAPSIZE - 1)
-            //     {
-            //         if (pGame->map[i - MAPSIZE].type)
-            //         {
-            //             temp = pGame->map[i].wall;
-            //             temp.h = ((float)pGame->world.tileSize * pGame->world.angle);
-            //             SDL_SetTextureColorMod(pGame->pTileTextures[(pGame->map[i - MAPSIZE].type - 1)], 150, 150, 150);
-            //             SDL_RenderCopy(pGame->pRenderer, pGame->pTileTextures[(pGame->map[i - MAPSIZE].type - 1)], NULL, &temp);
-            //             SDL_SetTextureColorMod(pGame->pTileTextures[(pGame->map[i - MAPSIZE].type - 1)], 255, 255, 255);
-            //         }
-            //     }
-            // }
+            else
+            {
+                if (i > MAPSIZE - 1)
+                {
+                    if (pGame->map[i - MAPSIZE].type)
+                    {
+                        temp = pGame->map[i].wall;
+                        temp.h = ((float)pGame->world.tileSize * pGame->world.angle);
+                        SDL_SetTextureColorMod(pGame->pTileTextures[(pGame->map[i - MAPSIZE].type - 1)], 150, 150, 150);
+                        SDL_RenderCopy(pGame->pRenderer, pGame->pTileTextures[(pGame->map[i - MAPSIZE].type - 1)], NULL, &temp);
+                        SDL_SetTextureColorMod(pGame->pTileTextures[(pGame->map[i - MAPSIZE].type - 1)], 255, 255, 255);
+                    }
+                }
+            }
         }
     }
     
