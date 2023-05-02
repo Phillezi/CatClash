@@ -349,7 +349,6 @@ void MTclose(Server *pServer)
     if (pServer->socketUDP)
         SDLNet_UDP_Close(pServer->socketUDP);
 
-    //SDLNet_Quit();
 
     // CLOSE TTF
     for (int i = 0; i < MAX_PLAYERS; i++)
@@ -364,15 +363,4 @@ void MTclose(Server *pServer)
 
     if (pServer->pFont)
         TTF_CloseFont(pServer->pFont);
-
-    //TTF_Quit();
-
-    // CLOSE SDL
-    if (pServer->pRenderer)
-        SDL_DestroyRenderer(pServer->pRenderer);
-
-    if (pServer->pWindow)
-        SDL_DestroyWindow(pServer->pWindow);
-
-    //SDL_Quit();
 }

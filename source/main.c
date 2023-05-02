@@ -47,12 +47,16 @@ int main(int argv, char **args)
             levelEditor(&game);
             break;
         case QUIT:
+            printf("Closing...\n");
             if (serverThread)
             {
+                printf("Closing server...\n");
                 pthread_cancel(serverThread);
                 pthread_join(serverThread, NULL);
             }
+            printf("Closing game...\n");
             close(&game);
+            printf("Done closing!\n");
             return 0;
             break;
         case JOIN:

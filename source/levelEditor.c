@@ -17,6 +17,15 @@ int levelEditor(Game *pGame)
                 exit = true;
                 break;
             }
+            else if (event.type == SDL_WINDOWEVENT && event.window.event == SDL_WINDOWEVENT_CLOSE)
+            {
+
+                if (SDL_GetWindowID(pGame->pWindow) == event.window.windowID)
+                {
+                    exit = true;
+                    break;
+                }
+            }
             else if (event.type == SDL_MOUSEWHEEL)
             {
                 lvlhandleZoom(pGame, event.wheel.y);
@@ -289,11 +298,11 @@ void lvlupdateScreen(Game *pGame, int mouseX, int mouseY)
         {
             if (pGame->map[i].type > 0)
                 SDL_RenderCopy(pGame->pRenderer, pGame->pTileTextures[pGame->map[i].type], NULL, &pGame->map[i].wall);
-            // else if (pGame->map[i].type == -1)
-            // {
-            //     SDL_SetRenderDrawColor(pGame->pRenderer, 0, 155, 0, 255);
-            //     SDL_RenderFillRect(pGame->pRenderer, &pGame->map[i].wall);
-            // }
+            else if (pGame->map[i].type == -1)
+            {
+                SDL_SetRenderDrawColor(pGame->pRenderer, 0, 155, 0, 255);
+                SDL_RenderFillRect(pGame->pRenderer, &pGame->map[i].wall);
+            }
         }
     }
     // Draw grid
