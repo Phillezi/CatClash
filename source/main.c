@@ -448,7 +448,7 @@ void *updateScreen(void *pGameIn)
     drawPlayer(pGame, *pGame->pPlayer, pGame->pPlayer->id);
     for (int i = 0; i < pGame->nrOfPlayers; i++)
     {
-        drawPlayer(pGame, pGame->pMultiPlayer[i], i);
+        drawPlayer(pGame, pGame->pMultiPlayer[i], pGame->pMultiPlayer[i].id);
     }
 
     if (pGame->state == OVER)

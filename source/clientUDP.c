@@ -49,13 +49,15 @@ void retrieveData(Game *pGame)
 
 int getPlayerData(Game *pGame, Player players[])
 {
-    for (int i = 0; i < MAX_PLAYERS; i++)
-    {
-        if (SDLNet_UDP_Recv(pGame->socketDesc, pGame->pPacket))
+        while (SDLNet_UDP_Recv(pGame->socketDesc, pGame->pPacket))
         {
             PlayerUdpPkg tmp;
             memcpy(&tmp, pGame->pPacket->data, sizeof(PlayerUdpPkg));
-            if (tmp.id > pGame->nrOfPlayers)
+            int playerId = tmp.id;
+            if(pGame->pPlayer->id < tmp.id)
+                playerId = tmp.id - 1;
+
+            if (playerId > pGame->nrOfPlayers)
             {
                 pGame->pMultiPlayer = createNewMultiPlayer(pGame, pGame->nrOfPlayers, tmp);
                 pGame->nrOfPlayers++;
@@ -70,10 +72,10 @@ int getPlayerData(Game *pGame, Player players[])
                 {
                     if (pGame->pMultiPlayer[j].id == tmp.id)
                     {
-                        printf("Recived msg from %d\n", tmp.id);
-                        pGame->pMultiPlayer[j].x == tmp.x;
-                        pGame->pMultiPlayer[j].y == tmp.y;
-                        pGame->pMultiPlayer[j].idle == tmp.idle;
+                        pGame->pMultiPlayer[j].x = tmp.x;
+                        pGame->pMultiPlayer[j].y = tmp.y;
+                        pGame->pMultiPlayer[j].idle = tmp.idle;
+                        pGame->pMultiPlayer[j].prevKeyPressed = tmp.direction;
                     }
                 }
             }
@@ -100,7 +102,6 @@ int getPlayerData(Game *pGame, Player players[])
             */
             // printf("Recived package\n");
         }
-    }
 
     return 0;
 }

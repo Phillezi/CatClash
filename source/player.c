@@ -640,10 +640,15 @@ void drawPlayer(Game *pGame, Player player, int i)
 Player *createNewMultiPlayer(Game *pGame, int size, PlayerUdpPkg data)
 {
     Player *pNew_arr;
-    if(pGame->pMultiPlayer)
+    if (pGame->pMultiPlayer)
+    {
+        printf("Expanding memory for player array\n");
         pNew_arr = (Player *)realloc(pGame->pMultiPlayer, (size + 1) * sizeof(Player));
+    }
     else
+    {
         pNew_arr = createPlayer(data.id, "alloc", pGame->world.tileSize);
+    }
 
     if (pNew_arr == NULL)
     {
@@ -655,6 +660,7 @@ Player *createNewMultiPlayer(Game *pGame, int size, PlayerUdpPkg data)
     pNew_arr[size].x = data.x;
     pNew_arr[size].y = data.y;
     pNew_arr[size].idle = data.idle;
+    pNew_arr[size].prevKeyPressed = data.direction;
     strcpy(pNew_arr[size].name, "Allocated");
 
     return pNew_arr;
