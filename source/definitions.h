@@ -37,7 +37,11 @@ typedef struct tile Tile;
     includes: int id, str name (max 20 chars + NULL),
     int hp, int x, y, SDL_Rect rect
 */
-enum playerState{ALIVE, DEAD};
+enum playerState
+{
+    ALIVE,
+    DEAD
+};
 typedef enum playerState PlayerState;
 
 enum selectedMode
@@ -125,8 +129,11 @@ struct game
     SDL_Texture *pTileTextures[TILES];
     SDL_Texture *pPlayerTexture;
     SDL_Rect gSpriteClips[27];
+    SDL_Rect portalList[MAPSIZE * MAPSIZE];
+    int nrOfPortals;
 
-    int windowWidth, windowHeight;
+    int windowWidth,
+        windowHeight;
     int movementAmount;
 
     UDPsocket socketDesc;
@@ -148,16 +155,23 @@ typedef struct game Game;
 
 // ------------------------------ SERVER ------------------------------------
 
-enum serverState{JOINING, RUNNING, CLOSED};
+enum serverState
+{
+    JOINING,
+    RUNNING,
+    CLOSED
+};
 typedef enum serverState ServerState;
 
-struct info {
+struct info
+{
     IPaddress address;
     int id;
-}; 
+};
 typedef struct info Info;
 
-struct server {
+struct server
+{
     SDL_Window *pWindow;
     SDL_Renderer *pRenderer;
     TTF_Font *pFont;
@@ -179,14 +193,15 @@ struct server {
     SDLNet_SocketSet socketSetTCP;
     Tile map[1024];
 
-    UDPsocket socketUDP;   // Socket descriptor
-    UDPpacket *pRecieve;    // Pointer to packet memory
-    UDPpacket *pSent;           
-}; 
+    UDPsocket socketUDP; // Socket descriptor
+    UDPpacket *pRecieve; // Pointer to packet memory
+    UDPpacket *pSent;
+};
 typedef struct server Server;
 
-struct udpPlayerPackage{
-    int x,y;
+struct udpPlayerPackage
+{
+    int x, y;
     char direction;
     Uint8 id;
     Uint8 idle;

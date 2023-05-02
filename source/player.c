@@ -134,7 +134,13 @@ void *handleInput(void *pGameIn) // Game *pGame)
             if (currentKeyStates[SDL_SCANCODE_W] || currentKeyStates[SDL_SCANCODE_UP])
             {
 
-                if (checkCollision(*pGame->pPlayer, pGame->map, 'W', pGame->world.tileSize) <= 0)
+                if (checkCollision(*pGame->pPlayer, pGame->map, 'W', pGame->world.tileSize) == 1)
+                {
+                    int temp = rand() % (pGame->nrOfPortals + 1);
+                    pGame->pPlayer->x = pGame->portalList[temp].x;
+                    pGame->pPlayer->y = pGame->portalList[temp].y;
+                }
+                if (checkCollision(*pGame->pPlayer, pGame->map, 'W', pGame->world.tileSize) <= 2)
                 {
                     pGame->pPlayer->prevKeyPressed = 'W';
                     movePlayer(pGame->pPlayer, 'W');
@@ -147,8 +153,13 @@ void *handleInput(void *pGameIn) // Game *pGame)
             }
             if (currentKeyStates[SDL_SCANCODE_A] || currentKeyStates[SDL_SCANCODE_LEFT])
             {
-
-                if (checkCollision(*pGame->pPlayer, pGame->map, 'A', pGame->world.tileSize) <= 0)
+                if (checkCollision(*pGame->pPlayer, pGame->map, 'A', pGame->world.tileSize) == 1)
+                {
+                    int temp = rand() % (pGame->nrOfPortals + 1);
+                    pGame->pPlayer->x = pGame->portalList[temp].x;
+                    pGame->pPlayer->y = pGame->portalList[temp].y;
+                }
+                if (checkCollision(*pGame->pPlayer, pGame->map, 'A', pGame->world.tileSize) <= 2)
                 {
                     pGame->pPlayer->prevKeyPressed = 'A';
                     movePlayer(pGame->pPlayer, 'A');
@@ -161,8 +172,13 @@ void *handleInput(void *pGameIn) // Game *pGame)
             }
             if (currentKeyStates[SDL_SCANCODE_S] || currentKeyStates[SDL_SCANCODE_DOWN])
             {
-
-                if (checkCollision(*pGame->pPlayer, pGame->map, 'S', pGame->world.tileSize) <= 0)
+                if (checkCollision(*pGame->pPlayer, pGame->map, 'S', pGame->world.tileSize) == 1)
+                {
+                    int temp = rand() % (pGame->nrOfPortals + 1);
+                    pGame->pPlayer->x = pGame->portalList[temp].x;
+                    pGame->pPlayer->y = pGame->portalList[temp].y;
+                }
+                if (checkCollision(*pGame->pPlayer, pGame->map, 'S', pGame->world.tileSize) <= 2)
                 {
                     pGame->pPlayer->prevKeyPressed = 'S';
                     movePlayer(pGame->pPlayer, 'S');
@@ -175,8 +191,13 @@ void *handleInput(void *pGameIn) // Game *pGame)
             }
             if (currentKeyStates[SDL_SCANCODE_D] || currentKeyStates[SDL_SCANCODE_RIGHT])
             {
-
-                if (checkCollision(*pGame->pPlayer, pGame->map, 'D', pGame->world.tileSize) <= 0)
+                if (checkCollision(*pGame->pPlayer, pGame->map, 'D', pGame->world.tileSize) == 1)
+                {
+                    int temp = rand() % (pGame->nrOfPortals + 1);
+                    pGame->pPlayer->x = pGame->portalList[temp].x;
+                    pGame->pPlayer->y = pGame->portalList[temp].y;
+                }
+                if (checkCollision(*pGame->pPlayer, pGame->map, 'D', pGame->world.tileSize) <= 2)
                 {
                     pGame->pPlayer->prevKeyPressed = 'D';
                     movePlayer(pGame->pPlayer, 'D');
@@ -574,46 +595,65 @@ void loadMedia(SDL_Renderer *pRenderer, SDL_Texture **pPlayerTexture, SDL_Rect g
     gSpriteClips[26].h = h;
 }
 
-void drawPlayer(Game *pGame, Player player, int i) {
-    //SDL_SetRenderDrawColor(pGame->pRenderer, 0, 0, 255, 255);
+void drawPlayer(Game *pGame, Player player, int i)
+{
+    // SDL_SetRenderDrawColor(pGame->pRenderer, 0, 0, 255, 255);
     SDL_RenderDrawRect(pGame->pRenderer, &player.rect);
     SDL_RendererFlip flip = SDL_FLIP_HORIZONTAL;
 
     static int frame[MAX_PLAYERS] = {0};
-    static int counter[MAX_PLAYERS] = {10,10,10,10,10};
+    static int counter[MAX_PLAYERS] = {10, 10, 10, 10, 10};
 
     switch (player.prevKeyPressed)
     {
     case 'W':
-        if (player.idle) { 
-            frame[i] = 0; counter[i] = 10;
+        if (player.idle)
+        {
+            frame[i] = 0;
+            counter[i] = 10;
             SDL_RenderCopyEx(pGame->pRenderer, pGame->pPlayerTexture, &pGame->gSpriteClips[1], &player.rect, 0, NULL, SDL_FLIP_NONE);
-        } 
-        else SDL_RenderCopyEx(pGame->pRenderer, pGame->pPlayerTexture, &pGame->gSpriteClips[frame[i]+3+8], &player.rect, 0, NULL, SDL_FLIP_NONE);
+        }
+        else
+            SDL_RenderCopyEx(pGame->pRenderer, pGame->pPlayerTexture, &pGame->gSpriteClips[frame[i] + 3 + 8], &player.rect, 0, NULL, SDL_FLIP_NONE);
         break;
     case 'S':
-        if (player.idle) { 
-            frame[i] = 0; counter[i] = 10;
+        if (player.idle)
+        {
+            frame[i] = 0;
+            counter[i] = 10;
             SDL_RenderCopyEx(pGame->pRenderer, pGame->pPlayerTexture, &pGame->gSpriteClips[0], &player.rect, 0, NULL, SDL_FLIP_NONE);
-        } 
-        else SDL_RenderCopyEx(pGame->pRenderer, pGame->pPlayerTexture, &pGame->gSpriteClips[frame[i]+3], &player.rect, 0, NULL, SDL_FLIP_NONE);
+        }
+        else
+            SDL_RenderCopyEx(pGame->pRenderer, pGame->pPlayerTexture, &pGame->gSpriteClips[frame[i] + 3], &player.rect, 0, NULL, SDL_FLIP_NONE);
         break;
     case 'D':
-        if (player.idle) { 
-            frame[i] = 0; counter[i] = 10;
+        if (player.idle)
+        {
+            frame[i] = 0;
+            counter[i] = 10;
             SDL_RenderCopyEx(pGame->pRenderer, pGame->pPlayerTexture, &pGame->gSpriteClips[2], &player.rect, 0, NULL, SDL_FLIP_NONE);
-        } 
-        else SDL_RenderCopyEx(pGame->pRenderer, pGame->pPlayerTexture, &pGame->gSpriteClips[frame[i]+3+8+8], &player.rect, 0, NULL, SDL_FLIP_NONE);
+        }
+        else
+            SDL_RenderCopyEx(pGame->pRenderer, pGame->pPlayerTexture, &pGame->gSpriteClips[frame[i] + 3 + 8 + 8], &player.rect, 0, NULL, SDL_FLIP_NONE);
         break;
     case 'A':
-        if (player.idle) { 
-            frame[i] = 0; counter[i] = 10;
+        if (player.idle)
+        {
+            frame[i] = 0;
+            counter[i] = 10;
             SDL_RenderCopyEx(pGame->pRenderer, pGame->pPlayerTexture, &pGame->gSpriteClips[2], &player.rect, 0, NULL, flip);
-        } 
-        else SDL_RenderCopyEx(pGame->pRenderer, pGame->pPlayerTexture, &pGame->gSpriteClips[frame[i]+3+8+8], &player.rect, 0, NULL, flip);
+        }
+        else
+            SDL_RenderCopyEx(pGame->pRenderer, pGame->pPlayerTexture, &pGame->gSpriteClips[frame[i] + 3 + 8 + 8], &player.rect, 0, NULL, flip);
         break;
     }
-    if (counter[i] > 0) counter[i]--;
-    else { frame[i]++; counter[i] = 10; }
-    if (frame[i] % 8 == 0) frame[i] %= 8;
+    if (counter[i] > 0)
+        counter[i]--;
+    else
+    {
+        frame[i]++;
+        counter[i] = 10;
+    }
+    if (frame[i] % 8 == 0)
+        frame[i] %= 8;
 }
