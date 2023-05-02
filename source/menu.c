@@ -572,6 +572,19 @@ int testSelectMenu(Game *pGame, char *mapName)
                 return 1;
                 break;
             }
+            else if (event.type == SDL_WINDOWEVENT && event.window.event == SDL_WINDOWEVENT_CLOSE)
+            {
+                if (SDL_GetWindowID(pGame->pWindow) == event.window.windowID)
+                {
+                    exit = true;
+                    TTF_CloseFont(listFont);
+                    for (int i = 0; i < len; i++)
+                        freeText(pText[i]);
+                    freeTextList(strArr, len);
+                    return 1;
+                    break;
+                }
+            }
             else if (event.type == SDL_MOUSEWHEEL || event.type == SDL_KEYDOWN || event.type == SDL_MOUSEBUTTONDOWN)
             {
                 if (event.wheel.y < 0 && event.type == SDL_MOUSEWHEEL || event.key.keysym.sym == SDLK_DOWN) // scroll up
@@ -658,7 +671,7 @@ int catSelMenu(Game *pGame)
 {
     int previousTime = 0;
     bool exit = false;
-    Text *pSelPrompt = createText(pGame->pRenderer, 0, 0, 0, pGame->ui.pFpsFont, "Select your cat", pGame->windowWidth / 2, (pGame->windowHeight/5));
+    Text *pSelPrompt = createText(pGame->pRenderer, 0, 0, 0, pGame->ui.pFpsFont, "Select your cat", pGame->windowWidth / 2, (pGame->windowHeight / 5));
 
     while (!exit)
     {
@@ -671,7 +684,6 @@ int catSelMenu(Game *pGame)
                 freeText(pSelPrompt);
                 return 1;
             }
-
         }
         if (SDL_GetTicks() - previousTime >= 1000 / 60)
         {
