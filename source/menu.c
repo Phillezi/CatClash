@@ -10,6 +10,7 @@
 #include <SDL2/SDL_ttf.h>
 #include "ioHandler.h"
 #include "TCPclient.h"
+#include "levelEditor.h"
 
 int menu(Game *pGame)
 {
@@ -965,4 +966,19 @@ int mainMenu(Game *pGame)
     freeText(pHost);
 
     return mode;
+}
+
+void deathScreen(Game *pGame)
+{
+    Text *pDeathText = createText(pGame->pRenderer, 0, 0, 0, pGame->ui.pFpsFont, "You Died!", pGame->windowWidth / 2, pGame->windowHeight / 5);
+    pGame->pPlayer->hp = 0;
+    drawText(pDeathText, pGame->pRenderer);
+    SDL_RenderPresent(pGame->pRenderer);
+    lvlhandleZoom(pGame, -1);
+    freeText(pDeathText);
+}
+
+void winScreen()
+{
+
 }

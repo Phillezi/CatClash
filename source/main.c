@@ -102,8 +102,8 @@ int init(Game *pGame)
         return 1;
     }
 
-    pGame->windowWidth = (float)displayMode.w * 0.4; // 70% of avaliable space
-    pGame->windowHeight = (float)displayMode.h * 0.4;
+    pGame->windowWidth = (float)displayMode.w * 0.7; // 70% of avaliable space
+    pGame->windowHeight = (float)displayMode.h * 0.7;
 
     pGame->world.tileSize = (pGame->windowHeight / MAPSIZE) * 4;
 
@@ -309,9 +309,9 @@ void run(Game *pGame)
 
                 if (pGame->pPlayer->hp <= 0)
                 {
-                    pGame->state = OVER;
-                    // printf("You Died\n");
-                    pGame->pPlayer->hp = 255;
+                    pGame->pPlayer->state = DEAD;
+                    if(howManyAlive(pGame) > 1)
+                        deathScreen(pGame);
                 }
 
                 pGame->ui.healthbar.w = pGame->pPlayer->hp;

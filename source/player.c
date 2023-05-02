@@ -617,3 +617,8 @@ void drawPlayer(Game *pGame, Player player, int i) {
     else { frame[i]++; counter[i] = 10; }
     if (frame[i] % 8 == 0) frame[i] %= 8;
 }
+
+int howManyAlive(Game *pGame)
+{
+    return 2;
+}
