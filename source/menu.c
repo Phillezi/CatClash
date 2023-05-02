@@ -676,13 +676,19 @@ int catSelMenu(Game *pGame)
     while (!exit)
     {
         SDL_Event event;
-        while (SDL_PollEvent(&event))
+ while (SDL_PollEvent(&event))
         {
-            if (event.type == SDL_QUIT || event.key.keysym.sym == SDLK_ESCAPE)
+            if (event.type == SDL_QUIT)
             {
                 exit = true;
-                freeText(pSelPrompt);
-                return 1;
+            }
+            else if (event.type == SDL_WINDOWEVENT && event.window.event == SDL_WINDOWEVENT_CLOSE)
+            {
+
+                if (SDL_GetWindowID(pGame->pWindow) == event.window.windowID)
+                {
+                    exit = true;
+                }
             }
         }
         if (SDL_GetTicks() - previousTime >= 1000 / 60)
