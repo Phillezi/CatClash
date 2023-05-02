@@ -107,12 +107,16 @@ void lvlhandleInput(Game *pGame, int *pMouseX, int *pMouseY)
     else if (currentKeyStates[SDL_SCANCODE_3])
     {
         static int type = 0;
-        int sides[4] = {0,0,0,0};
+        int sides[4] = {0,0,0,0}, tmp;
         if ((*pMouseY - pGame->map[0].wall.y) < (pGame->map[0].wall.w * MAPSIZE) && (*pMouseX - pGame->map[0].wall.x) < (pGame->map[0].wall.w * MAPSIZE))
-            if (pGame->map[(((*pMouseY - pGame->map[0].wall.y) / pGame->map[0].wall.w * MAPSIZE) + ((*pMouseX - pGame->map[0].wall.x) / pGame->map[0].wall.w)) - (MAPSIZE)].type == 0) sides[0] = 1; 
-            if (pGame->map[(((*pMouseY - pGame->map[0].wall.y) / pGame->map[0].wall.w * MAPSIZE) + ((*pMouseX - pGame->map[0].wall.x) / pGame->map[0].wall.w)) + (MAPSIZE)].type == 0) sides[2] = 1;
-            if (pGame->map[(((*pMouseY - pGame->map[0].wall.y) / pGame->map[0].wall.w * MAPSIZE) + ((*pMouseX - pGame->map[0].wall.x) / pGame->map[0].wall.w)) - 1].type == 0) sides[3] = 1;
-            if (pGame->map[(((*pMouseY - pGame->map[0].wall.y) / pGame->map[0].wall.w * MAPSIZE) + ((*pMouseX - pGame->map[0].wall.x) / pGame->map[0].wall.w)) + 1].type == 0) sides[1] = 1;
+            tmp = (((*pMouseY - pGame->map[0].wall.y) / pGame->map[0].wall.w * MAPSIZE) + ((*pMouseX - pGame->map[0].wall.x) / pGame->map[0].wall.w)) - MAPSIZE;
+            if (tmp < 0 ? 0 : pGame->map[tmp].type == 0) sides[0] = 1; 
+            tmp = (((*pMouseY - pGame->map[0].wall.y) / pGame->map[0].wall.w * MAPSIZE) + ((*pMouseX - pGame->map[0].wall.x) / pGame->map[0].wall.w)) + MAPSIZE;
+            if (tmp >= 1024 ? 0 : pGame->map[tmp].type == 0) sides[2] = 1;
+            tmp = (((*pMouseY - pGame->map[0].wall.y) / pGame->map[0].wall.w * MAPSIZE) + ((*pMouseX - pGame->map[0].wall.x) / pGame->map[0].wall.w)) - 1;
+            if (tmp+1%32 == 0 ? 0 : pGame->map[tmp].type == 0) sides[3] = 1;
+            tmp = (((*pMouseY - pGame->map[0].wall.y) / pGame->map[0].wall.w * MAPSIZE) + ((*pMouseX - pGame->map[0].wall.x) / pGame->map[0].wall.w)) + 1;
+            if (tmp%32 == 0 ? 0 : pGame->map[tmp].type == 0) sides[1] = 1;
 
             if (sides[0] == 0 && sides[1] == 0 && sides[2] == 0 && sides[3] == 0) type = 0;
             if (sides[0] == 0 && sides[1] == 0 && sides[2] == 0 && sides[3] == 1) type = 7; 
