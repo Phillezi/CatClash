@@ -140,7 +140,7 @@ void *handleInput(void *pGameIn) // Game *pGame)
                     pGame->pPlayer->x = pGame->portalList[temp].x;
                     pGame->pPlayer->y = pGame->portalList[temp].y;
                 }
-                if (checkCollision(*pGame->pPlayer, pGame->map, 'W', pGame->world.tileSize) <= 2)
+                if (checkCollision(*pGame->pPlayer, pGame->map, 'W', pGame->world.tileSize) < 1)
                 {
                     pGame->pPlayer->prevKeyPressed = 'W';
                     movePlayer(pGame->pPlayer, 'W');
@@ -159,7 +159,7 @@ void *handleInput(void *pGameIn) // Game *pGame)
                     pGame->pPlayer->x = pGame->portalList[temp].x;
                     pGame->pPlayer->y = pGame->portalList[temp].y;
                 }
-                if (checkCollision(*pGame->pPlayer, pGame->map, 'A', pGame->world.tileSize) <= 2)
+                if (checkCollision(*pGame->pPlayer, pGame->map, 'A', pGame->world.tileSize) < 1)
                 {
                     pGame->pPlayer->prevKeyPressed = 'A';
                     movePlayer(pGame->pPlayer, 'A');
@@ -178,7 +178,7 @@ void *handleInput(void *pGameIn) // Game *pGame)
                     pGame->pPlayer->x = pGame->portalList[temp].x;
                     pGame->pPlayer->y = pGame->portalList[temp].y;
                 }
-                if (checkCollision(*pGame->pPlayer, pGame->map, 'S', pGame->world.tileSize) <= 2)
+                if (checkCollision(*pGame->pPlayer, pGame->map, 'S', pGame->world.tileSize) < 1)
                 {
                     pGame->pPlayer->prevKeyPressed = 'S';
                     movePlayer(pGame->pPlayer, 'S');
@@ -197,7 +197,7 @@ void *handleInput(void *pGameIn) // Game *pGame)
                     pGame->pPlayer->x = pGame->portalList[temp].x;
                     pGame->pPlayer->y = pGame->portalList[temp].y;
                 }
-                if (checkCollision(*pGame->pPlayer, pGame->map, 'D', pGame->world.tileSize) <= 2)
+                if (checkCollision(*pGame->pPlayer, pGame->map, 'D', pGame->world.tileSize) < 1)
                 {
                     pGame->pPlayer->prevKeyPressed = 'D';
                     movePlayer(pGame->pPlayer, 'D');
