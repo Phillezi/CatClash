@@ -10,13 +10,19 @@ void *MThostServer(void *mapName)
 
     bool exit = false;
     initMap(threads.server.map, (char *)mapName, 16);
+    int prevTime = 0;
     if (!MTsetup(&threads.server))
     {
         while (!exit)
         {
             pthread_create(&threads.tcp, NULL, MTtcpServer, (void *)&threads.server);
             pthread_create(&threads.udp, NULL, MTudpServer, (void *)&threads.server);
-            MTupdateServerScreen(&threads.server); // VSYNC är på dvs kommer den vara blockerande
+            int deltaTime = SDL_GetTicks() - prevTime;
+            if(deltaTime >= 1000/30){
+                prevTime = SDL_GetTicks();
+                MTupdateServerScreen(&threads.server);
+            }
+            
             pthread_join(threads.tcp, NULL);
             pthread_join(threads.udp, NULL);
             pthread_testcancel();
@@ -96,7 +102,7 @@ int MTsetup(Server *pServer)
         return 1;
     }
 
-    pServer->pRenderer = SDL_CreateRenderer(pServer->pWindow, -1, SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC);
+    pServer->pRenderer = SDL_CreateRenderer(pServer->pWindow, -1, SDL_RENDERER_ACCELERATED);
     if (!pServer->pRenderer)
     {
         debugPrint();

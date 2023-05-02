@@ -707,7 +707,7 @@ int catSelMenu(Game *pGame)
 
 int mainMenu(Game *pGame)
 {
-    SelectedMode mode;
+    SelectedMode mode = PLAY;
 
     bool quit = false;
     int deltaTime = 0, previousTime = 0;
