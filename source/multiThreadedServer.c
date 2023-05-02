@@ -57,10 +57,10 @@ void closeThreads(void *pThreadsIn)
     printf("Cleaning up Threads...\n");
     pthread_cancel(pT->tcp);
     printf("Cancelling TCP...\n");
-    pthread_cancel(pT->udp);
-    printf("Cancelling UDP...\n");
     pthread_join(pT->tcp, NULL);
     printf("Done: Cancelling TCP!\n");
+    pthread_cancel(pT->udp);
+    printf("Cancelling UDP...\n");
     pthread_join(pT->udp, NULL);
     printf("Done: Cancelling UDP!\n");
     printf("Done: Cleaning up Threads!\n");
@@ -190,6 +190,7 @@ void *MTtcpServer(void *pServerIn)
             for (int i = 0; i < MAPSIZE * MAPSIZE; i++)
                 SDLNet_TCP_Send(tmpClient, &pServer->map[i].type, sizeof(pServer->map[i].type)); // send map to client
             SDLNet_TCP_Send(tmpClient, &pServer->nrOfClients, sizeof(int));
+            /*
             int bytesRecv = SDLNet_TCP_Recv(tmpClient, &pServer->playerData[pServer->nrOfClients], sizeof(Player));
             if(bytesRecv != sizeof(Player)){
                 printf("Error when reciving Player struct over TCP\n");
@@ -198,6 +199,7 @@ void *MTtcpServer(void *pServerIn)
             for(int i = 0; i < pServer->nrOfClients; i++){
                 SDLNet_TCP_Send(tmpClient, &pServer->playerData[i], sizeof(Player));
             }
+            */
             /*
                 Skicka Player data till alla som har anslutit sig här
                 Dvs spara alla tmpSockets i socketSetTCP och iterera genom listan och skicka till alla

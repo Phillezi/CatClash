@@ -118,6 +118,8 @@ typedef struct playerNet
 
 struct game
 {
+    int nrOfPlayers;
+    Player *pMultiPlayer;
     UiE ui;
     SDL_Window *pWindow;
     SDL_Renderer *pRenderer;

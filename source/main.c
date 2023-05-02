@@ -65,9 +65,9 @@ int main(int argv, char **args)
             run(&game);
             break;
         case CATSEL:
-            if(catSelMenu(&game))
+            if (catSelMenu(&game))
                 break;
-                break;   
+            break;
         case HOST:
             if (testSelectMenu(&game, mapName))
                 break;
@@ -107,12 +107,11 @@ int init(Game *pGame)
         return 1;
     }
 
-    //pGame->windowWidth = (float)displayMode.w * 0.4; // 70% of avaliable space
-    //pGame->windowHeight = (float)displayMode.h * 0.4;
+    // pGame->windowWidth = (float)displayMode.w * 0.4; // 70% of avaliable space
+    // pGame->windowHeight = (float)displayMode.h * 0.4;
 
     pGame->windowWidth = 1920; // locked res
     pGame->windowHeight = 1080;
-
 
     pGame->world.tileSize = (pGame->windowHeight / MAPSIZE) * 4;
 
@@ -236,9 +235,10 @@ int init(Game *pGame)
     }
     SDL_SetWindowIcon(pGame->pWindow, pSurface);
     SDL_FreeSurface(pSurface);
-    
+
     loadMedia(pGame->pRenderer, &pGame->pPlayerTexture, pGame->gSpriteClips);
-    pGame->pPlayer->idle = 1;    
+    pGame->pPlayer->idle = 1;
+
     return 0;
 }
 
@@ -299,7 +299,11 @@ void run(Game *pGame)
                         sendData(pGame);
                         idle = 1;
                     }
-                    else if (idle) { sendData(pGame); idle = 0; } // Send one last data packet så other players know you are idle
+                    else if (idle)
+                    {
+                        sendData(pGame);
+                        idle = 0;
+                    } // Send one last data packet så other players know you are idle
                     pthread_create(&movementThread, NULL, handleInput, (void *)pGame);
                 }
                 else
@@ -362,6 +366,8 @@ void run(Game *pGame)
 
 void close(Game *pGame)
 {
+    if(pGame->pMultiPlayer)
+        free(pGame->pMultiPlayer);
     if (pGame->pPacket)
     {
         SDLNet_FreePacket(pGame->pPacket);
@@ -393,7 +399,7 @@ void close(Game *pGame)
     if (pGame->ui.pOverText)
         freeText(pGame->ui.pOverText);
     if (pGame->ui.pFpsText)
-        freeText(pGame->ui.pFpsText);  
+        freeText(pGame->ui.pFpsText);
     TTF_Quit();
 
     SDLNet_Quit();
@@ -434,14 +440,15 @@ void *updateScreen(void *pGameIn)
             }
         }
     }
-    
+
     SDL_SetRenderDrawColor(pGame->pRenderer, 0, 0, 255, 255);
 
     translatePositionToScreen(pGame);
     // Draw players
-    for (int i = 0; i < MAX_PLAYERS; i++) {
-        if (pGame->players[i].x != 0) drawPlayer(pGame, pGame->players[i], i);
-        else drawPlayer(pGame, *pGame->pPlayer, i);
+    drawPlayer(pGame, *pGame->pPlayer, pGame->pPlayer->id);
+    for (int i = 0; i < pGame->nrOfPlayers; i++)
+    {
+        drawPlayer(pGame, pGame->pMultiPlayer[i], i);
     }
 
     if (pGame->state == OVER)

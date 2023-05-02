@@ -1,4 +1,5 @@
 #include "clientUDP.h"
+#include "player.h"
 
 void sendData(Game *pGame)
 {
@@ -54,6 +55,29 @@ int getPlayerData(Game *pGame, Player players[])
         {
             PlayerUdpPkg tmp;
             memcpy(&tmp, pGame->pPacket->data, sizeof(PlayerUdpPkg));
+            if (tmp.id > pGame->nrOfPlayers)
+            {
+                pGame->pMultiPlayer = createNewMultiPlayer(pGame, pGame->nrOfPlayers, tmp);
+                pGame->nrOfPlayers++;
+                printf("A new player joined! (%d total)\n", pGame->nrOfPlayers );
+                /*
+                    Allocate memory for new player using Realloc
+                */
+            }
+            else
+            {
+                for (int j = 0; j < pGame->nrOfPlayers; j++)
+                {
+                    if (pGame->pMultiPlayer[j].id == tmp.id)
+                    {
+                        printf("Recived msg from %d\n", tmp.id);
+                        pGame->pMultiPlayer[j].x == tmp.x;
+                        pGame->pMultiPlayer[j].y == tmp.y;
+                        pGame->pMultiPlayer[j].idle == tmp.idle;
+                    }
+                }
+            }
+            /*
             if (!pGame->pPlayer->id)
             {
                 if (tmp.id - 1 < MAX_PLAYERS)
@@ -73,7 +97,8 @@ int getPlayerData(Game *pGame, Player players[])
                 players[tmp.id - 1].idle = tmp.idle;
                 players[tmp.id - 1].prevKeyPressed = tmp.direction;
             }
-            //printf("Recived package\n");
+            */
+            // printf("Recived package\n");
         }
     }
 

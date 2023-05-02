@@ -348,14 +348,14 @@ void translatePositionToScreen(Game *pGame)
     float scaleX = (float)pGame->map[0].wall.w / pGame->world.tileSize;
     int offsetX = pGame->map[0].wall.x - pGame->map[0].x;
     int offsetY = pGame->map[0].wall.y - pGame->map[0].y;
-    for (int i = 0; i < MAX_PLAYERS; i++)
+    for (int i = 0; i < pGame->nrOfPlayers; i++)
     {
-        pGame->players[i].rect.x = ((float)pGame->players[i].x * scaleX) + offsetX;
-        pGame->players[i].rect.y = ((float)pGame->players[i].y * scaleY) + offsetY;
+        pGame->pMultiPlayer[i].rect.x = ((float)pGame->pMultiPlayer[i].x * scaleX) + offsetX;
+        pGame->pMultiPlayer[i].rect.y = ((float)pGame->pMultiPlayer[i].y * scaleY) + offsetY;
 
-        pGame->players[i].rect.h = (pGame->world.tileSize / 2) + ((pGame->world.tileSize / 2) * (1 - (float)pGame->players[i].charge / MAX_CHARGE));
-        pGame->players[i].rect.y += pGame->world.tileSize - pGame->players[i].rect.h;
-        pGame->players[i].rect.w = pGame->world.tileSize;
+        pGame->pMultiPlayer[i].rect.h = (pGame->world.tileSize / 2) + ((pGame->world.tileSize / 2) * (1 - (float)pGame->pMultiPlayer[i].charge / MAX_CHARGE));
+        pGame->pMultiPlayer[i].rect.y += pGame->world.tileSize - pGame->pMultiPlayer[i].rect.h;
+        pGame->pMultiPlayer[i].rect.w = pGame->world.tileSize;
     }
 }
 
@@ -574,46 +574,88 @@ void loadMedia(SDL_Renderer *pRenderer, SDL_Texture **pPlayerTexture, SDL_Rect g
     gSpriteClips[26].h = h;
 }
 
-void drawPlayer(Game *pGame, Player player, int i) {
-    //SDL_SetRenderDrawColor(pGame->pRenderer, 0, 0, 255, 255);
+void drawPlayer(Game *pGame, Player player, int i)
+{
+    // SDL_SetRenderDrawColor(pGame->pRenderer, 0, 0, 255, 255);
     SDL_RenderDrawRect(pGame->pRenderer, &player.rect);
     SDL_RendererFlip flip = SDL_FLIP_HORIZONTAL;
 
     static int frame[MAX_PLAYERS] = {0};
-    static int counter[MAX_PLAYERS] = {10,10,10,10,10};
+    static int counter[MAX_PLAYERS] = {10, 10, 10, 10, 10};
 
     switch (player.prevKeyPressed)
     {
     case 'W':
-        if (player.idle) { 
-            frame[i] = 0; counter[i] = 10;
+        if (player.idle)
+        {
+            frame[i] = 0;
+            counter[i] = 10;
             SDL_RenderCopyEx(pGame->pRenderer, pGame->pPlayerTexture, &pGame->gSpriteClips[1], &player.rect, 0, NULL, SDL_FLIP_NONE);
-        } 
-        else SDL_RenderCopyEx(pGame->pRenderer, pGame->pPlayerTexture, &pGame->gSpriteClips[frame[i]+3+8], &player.rect, 0, NULL, SDL_FLIP_NONE);
+        }
+        else
+            SDL_RenderCopyEx(pGame->pRenderer, pGame->pPlayerTexture, &pGame->gSpriteClips[frame[i] + 3 + 8], &player.rect, 0, NULL, SDL_FLIP_NONE);
         break;
     case 'S':
-        if (player.idle) { 
-            frame[i] = 0; counter[i] = 10;
+        if (player.idle)
+        {
+            frame[i] = 0;
+            counter[i] = 10;
             SDL_RenderCopyEx(pGame->pRenderer, pGame->pPlayerTexture, &pGame->gSpriteClips[0], &player.rect, 0, NULL, SDL_FLIP_NONE);
-        } 
-        else SDL_RenderCopyEx(pGame->pRenderer, pGame->pPlayerTexture, &pGame->gSpriteClips[frame[i]+3], &player.rect, 0, NULL, SDL_FLIP_NONE);
+        }
+        else
+            SDL_RenderCopyEx(pGame->pRenderer, pGame->pPlayerTexture, &pGame->gSpriteClips[frame[i] + 3], &player.rect, 0, NULL, SDL_FLIP_NONE);
         break;
     case 'D':
-        if (player.idle) { 
-            frame[i] = 0; counter[i] = 10;
+        if (player.idle)
+        {
+            frame[i] = 0;
+            counter[i] = 10;
             SDL_RenderCopyEx(pGame->pRenderer, pGame->pPlayerTexture, &pGame->gSpriteClips[2], &player.rect, 0, NULL, SDL_FLIP_NONE);
-        } 
-        else SDL_RenderCopyEx(pGame->pRenderer, pGame->pPlayerTexture, &pGame->gSpriteClips[frame[i]+3+8+8], &player.rect, 0, NULL, SDL_FLIP_NONE);
+        }
+        else
+            SDL_RenderCopyEx(pGame->pRenderer, pGame->pPlayerTexture, &pGame->gSpriteClips[frame[i] + 3 + 8 + 8], &player.rect, 0, NULL, SDL_FLIP_NONE);
         break;
     case 'A':
-        if (player.idle) { 
-            frame[i] = 0; counter[i] = 10;
+        if (player.idle)
+        {
+            frame[i] = 0;
+            counter[i] = 10;
             SDL_RenderCopyEx(pGame->pRenderer, pGame->pPlayerTexture, &pGame->gSpriteClips[2], &player.rect, 0, NULL, flip);
-        } 
-        else SDL_RenderCopyEx(pGame->pRenderer, pGame->pPlayerTexture, &pGame->gSpriteClips[frame[i]+3+8+8], &player.rect, 0, NULL, flip);
+        }
+        else
+            SDL_RenderCopyEx(pGame->pRenderer, pGame->pPlayerTexture, &pGame->gSpriteClips[frame[i] + 3 + 8 + 8], &player.rect, 0, NULL, flip);
         break;
     }
-    if (counter[i] > 0) counter[i]--;
-    else { frame[i]++; counter[i] = 10; }
-    if (frame[i] % 8 == 0) frame[i] %= 8;
+    if (counter[i] > 0)
+        counter[i]--;
+    else
+    {
+        frame[i]++;
+        counter[i] = 10;
+    }
+    if (frame[i] % 8 == 0)
+        frame[i] %= 8;
+}
+
+Player *createNewMultiPlayer(Game *pGame, int size, PlayerUdpPkg data)
+{
+    Player *pNew_arr;
+    if(pGame->pMultiPlayer)
+        pNew_arr = (Player *)realloc(pGame->pMultiPlayer, (size + 1) * sizeof(Player));
+    else
+        pNew_arr = createPlayer(data.id, "alloc", pGame->world.tileSize);
+
+    if (pNew_arr == NULL)
+    {
+        printf("ERROR when allocating new memory for joined player\n");
+        return NULL;
+    }
+
+    pNew_arr[size].id = data.id;
+    pNew_arr[size].x = data.x;
+    pNew_arr[size].y = data.y;
+    pNew_arr[size].idle = data.idle;
+    strcpy(pNew_arr[size].name, "Allocated");
+
+    return pNew_arr;
 }
