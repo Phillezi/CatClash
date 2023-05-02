@@ -19,6 +19,7 @@ void *MThostServer(void *mapName)
                 printf("Could not create Thread TCP\n");
             if (pthread_create(&threads.udp, NULL, MTudpServer, (void *)&threads.server))
                 printf("Could not create Thread UDP\n");
+
             int deltaTime = SDL_GetTicks() - prevTime;
             if (deltaTime >= 1000 / 30)
             {
@@ -26,8 +27,6 @@ void *MThostServer(void *mapName)
                 MTupdateServerScreen(&threads.server);
             }
             pthread_testcancel();
-            pthread_join(threads.tcp, NULL);
-            pthread_join(threads.udp, NULL);
 
             SDL_Event event;
             while (SDL_PollEvent(&event))
@@ -54,6 +53,9 @@ void *MThostServer(void *mapName)
                     }
                 }
             }
+            pthread_join(threads.tcp, NULL);
+            pthread_join(threads.udp, NULL);
+            
         }
     }
     closeThreads((void *)&threads);
@@ -64,15 +66,22 @@ void *MThostServer(void *mapName)
 void closeThreads(void *pThreadsIn)
 {
     Threads *pT = (Threads *)pThreadsIn;
+
     printf("Cleaning up Threads...\n");
-    pthread_cancel(pT->tcp);
-    printf("Cancelling TCP...\n");
-    pthread_join(pT->tcp, NULL);
-    printf("Done: Cancelling TCP!\n");
-    pthread_cancel(pT->udp);
-    printf("Cancelling UDP...\n");
-    pthread_join(pT->udp, NULL);
-    printf("Done: Cancelling UDP!\n");
+    if (pT->tcp)
+    {
+        pthread_cancel(pT->tcp);
+        printf("Cancelling TCP...\n");
+        pthread_join(pT->tcp, NULL);
+        printf("Done: Cancelling TCP!\n");
+    }
+    if (pT->udp)
+    {
+        pthread_cancel(pT->udp);
+        printf("Cancelling UDP...\n");
+        pthread_join(pT->udp, NULL);
+        printf("Done: Cancelling UDP!\n");
+    }
     printf("Done: Cleaning up Threads!\n");
     printf("Cleaning up server...\n");
     MTclose(&pT->server);
@@ -183,6 +192,8 @@ int MTsetupTCP(Server *pServer)
 void *MTtcpServer(void *pServerIn)
 {
     Server *pServer = (Server *)pServerIn;
+    TCPsocket tmpClient;
+    int running = 1;
 
     pthread_setcancelstate(PTHREAD_CANCEL_ENABLE, NULL);
 
@@ -192,7 +203,7 @@ void *MTtcpServer(void *pServerIn)
 
     pthread_testcancel();
 
-    TCPsocket tmpClient = SDLNet_TCP_Accept(pServer->socketTCP);
+    tmpClient = SDLNet_TCP_Accept(pServer->socketTCP);
     if (tmpClient)
     {
         if (pServer->nrOfClients < MAX_PLAYERS)
@@ -290,6 +301,8 @@ void MTcheckUdpClient(Server *pServer, PlayerUdpPkg data)
 
 void *MTudpServer(void *pServerIn)
 {
+    Server *pServer = (Server *)pServerIn;
+    int running = 1;
     pthread_setcancelstate(PTHREAD_CANCEL_ENABLE, NULL);
 
     pthread_setcanceltype(PTHREAD_CANCEL_ASYNCHRONOUS, NULL);
@@ -298,7 +311,6 @@ void *MTudpServer(void *pServerIn)
 
     pthread_testcancel();
 
-    Server *pServer = (Server *)pServerIn;
     /*
     Kolla om alla i clients har skickat ett meddelande inom ett visst intervall (keep alive signaler ksk behöver skickas från klientsidan)
     Om servern inte har tagit emot ett meddelande från en klient så har den timeat ut och då bör den platsen i clientArrayen sättas till tom
@@ -331,6 +343,7 @@ void *MTudpServer(void *pServerIn)
             }
         }
     }
+
     pthread_cleanup_pop(0);
     pthread_exit(NULL);
 }

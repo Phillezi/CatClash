@@ -299,7 +299,7 @@ void run(Game *pGame)
                 if (pGame->config.multiThreading)
                 {
                     static int idle = 0;
-                    getPlayerData(pGame, pGame->players);
+                    getPlayerData(pGame, pGame->pMultiPlayer);
                     pthread_join(movementThread, NULL);
                     if (oldX != pGame->pPlayer->x || oldY != pGame->pPlayer->y || oldCharge != pGame->pPlayer->charge)
                     {
@@ -319,7 +319,7 @@ void run(Game *pGame)
                 }
                 else
                 {
-                    getPlayerData(pGame, pGame->players);
+                    getPlayerData(pGame, pGame->pMultiPlayer);
                     handleInput(pGame);
                     if (oldX != pGame->pPlayer->x || oldY != pGame->pPlayer->y || oldCharge != pGame->pPlayer->charge)
                     {
@@ -383,6 +383,8 @@ void run(Game *pGame)
             }
         }
     }
+    if (pGame->pPacket)
+        SDLNet_FreePacket(pGame->pPacket);
 }
 
 void close(Game *pGame)
@@ -469,7 +471,12 @@ void *updateScreen(void *pGameIn)
     drawPlayer(pGame, *pGame->pPlayer, pGame->pPlayer->id);
     for (int i = 0; i < pGame->nrOfPlayers; i++)
     {
+        char buffer[31];
+        sprintf(buffer, "P: %d", pGame->pMultiPlayer[i].id);
         drawPlayer(pGame, pGame->pMultiPlayer[i], pGame->pMultiPlayer[i].id);
+        pGame->ui.pPlayerName = createText(pGame->pRenderer, 0, 0, 0, pGame->ui.pFpsFont, buffer, pGame->pMultiPlayer[i].rect.x, pGame->pMultiPlayer[i].rect.y + (pGame->world.tileSize / 2));
+        drawText(pGame->ui.pPlayerName, pGame->pRenderer);
+        freeText(pGame->ui.pPlayerName);
     }
 
     if (pGame->state == OVER)

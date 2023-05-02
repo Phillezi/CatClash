@@ -94,7 +94,7 @@ struct uiElements
     SDL_Rect chargebar;
     SDL_Rect healthbar;
     SDL_Rect fpsFrame;
-    Text *pMenuText, *pOverText, *pFpsText;
+    Text *pMenuText, *pOverText, *pFpsText, *pPlayerName;
     TTF_Font *pGameFont, *pFpsFont;
 };
 typedef struct uiElements UiE;
@@ -141,7 +141,6 @@ struct game
     PlayerNet *pClient;
 
     //    Player player;
-    Player players[MAX_PLAYERS];
     Player *pPlayer;
     Tile map[MAPSIZE * MAPSIZE];
     World world;
