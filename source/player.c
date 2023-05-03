@@ -111,11 +111,17 @@ void *handleInput(void *pGameIn) // Game *pGame)
     }
     else if (pGame->pPlayer->charge > 0)
     {
+        srand(time(NULL));
         int damage = 0;
         int id = 0;
 
         for (int i = 0; i < 2 * (pGame->pPlayer->charge / 2); i++)
         {
+            if (checkCollision(*pGame->pPlayer, pGame->map, pGame->pPlayer->prevKeyPressed, pGame->world.tileSize) == 1) {
+                int temp = rand() % pGame->nrOfPortals;
+                pGame->pPlayer->x = pGame->portalList[temp].x;
+                pGame->pPlayer->y = pGame->portalList[temp].y;
+            }
             if (((id = playerCollision(*pGame->pPlayer, pGame->pMultiPlayer, pGame->nrOfPlayers, pGame->pPlayer->prevKeyPressed, pGame->world.tileSize)) == -1) && (checkCollision(*pGame->pPlayer, pGame->map, pGame->pPlayer->prevKeyPressed, pGame->world.tileSize) <= 0))
             {
                 movePlayer(pGame->pPlayer, pGame->pPlayer->prevKeyPressed);
@@ -123,7 +129,6 @@ void *handleInput(void *pGameIn) // Game *pGame)
             }
             else
             {
-                printf("%d\n", id);
                 if (id != -1) {
                     if (pGame->pPlayer->charge < pGame->pMultiPlayer[id].charge){
                         damage = pGame->pMultiPlayer->charge * 2;    // Collided with player
