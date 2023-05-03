@@ -496,7 +496,7 @@ void *updateScreen(void *pGameIn)
                         SDL_RenderCopy(pGame->pRenderer, pGame->pTileTextures[(pGame->map[i - MAPSIZE].type)], NULL, &temp);
                         SDL_SetTextureColorMod(pGame->pTileTextures[(pGame->map[i - MAPSIZE].type)], 255, 255, 255);
                     }
-                    else if(pGame->map[i - MAPSIZE].type)
+                    else if(pGame->map[i - MAPSIZE].type > 0)
                     {
                         temp = pGame->map[i].wall;
                         temp.h = ((float)pGame->world.tileSize * pGame->world.angle);
