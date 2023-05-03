@@ -6,6 +6,8 @@
 */
 int joinServerTCP(Game *pGame)
 {
+    pGame->nrOfPlayers = 0;
+
     IPaddress ip;
     if (SDLNet_ResolveHost(&ip, pGame->pClient->serverIP, pGame->pClient->port) == -1)
         return 1;
@@ -49,6 +51,7 @@ int joinServerTCP(Game *pGame)
                         SDLNet_FreeSocketSet(sockets);
                         return 1;
                     }
+                    /*
                     int bytesSent = SDLNet_TCP_Send(pGame->pClient->socketTCP, pGame->pPlayer, sizeof(Player));
                     if (bytesSent != sizeof(Player))
                     {
@@ -70,6 +73,7 @@ int joinServerTCP(Game *pGame)
                             return 1;
                         }
                     }
+                    */
 
                     printf("Recieved message\n");
                     exit = true;

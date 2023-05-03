@@ -5,6 +5,7 @@
 #include <SDL2/SDL_ttf.h>
 #include <stdlib.h>
 #include <stdbool.h>
+#include <pthread.h>
 
 // DEFINITIONS
 #define MAP_FILEPATH "resources/map.txt"
@@ -97,7 +98,7 @@ struct uiElements
     SDL_Rect chargebar;
     SDL_Rect healthbar;
     SDL_Rect fpsFrame;
-    Text *pMenuText, *pOverText, *pFpsText;
+    Text *pMenuText, *pOverText, *pFpsText, *pPlayerName;
     TTF_Font *pGameFont, *pFpsFont;
 };
 typedef struct uiElements UiE;
@@ -122,6 +123,10 @@ typedef struct playerNet
 
 struct game
 {
+    int nrOfPlayers;
+    bool serverIsHosted;
+    pthread_t serverThread;
+    Player *pMultiPlayer;
     UiE ui;
     SDL_Window *pWindow;
     SDL_Renderer *pRenderer;
@@ -143,7 +148,6 @@ struct game
     PlayerNet *pClient;
 
     //    Player player;
-    Player players[MAX_PLAYERS];
     Player *pPlayer;
     Tile map[MAPSIZE * MAPSIZE];
     World world;

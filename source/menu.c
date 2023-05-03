@@ -432,6 +432,25 @@ int joinServerMenu(Game *pGame)
                 freeText(pPrompt2);
                 return 1;
             }
+            else if (event.type == SDL_WINDOWEVENT && event.window.event == SDL_WINDOWEVENT_CLOSE)
+            {
+
+                if (SDL_GetWindowID(pGame->pWindow) == event.window.windowID)
+                {
+                    exit = true;
+                    break;
+                }
+                else
+                {
+                    if (pGame->serverIsHosted)
+                    {
+                        printf("Closing server...\n");
+                        pthread_cancel(pGame->serverThread);
+                        pthread_join(pGame->serverThread, NULL);
+                        pGame->serverIsHosted = false;
+                    }
+                }
+            }
             else if (getStringFromUser(text, event))
             {
                 if (SDLNet_Init())
@@ -584,6 +603,16 @@ int testSelectMenu(Game *pGame, char *mapName)
                     return 1;
                     break;
                 }
+                else
+                {
+                    if (pGame->serverIsHosted)
+                    {
+                        printf("Closing server...\n");
+                        pthread_cancel(pGame->serverThread);
+                        pthread_join(pGame->serverThread, NULL);
+                        pGame->serverIsHosted = false;
+                    }
+                }
             }
             else if (event.type == SDL_MOUSEWHEEL || event.type == SDL_KEYDOWN || event.type == SDL_MOUSEBUTTONDOWN)
             {
@@ -676,7 +705,7 @@ int catSelMenu(Game *pGame)
     while (!exit)
     {
         SDL_Event event;
- while (SDL_PollEvent(&event))
+        while (SDL_PollEvent(&event))
         {
             if (event.type == SDL_QUIT)
             {
@@ -684,10 +713,19 @@ int catSelMenu(Game *pGame)
             }
             else if (event.type == SDL_WINDOWEVENT && event.window.event == SDL_WINDOWEVENT_CLOSE)
             {
-
                 if (SDL_GetWindowID(pGame->pWindow) == event.window.windowID)
                 {
                     exit = true;
+                }
+                else
+                {
+                    if (pGame->serverIsHosted)
+                    {
+                        printf("Closing server...\n");
+                        pthread_cancel(pGame->serverThread);
+                        pthread_join(pGame->serverThread, NULL);
+                        pGame->serverIsHosted = false;
+                    }
                 }
             }
         }
@@ -716,19 +754,6 @@ int mainMenu(Game *pGame)
     int rAdd = 1, gAdd = 1, bAdd = 1;
     int playW, levelEditW, quitW, joinServerW, catSelectW, hostW;
 
-    Text *pPlay = createText(pGame->pRenderer, 200, 200, 200, pGame->ui.pFpsFont, "Play", pGame->windowWidth / 2, (pGame->windowHeight / 4) + (PLAY *pGame->world.tileSize));
-    TTF_SizeText(pGame->ui.pFpsFont, "Play", &playW, NULL);
-    Text *pLvlEdit = createText(pGame->pRenderer, 200, 200, 200, pGame->ui.pFpsFont, "Edit level", pGame->windowWidth / 2, (pGame->windowHeight / 4) + (EDIT *pGame->world.tileSize));
-    TTF_SizeText(pGame->ui.pFpsFont, "Edit level", &levelEditW, NULL);
-    Text *pQuit = createText(pGame->pRenderer, 200, 200, 200, pGame->ui.pFpsFont, "QUIT", pGame->windowWidth / 2, (pGame->windowHeight / 4) + (QUIT * pGame->world.tileSize));
-    TTF_SizeText(pGame->ui.pFpsFont, "QUIT", &quitW, NULL);
-    Text *pJoinServer = createText(pGame->pRenderer, 200, 200, 200, pGame->ui.pFpsFont, "Join Server", pGame->windowWidth / 2, (pGame->windowHeight / 4) + (JOIN * pGame->world.tileSize));
-    TTF_SizeText(pGame->ui.pFpsFont, "Join Server", &joinServerW, NULL);
-    Text *pCatSelect = createText(pGame->pRenderer, 200, 200, 200, pGame->ui.pFpsFont, "Cat Selection", pGame->windowWidth / 2, (pGame->windowHeight / 4) + (CATSEL * pGame->world.tileSize));
-    TTF_SizeText(pGame->ui.pFpsFont, "Cat Selection", &catSelectW, NULL);
-    Text *pHost = createText(pGame->pRenderer, 200, 200, 200, pGame->ui.pFpsFont, "Host Server", pGame->windowWidth / 2, (pGame->windowHeight / 4) + (HOST * pGame->world.tileSize));
-    TTF_SizeText(pGame->ui.pFpsFont, "Host Server", &hostW, NULL);
-
     int centerOfScreenX = pGame->windowWidth / 2;
     int playY = (pGame->windowHeight / 4) + (PLAY * pGame->world.tileSize);
     int editY = (pGame->windowHeight / 4) + (EDIT * pGame->world.tileSize);
@@ -736,6 +761,20 @@ int mainMenu(Game *pGame)
     int joinY = (pGame->windowHeight / 4) + (JOIN * pGame->world.tileSize);
     int catselY = (pGame->windowHeight / 4) + (CATSEL * pGame->world.tileSize);
     int hostY = (pGame->windowHeight / 4) + (HOST * pGame->world.tileSize);
+
+    Text *pPlay = createText(pGame->pRenderer, 200, 200, 200, pGame->ui.pFpsFont, "Play", centerOfScreenX, playY);
+    Text *pLvlEdit = createText(pGame->pRenderer, 200, 200, 200, pGame->ui.pFpsFont, "Edit level", centerOfScreenX, editY);
+    Text *pQuit = createText(pGame->pRenderer, 200, 200, 200, pGame->ui.pFpsFont, "QUIT", centerOfScreenX, quitY);
+    Text *pJoinServer = createText(pGame->pRenderer, 200, 200, 200, pGame->ui.pFpsFont, "Join Server", centerOfScreenX, joinY);
+    Text *pCatSelect = createText(pGame->pRenderer, 200, 200, 200, pGame->ui.pFpsFont, "Cat Selection", centerOfScreenX, catselY);
+    Text *pHost = createText(pGame->pRenderer, 200, 200, 200, pGame->ui.pFpsFont, "Host Server", centerOfScreenX, hostY);
+
+    TTF_SizeText(pGame->ui.pFpsFont, "Play", &playW, NULL);
+    TTF_SizeText(pGame->ui.pFpsFont, "Edit level", &levelEditW, NULL);
+    TTF_SizeText(pGame->ui.pFpsFont, "QUIT", &quitW, NULL);
+    TTF_SizeText(pGame->ui.pFpsFont, "Join Server", &joinServerW, NULL);
+    TTF_SizeText(pGame->ui.pFpsFont, "Cat Selection", &catSelectW, NULL);
+    TTF_SizeText(pGame->ui.pFpsFont, "Host Server", &hostW, NULL);
 
     while (!quit)
     {
@@ -755,6 +794,16 @@ int mainMenu(Game *pGame)
                 {
                     mode = QUIT;
                     quit = true;
+                }
+                else
+                {
+                    if (pGame->serverIsHosted)
+                    {
+                        printf("Closing server...\n");
+                        pthread_cancel(pGame->serverThread);
+                        pthread_join(pGame->serverThread, NULL);
+                        pGame->serverIsHosted = false;
+                    }
                 }
             }
             else if (event.type == SDL_KEYDOWN)
