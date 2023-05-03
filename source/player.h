@@ -2,7 +2,7 @@
 #ifndef player_h
 #define player_h
 
-void centerPlayer(Game *pGame);
+void centerPlayer(Game *pGame, Player *pPlayer);
 void *handleInput(void *pGameIn);//Game *pGame);
 void movePlayer(Player *pPlayer, char direction);
 int checkCollision(Player player, Tile map[], char direction, int tileSize);
@@ -16,5 +16,6 @@ int changePlayerTexture(SDL_Renderer *pRenderer, SDL_Window *pWindow, SDL_Textur
 void loadMedia(SDL_Renderer *pRenderer, SDL_Texture **pPlayerTexture, SDL_Rect gSpriteClips[]);
 void drawPlayer(Game *pGame, Player player, int i);
 Player *createNewMultiPlayer(Game *pGame, int size, PlayerUdpPkg data);
+void deadPlayer(Game *pGame);
 
 #endif

@@ -1,51 +1,53 @@
 #include "definitions.h"
 #include "player.h"
+#include "levelEditor.h"
+#include "text.h"
 #include <stdbool.h>
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_image.h>
 #include <SDL2/SDL_ttf.h>
 
-void centerPlayer(Game *pGame)
+void centerPlayer(Game *pGame, Player *pPlayer)
 {
     int screenShiftAmount = pGame->movementAmount;
-    if (pGame->pPlayer->rect.x >= (4 * pGame->windowWidth) / 5 || pGame->pPlayer->rect.x <= pGame->windowWidth / 5)
+    if (pPlayer->rect.x >= (4 * pGame->windowWidth) / 5 || pPlayer->rect.y <= pGame->windowWidth / 5)
     {
         screenShiftAmount = pGame->movementAmount * 2;
     }
-    if (pGame->pPlayer->rect.y >= (4 * pGame->windowHeight) / 5 || pGame->pPlayer->rect.y <= pGame->windowHeight / 5)
+    if (pPlayer->rect.y >= (4 * pGame->windowHeight) / 5 || pPlayer->rect.y <= pGame->windowHeight / 5)
     {
         screenShiftAmount = pGame->movementAmount * 2;
     }
-    if (pGame->pPlayer->rect.x >= pGame->windowWidth || pGame->pPlayer->rect.x <= 0)
+    if (pPlayer->rect.x >= pGame->windowWidth || pPlayer->rect.x <= 0)
     {
         screenShiftAmount = pGame->movementAmount * 10;
     }
-    if (pGame->pPlayer->rect.y >= pGame->windowHeight || pGame->pPlayer->rect.y <= 0)
+    if (pPlayer->rect.y >= pGame->windowHeight || pPlayer->rect.y <= 0)
     {
         screenShiftAmount = pGame->movementAmount * 10;
     }
-    if (pGame->pPlayer->rect.y < (2 * pGame->windowHeight) / 5)
+    if (pPlayer->rect.y < (2 * pGame->windowHeight) / 5)
     {
         for (int i = 0; i < MAPSIZE * MAPSIZE; i++)
         {
             pGame->map[i].wall.y += screenShiftAmount;
         }
     }
-    if (pGame->pPlayer->rect.y > (3 * pGame->windowHeight) / 5)
+    if (pPlayer->rect.y > (3 * pGame->windowHeight) / 5)
     {
         for (int i = 0; i < MAPSIZE * MAPSIZE; i++)
         {
             pGame->map[i].wall.y -= screenShiftAmount;
         }
     }
-    if (pGame->pPlayer->rect.x < (2 * pGame->windowWidth) / 5)
+    if (pPlayer->rect.x < (2 * pGame->windowWidth) / 5)
     {
         for (int i = 0; i < MAPSIZE * MAPSIZE; i++)
         {
             pGame->map[i].wall.x += screenShiftAmount;
         }
     }
-    if (pGame->pPlayer->rect.x > (3 * pGame->windowWidth) / 5)
+    if (pPlayer->rect.x > (3 * pGame->windowWidth) / 5)
     {
         for (int i = 0; i < MAPSIZE * MAPSIZE; i++)
         {
@@ -200,8 +202,18 @@ void *handleInput(void *pGameIn) // Game *pGame)
                 */
         }
     }
-    // CENTER PLAYER
-    centerPlayer(pGame);
+    // CENTER PLAYER + SPECTATE
+
+    switch (pGame->pPlayer->state)
+    {
+    case ALIVE:
+        centerPlayer(pGame, pGame->pPlayer);
+        break;
+    case DEAD:
+        if (&pGame->pMultiPlayer[pGame->tempID])
+            centerPlayer(pGame, &pGame->pMultiPlayer[pGame->tempID]);
+        break;
+    }
 
     int offsetX = pGame->map[0].wall.x - pGame->map[0].x;
     int offsetY = pGame->map[0].wall.y - pGame->map[0].y;
@@ -215,22 +227,25 @@ void *handleInput(void *pGameIn) // Game *pGame)
 
 void movePlayer(Player *pPlayer, char direction)
 {
-    switch (direction)
+    if (pPlayer->state == ALIVE)
     {
-    case 'W':
-        pPlayer->y--;
-        break;
-    case 'A':
-        pPlayer->x--;
-        break;
-    case 'S':
-        pPlayer->y++;
-        break;
-    case 'D':
-        pPlayer->x++;
-        break;
-    default:
-        break;
+        switch (direction)
+        {
+        case 'W':
+            pPlayer->y--;
+            break;
+        case 'A':
+            pPlayer->x--;
+            break;
+        case 'S':
+            pPlayer->y++;
+            break;
+        case 'D':
+            pPlayer->x++;
+            break;
+        default:
+            break;
+        }
     }
 }
 
@@ -333,6 +348,7 @@ Player *createPlayer(int id, char *name, int tileSize)
     pPlayer->rect.y = 0;
     pPlayer->x = 0;
     pPlayer->y = 0;
+    pPlayer->state = ALIVE;
 
     return pPlayer;
 }
@@ -576,7 +592,9 @@ void loadMedia(SDL_Renderer *pRenderer, SDL_Texture **pPlayerTexture, SDL_Rect g
 
 void drawPlayer(Game *pGame, Player player, int i)
 {
-    // SDL_SetRenderDrawColor(pGame->pRenderer, 0, 0, 255, 255);
+    if(pGame->pPlayer->state == ALIVE)
+    {
+      SDL_SetRenderDrawColor(pGame->pRenderer, 0, 0, 255, 255);
     SDL_RenderDrawRect(pGame->pRenderer, &player.rect);
     SDL_RendererFlip flip = SDL_FLIP_HORIZONTAL;
 
@@ -635,6 +653,7 @@ void drawPlayer(Game *pGame, Player player, int i)
     }
     if (frame[i] % 8 == 0)
         frame[i] %= 8;
+    }
 }
 
 Player *createNewMultiPlayer(Game *pGame, int size, PlayerUdpPkg data)
@@ -664,4 +683,8 @@ Player *createNewMultiPlayer(Game *pGame, int size, PlayerUdpPkg data)
     strcpy(pNew_arr[size].name, "Allocated");
 
     return pNew_arr;
+}
+
+void deadPlayer(Game *pGame)
+{
 }

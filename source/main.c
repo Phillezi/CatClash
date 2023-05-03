@@ -190,8 +190,8 @@ int init(Game *pGame)
         return 1;
     }
 
-    pGame->ui.pMenuText = createText(pGame->pRenderer, 97, 181, 97, pGame->ui.pGameFont, "Press Space to play!", pGame->windowWidth / 2, pGame->windowHeight / 2);
-    pGame->ui.pOverText = createText(pGame->pRenderer, 20, 197, 204, pGame->ui.pGameFont, "You Died!", pGame->windowWidth / 2, pGame->windowHeight / 2);
+    pGame->ui.pMenuText = createText(pGame->pRenderer, 0, 0, 0, pGame->ui.pFpsFont, "Use <- -> To Spectate", pGame->windowWidth / 2, pGame->windowHeight - pGame->windowHeight / 5);
+    pGame->ui.pOverText = createText(pGame->pRenderer, 0, 0, 0, pGame->ui.pFpsFont, "You Died!", pGame->windowWidth / 2, pGame->windowHeight / 5);
     if (!pGame->ui.pMenuText || !pGame->ui.pOverText)
     {
         printf("Error: %s\n", SDL_GetError());
@@ -246,6 +246,8 @@ int init(Game *pGame)
 
     loadMedia(pGame->pRenderer, &pGame->pPlayerTexture, pGame->gSpriteClips);
     pGame->pPlayer->idle = 1;
+
+    pGame->tempID = 0;
 
     return 0;
 }
@@ -331,11 +333,10 @@ void run(Game *pGame)
                     }
                 }
 
-                if (pGame->pPlayer->hp <= 0)
+                if (pGame->pPlayer->hp <= 0 && pGame->pPlayer->state == ALIVE)
                 {
-                    pGame->state = OVER;
-                    // printf("You Died\n");
-                    pGame->pPlayer->hp = 255;
+                    pGame->pPlayer->state = DEAD;
+                    deadPlayer(pGame);
                 }
 
                 pGame->ui.healthbar.w = pGame->pPlayer->hp;
@@ -379,6 +380,27 @@ void run(Game *pGame)
                         pthread_join(pGame->serverThread, NULL);
                         pGame->serverIsHosted = false;
                     }
+                }
+            }
+            else if (event.type == SDL_KEYDOWN)
+            {
+                if (event.key.keysym.sym == SDLK_RIGHT)
+                {
+                    if (pGame->tempID >= pGame->nrOfPlayers - 1)
+                        pGame->tempID = 0;
+                    else
+                        pGame->tempID += 1;
+                    //                   while (pGame->pMultiPlayer[pGame->tempID].state == DEAD)
+                    //                        pGame->tempID += 1;
+                }
+                else if (event.key.keysym.sym == SDLK_LEFT)
+                {
+                    if (pGame->tempID <= 0)
+                        pGame->tempID = pGame->nrOfPlayers - 1;
+                    else
+                        pGame->tempID -= 1;
+                    //                    while (pGame->pMultiPlayer[pGame->tempID].state == DEAD)
+                    //                        pGame->tempID -= 1;
                 }
             }
         }
@@ -479,17 +501,22 @@ void *updateScreen(void *pGameIn)
         freeText(pGame->ui.pPlayerName);
     }
 
-    if (pGame->state == OVER)
+    if (pGame->pPlayer->state == DEAD)
     {
         drawText(pGame->ui.pOverText, pGame->pRenderer);
+        drawText(pGame->ui.pMenuText, pGame->pRenderer);
     }
+
     drawText(pGame->ui.pFpsText, pGame->pRenderer);
 
-    SDL_SetRenderDrawColor(pGame->pRenderer, 255 - pGame->pPlayer->hp, pGame->pPlayer->hp, 0, 255);
-    SDL_RenderFillRect(pGame->pRenderer, &pGame->ui.healthbar);
+    if (pGame->pPlayer->state == ALIVE)
+    {
+        SDL_SetRenderDrawColor(pGame->pRenderer, 255 - pGame->pPlayer->hp, pGame->pPlayer->hp, 0, 255);
+        SDL_RenderFillRect(pGame->pRenderer, &pGame->ui.healthbar);
 
-    SDL_SetRenderDrawColor(pGame->pRenderer, 0, 0, 255, 255);
-    SDL_RenderFillRect(pGame->pRenderer, &pGame->ui.chargebar);
+        SDL_SetRenderDrawColor(pGame->pRenderer, 0, 0, 255, 255);
+        SDL_RenderFillRect(pGame->pRenderer, &pGame->ui.chargebar);
+    }
 
     SDL_RenderPresent(pGame->pRenderer);
 }

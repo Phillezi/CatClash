@@ -119,6 +119,7 @@ typedef struct playerNet
 
 struct game
 {
+    int tempID;
     int nrOfPlayers;
     bool serverIsHosted;
     pthread_t serverThread;
