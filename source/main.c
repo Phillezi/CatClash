@@ -12,6 +12,7 @@
 // #include "client.h"
 #include "clientUDP.h"
 #include "multiThreadedServer.h"
+#include <time.h>
 
 int init(Game *pGame);
 void run(Game *pGame);
@@ -251,6 +252,7 @@ int init(Game *pGame)
 
 void run(Game *pGame)
 {
+    findPortal(pGame);
     char windowTitle[31];
     sprintf(windowTitle, "CLIENT: %d", pGame->pPlayer->id);
     SDL_SetWindowTitle(pGame->pWindow, windowTitle);
@@ -463,13 +465,13 @@ void *updateScreen(void *pGameIn)
                     }
                 }
             }
-            if (i == (((pGame->pPlayer->y / pGame->map[0].wall.w) * MAPSIZE)+ ((pGame->pPlayer->x - 1) / pGame->map[0].wall.w) + 2))
+            if (i == (((pGame->pPlayer->y / pGame->map[0].wall.w) * MAPSIZE) + ((pGame->pPlayer->x - 1) / pGame->map[0].wall.w) + 2))
             {
                 drawPlayer(pGame, *pGame->pPlayer, pGame->pPlayer->id);
             }
             for (int j = 0; j < pGame->nrOfPlayers; j++)
             {
-                if (i == (((pGame->pMultiPlayer[j].y / pGame->map[0].wall.w) * MAPSIZE)+ ((pGame->pMultiPlayer[j].x - 1) / pGame->map[0].wall.w) + 2))
+                if (i == (((pGame->pMultiPlayer[j].y / pGame->map[0].wall.w) * MAPSIZE) + ((pGame->pMultiPlayer[j].x - 1) / pGame->map[0].wall.w) + 2))
                 {
                     char buffer[31];
                     sprintf(buffer, "p:%d,i:%d", pGame->pMultiPlayer[j].id, j);
@@ -484,7 +486,6 @@ void *updateScreen(void *pGameIn)
 
     SDL_SetRenderDrawColor(pGame->pRenderer, 0, 0, 255, 255);
 
-    
     /*
     // Draw players
     drawPlayer(pGame, *pGame->pPlayer, pGame->pPlayer->id);
