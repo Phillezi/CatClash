@@ -118,11 +118,8 @@ int init(Game *pGame)
         return 1;
     }
 
-    // pGame->windowWidth = (float)displayMode.w * 0.4; // 70% of avaliable space
-    // pGame->windowHeight = (float)displayMode.h * 0.4;
-
-    pGame->windowWidth = 1920; // locked res
-    pGame->windowHeight = 1080;
+    pGame->windowWidth = (float)displayMode.w * 0.4; // 70% of avaliable space
+    pGame->windowHeight = (float)displayMode.h * 0.4;
 
     pGame->world.tileSize = (pGame->windowHeight / MAPSIZE) * 4;
 
@@ -255,6 +252,9 @@ int init(Game *pGame)
 
 void run(Game *pGame)
 {
+    char windowTitle[31];
+    sprintf(windowTitle, "CLIENT: %d", pGame->pPlayer->id);
+    SDL_SetWindowTitle(pGame->pWindow, windowTitle);
     pGame->pPacket = SDLNet_AllocPacket(sizeof(PlayerUdpPkg));
     if (pGame->socketDesc = SDLNet_UDP_Open(0))
     {
