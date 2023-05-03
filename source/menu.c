@@ -9,7 +9,8 @@
 #include <SDL2/SDL_image.h>
 #include <SDL2/SDL_ttf.h>
 #include "ioHandler.h"
-#include "TCPclient.h"
+//#include "TCPclient.h"
+#include "newClient.h"
 
 int menu(Game *pGame)
 {
@@ -453,17 +454,8 @@ int joinServerMenu(Game *pGame)
             }
             else if (getStringFromUser(text, event))
             {
-                if (SDLNet_Init())
-                {
-                    printf("Error: %s\n", SDL_GetError());
-                    exit = true;
-                    freeText(pIpText);
-                    freeText(pPrompt);
-                    freeText(pPrompt2);
-                    return 1;
-                }
                 pGame->pClient = createClient(text, 1234, 0, 100, 100);
-                if (joinServerTCP(pGame))
+                if (connectToServer(pGame))
                 {
                     printf("Error: Could not join server\n");
                     exit = true;
@@ -473,13 +465,11 @@ int joinServerMenu(Game *pGame)
                     freeText(pPrompt2);
                     return 1;
                 }
-                //free(pGame->pClient);
                 initMapFromTCP(pGame->map, pGame->world.tileSize);
                 getPlayerSpawnPos(pGame);
                 SDLNet_ResolveHost(&pGame->serverAddress, text, 1234);
                 exit = true;
             }
-
             else
             {
                 if (text[0])

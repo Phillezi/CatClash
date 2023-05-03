@@ -13,10 +13,9 @@ all:
 	$(CC) $(CFLAGS) $(SRCDIR)/menu.c    
 	$(CC) $(CFLAGS) $(SRCDIR)/levelEditor.c
 	$(CC) $(CFLAGS) $(SRCDIR)/ioHandler.c
-	$(CC) $(CFLAGS) $(SRCDIR)/TCPclient.c 
-	$(CC) $(CFLAGS) $(SRCDIR)/clientUDP.c 
+	$(CC) $(CFLAGS) $(SRCDIR)/newClient.c
 	$(CC) $(CFLAGS) $(SRCDIR)/multiThreadedServer.c 
-	$(CC) main.o init.o text.o player.o menu.o levelEditor.o ioHandler.o TCPclient.o clientUDP.o multiThreadedServer.o -o main.exe $(LDFLAGS)
+	$(CC) main.o init.o text.o player.o menu.o levelEditor.o ioHandler.o newClient.o multiThreadedServer.o -o main.exe $(LDFLAGS)
 
 demo:
 	@echo "Building demo"

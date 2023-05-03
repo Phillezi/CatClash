@@ -212,7 +212,7 @@ void *MTtcpServer(void *pServerIn)
             for (int i = 0; i < MAPSIZE * MAPSIZE; i++)
             {
                 bytesSent = SDLNet_TCP_Send(tmpClient, &pServer->map[i].type, sizeof(pServer->map[i].type)); // send map to client
-                if (bytesSent != sizeof(int))
+                if (bytesSent != sizeof(pServer->map[i].type))
                 {
                     printf("Error: packet loss when sending map nr:%d\n", i);
                 }
@@ -227,7 +227,7 @@ void *MTtcpServer(void *pServerIn)
             */
 
             bytesSent = SDLNet_TCP_Send(tmpClient, &pServer->nrOfClients, sizeof(pServer->nrOfClients));
-            if (bytesSent != sizeof(int))
+            if (bytesSent != sizeof(pServer->nrOfClients))
             {
                 printf("Error: packet loss when sending player id\n");
             }
