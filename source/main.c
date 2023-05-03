@@ -36,15 +36,11 @@ int main(int argv, char **args)
         switch (mainMenu(&game))
         {
         case PLAY:
-            // if (mapSelection(&game))
-            //     break;
             if (testSelectMenu(&game, mapName))
                 break;
             run(&game);
             break;
         case EDIT:
-            // if (mapSelection(&game))
-            //     break;
             if (testSelectMenu(&game, mapName))
                 break;
             levelEditor(&game);
@@ -82,7 +78,10 @@ int main(int argv, char **args)
                     game.serverIsHosted = true;
                 }
             }
-
+            else
+            {
+                printf("SERVER IS ALREADY HOSTED\n");
+            }
             break;
         default:
             break;
@@ -441,6 +440,9 @@ void *updateScreen(void *pGameIn)
     SDL_SetRenderDrawColor(pGame->pRenderer, 255, 255, 255, 255);
     SDL_RenderClear(pGame->pRenderer);
     SDL_Rect temp;
+
+    translatePositionToScreen(pGame);
+
     for (int i = 0; i < MAPSIZE * MAPSIZE; i++)
     {
         if (((pGame->map[i].wall.x <= pGame->windowWidth) && (pGame->map[i].wall.x + pGame->world.tileSize >= 0)) && ((pGame->map[i].wall.y <= pGame->windowHeight) && (pGame->map[i].wall.y + pGame->world.tileSize >= 0)))
@@ -461,12 +463,29 @@ void *updateScreen(void *pGameIn)
                     }
                 }
             }
+            if (i == (((pGame->pPlayer->y / pGame->map[0].wall.w) * MAPSIZE)+ ((pGame->pPlayer->x - 1) / pGame->map[0].wall.w) + 2))
+            {
+                drawPlayer(pGame, *pGame->pPlayer, pGame->pPlayer->id);
+            }
+            for (int j = 0; j < pGame->nrOfPlayers; j++)
+            {
+                if (i == (((pGame->pMultiPlayer[j].y / pGame->map[0].wall.w) * MAPSIZE)+ ((pGame->pMultiPlayer[j].x - 1) / pGame->map[0].wall.w) + 2))
+                {
+                    char buffer[31];
+                    sprintf(buffer, "P: %d", pGame->pMultiPlayer[j].id);
+                    drawPlayer(pGame, pGame->pMultiPlayer[j], pGame->pMultiPlayer[j].id);
+                    pGame->ui.pPlayerName = createText(pGame->pRenderer, 0, 0, 0, pGame->ui.pFpsFont, buffer, pGame->pMultiPlayer[j].rect.x, pGame->pMultiPlayer[j].rect.y + (pGame->world.tileSize / 2));
+                    drawText(pGame->ui.pPlayerName, pGame->pRenderer);
+                    freeText(pGame->ui.pPlayerName);
+                }
+            }
         }
     }
 
     SDL_SetRenderDrawColor(pGame->pRenderer, 0, 0, 255, 255);
 
-    translatePositionToScreen(pGame);
+    
+    /*
     // Draw players
     drawPlayer(pGame, *pGame->pPlayer, pGame->pPlayer->id);
     for (int i = 0; i < pGame->nrOfPlayers; i++)
@@ -478,6 +497,7 @@ void *updateScreen(void *pGameIn)
         drawText(pGame->ui.pPlayerName, pGame->pRenderer);
         freeText(pGame->ui.pPlayerName);
     }
+    */
 
     if (pGame->state == OVER)
     {
