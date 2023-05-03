@@ -12,6 +12,7 @@
 // #include "client.h"
 #include "clientUDP.h"
 #include "multiThreadedServer.h"
+#include <time.h>
 
 int init(Game *pGame);
 void run(Game *pGame);
@@ -36,15 +37,11 @@ int main(int argv, char **args)
         switch (mainMenu(&game))
         {
         case PLAY:
-            // if (mapSelection(&game))
-            //     break;
             if (testSelectMenu(&game, mapName))
                 break;
             run(&game);
             break;
         case EDIT:
-            // if (mapSelection(&game))
-            //     break;
             if (testSelectMenu(&game, mapName))
                 break;
             levelEditor(&game);
@@ -82,7 +79,10 @@ int main(int argv, char **args)
                     game.serverIsHosted = true;
                 }
             }
-
+            else
+            {
+                printf("SERVER IS ALREADY HOSTED\n");
+            }
             break;
         default:
             break;
@@ -254,6 +254,7 @@ int init(Game *pGame)
 
 void run(Game *pGame)
 {
+    findPortal(pGame);
     char windowTitle[31];
     sprintf(windowTitle, "CLIENT: %d", pGame->pPlayer->id);
     SDL_SetWindowTitle(pGame->pWindow, windowTitle);
@@ -463,6 +464,9 @@ void *updateScreen(void *pGameIn)
     SDL_SetRenderDrawColor(pGame->pRenderer, 255, 255, 255, 255);
     SDL_RenderClear(pGame->pRenderer);
     SDL_Rect temp;
+
+    translatePositionToScreen(pGame);
+
     for (int i = 0; i < MAPSIZE * MAPSIZE; i++)
     {
         if (((pGame->map[i].wall.x <= pGame->windowWidth) && (pGame->map[i].wall.x + pGame->world.tileSize >= 0)) && ((pGame->map[i].wall.y <= pGame->windowHeight) && (pGame->map[i].wall.y + pGame->world.tileSize >= 0)))
@@ -477,10 +481,26 @@ void *updateScreen(void *pGameIn)
                     {
                         temp = pGame->map[i].wall;
                         temp.h = ((float)pGame->world.tileSize * pGame->world.angle);
-                        SDL_SetTextureColorMod(pGame->pTileTextures[(pGame->map[i - MAPSIZE].type - 1)], 150, 150, 150);
-                        SDL_RenderCopy(pGame->pRenderer, pGame->pTileTextures[(pGame->map[i - MAPSIZE].type - 1)], NULL, &temp);
-                        SDL_SetTextureColorMod(pGame->pTileTextures[(pGame->map[i - MAPSIZE].type - 1)], 255, 255, 255);
+                        SDL_SetTextureColorMod(pGame->pTileTextures[(pGame->map[i - MAPSIZE].type)], 150, 150, 150);
+                        SDL_RenderCopy(pGame->pRenderer, pGame->pTileTextures[(pGame->map[i - MAPSIZE].type)], NULL, &temp);
+                        SDL_SetTextureColorMod(pGame->pTileTextures[(pGame->map[i - MAPSIZE].type)], 255, 255, 255);
                     }
+                }
+            }
+            if (i == (((pGame->pPlayer->y / pGame->map[0].wall.w) * MAPSIZE) + ((pGame->pPlayer->x - 1) / pGame->map[0].wall.w) + 2))
+            {
+                drawPlayer(pGame, *pGame->pPlayer, pGame->pPlayer->id);
+            }
+            for (int j = 0; j < pGame->nrOfPlayers; j++)
+            {
+                if (i == (((pGame->pMultiPlayer[j].y / pGame->map[0].wall.w) * MAPSIZE) + ((pGame->pMultiPlayer[j].x - 1) / pGame->map[0].wall.w) + 2))
+                {
+                    char buffer[31];
+                    sprintf(buffer, "p:%d,i:%d", pGame->pMultiPlayer[j].id, j);
+                    drawPlayer(pGame, pGame->pMultiPlayer[j], pGame->pMultiPlayer[j].id);
+                    pGame->ui.pPlayerName = createText(pGame->pRenderer, 0, 0, 0, pGame->ui.pFpsFont, buffer, pGame->pMultiPlayer[j].rect.x, pGame->pMultiPlayer[j].rect.y + (pGame->world.tileSize / 2));
+                    drawText(pGame->ui.pPlayerName, pGame->pRenderer);
+                    freeText(pGame->ui.pPlayerName);
                 }
             }
         }
@@ -488,7 +508,7 @@ void *updateScreen(void *pGameIn)
 
     SDL_SetRenderDrawColor(pGame->pRenderer, 0, 0, 255, 255);
 
-    translatePositionToScreen(pGame);
+    /*
     // Draw players
     drawPlayer(pGame, *pGame->pPlayer, pGame->pPlayer->id);
     for (int i = 0; i < pGame->nrOfPlayers; i++)
@@ -500,6 +520,7 @@ void *updateScreen(void *pGameIn)
         drawText(pGame->ui.pPlayerName, pGame->pRenderer);
         freeText(pGame->ui.pPlayerName);
     }
+    */
 
     if (pGame->pPlayer->state == DEAD)
     {

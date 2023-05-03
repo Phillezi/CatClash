@@ -187,15 +187,15 @@ int initMap(Tile map[], char filepath[], int tileSize)
 
 int initMapFromTCP(Tile map[], int tileSize)
 {
-        for (int row = 0; row < MAPSIZE; row++)
+    for (int row = 0; row < MAPSIZE; row++)
+    {
+        for (int col = 0; col < MAPSIZE; col++)
         {
-            for (int col = 0; col < MAPSIZE; col++)
-            {
-                map[row * MAPSIZE + col] = createTile(col, row, map[row * MAPSIZE + col].type, tileSize);
-                map[row * MAPSIZE + col].x = map[row * MAPSIZE + col].wall.x;
-                map[row * MAPSIZE + col].y = map[row * MAPSIZE + col].wall.y;
-            }
+            map[row * MAPSIZE + col] = createTile(col, row, map[row * MAPSIZE + col].type, tileSize);
+            map[row * MAPSIZE + col].x = map[row * MAPSIZE + col].wall.x;
+            map[row * MAPSIZE + col].y = map[row * MAPSIZE + col].wall.y;
         }
+    }
     return 0;
 }
 /*
@@ -232,4 +232,18 @@ int readConfig(Config *pConfig)
         return -1;
     }
     return 0;
+}
+void findPortal(Game *pGame)
+{
+    pGame->nrOfPortals = 0;
+
+    for (int i = 0; i < MAPSIZE * MAPSIZE; i++)
+    {
+        if (pGame->map[i].type == 1)
+        {
+            pGame->portalList[pGame->nrOfPortals].x = pGame->map[i].x;
+            pGame->portalList[pGame->nrOfPortals].y = pGame->map[i].y;
+            pGame->nrOfPortals++;
+        }
+    }
 }
