@@ -472,7 +472,7 @@ void *updateScreen(void *pGameIn)
                 if (i == (((pGame->pMultiPlayer[j].y / pGame->map[0].wall.w) * MAPSIZE)+ ((pGame->pMultiPlayer[j].x - 1) / pGame->map[0].wall.w) + 2))
                 {
                     char buffer[31];
-                    sprintf(buffer, "P: %d", pGame->pMultiPlayer[j].id);
+                    sprintf(buffer, "p:%d,i:%d", pGame->pMultiPlayer[j].id, j);
                     drawPlayer(pGame, pGame->pMultiPlayer[j], pGame->pMultiPlayer[j].id);
                     pGame->ui.pPlayerName = createText(pGame->pRenderer, 0, 0, 0, pGame->ui.pFpsFont, buffer, pGame->pMultiPlayer[j].rect.x, pGame->pMultiPlayer[j].rect.y + (pGame->world.tileSize / 2));
                     drawText(pGame->ui.pPlayerName, pGame->pRenderer);
