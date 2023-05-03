@@ -136,9 +136,13 @@ void *handleInput(void *pGameIn) // Game *pGame)
 
                 if (checkCollision(*pGame->pPlayer, pGame->map, 'W', pGame->world.tileSize) == 1)
                 {
-                    int temp = rand() % (pGame->nrOfPortals + 1);
+                    int temp = rand() % pGame->nrOfPortals;
                     pGame->pPlayer->x = pGame->portalList[temp].x;
                     pGame->pPlayer->y = pGame->portalList[temp].y;
+                    printf("%d\n", pGame->pPlayer->x);
+                    printf("%d\n", pGame->pPlayer->y);
+                    printf("%d\n", pGame->portalList[temp].x);
+                    printf("%d\n", pGame->portalList[temp].y);
                 }
                 if (checkCollision(*pGame->pPlayer, pGame->map, 'W', pGame->world.tileSize) < 1)
                 {
@@ -155,9 +159,13 @@ void *handleInput(void *pGameIn) // Game *pGame)
             {
                 if (checkCollision(*pGame->pPlayer, pGame->map, 'A', pGame->world.tileSize) == 1)
                 {
-                    int temp = rand() % (pGame->nrOfPortals + 1);
+                    int temp = rand() % pGame->nrOfPortals;
                     pGame->pPlayer->x = pGame->portalList[temp].x;
                     pGame->pPlayer->y = pGame->portalList[temp].y;
+                    printf("%d\n", pGame->pPlayer->x);
+                    printf("%d\n", pGame->pPlayer->y);
+                    printf("%d\n", pGame->portalList[temp].x);
+                    printf("%d\n", pGame->portalList[temp].y);
                 }
                 if (checkCollision(*pGame->pPlayer, pGame->map, 'A', pGame->world.tileSize) < 1)
                 {
@@ -174,9 +182,13 @@ void *handleInput(void *pGameIn) // Game *pGame)
             {
                 if (checkCollision(*pGame->pPlayer, pGame->map, 'S', pGame->world.tileSize) == 1)
                 {
-                    int temp = rand() % (pGame->nrOfPortals + 1);
+                    int temp = rand() % pGame->nrOfPortals;
                     pGame->pPlayer->x = pGame->portalList[temp].x;
                     pGame->pPlayer->y = pGame->portalList[temp].y;
+                    printf("%d\n", pGame->pPlayer->x);
+                    printf("%d\n", pGame->pPlayer->y);
+                    printf("%d\n", pGame->portalList[temp].x);
+                    printf("%d\n", pGame->portalList[temp].y);
                 }
                 if (checkCollision(*pGame->pPlayer, pGame->map, 'S', pGame->world.tileSize) < 1)
                 {
@@ -193,9 +205,13 @@ void *handleInput(void *pGameIn) // Game *pGame)
             {
                 if (checkCollision(*pGame->pPlayer, pGame->map, 'D', pGame->world.tileSize) == 1)
                 {
-                    int temp = rand() % (pGame->nrOfPortals + 1);
+                    int temp = rand() % pGame->nrOfPortals;
                     pGame->pPlayer->x = pGame->portalList[temp].x;
                     pGame->pPlayer->y = pGame->portalList[temp].y;
+                    printf("%d", pGame->pPlayer->x);
+                    printf("%d", pGame->pPlayer->y);
+                    printf("%d\n", pGame->portalList[temp].x);
+                    printf("%d\n", pGame->portalList[temp].y);
                 }
                 if (checkCollision(*pGame->pPlayer, pGame->map, 'D', pGame->world.tileSize) < 1)
                 {
