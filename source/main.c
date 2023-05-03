@@ -422,14 +422,17 @@ void close(Game *pGame)
     {
         destroyPlayer(pGame->pPlayer);
     }
-    if (pGame->pTileTextures[0])
-        SDL_DestroyTexture(pGame->pTileTextures[0]);
-    if (pGame->pTileTextures[1])
-        SDL_DestroyTexture(pGame->pTileTextures[1]);
-    if (pGame->pTileTextures[2])
-        SDL_DestroyTexture(pGame->pTileTextures[2]);
-    if (pGame->pTileTextures[3])
-        SDL_DestroyTexture(pGame->pTileTextures[3]);
+    for (int i = 0; i < TILES; i++)
+    {
+        if (pGame->pTileTextures[i])
+            SDL_DestroyTexture(pGame->pTileTextures[i]);
+    }
+    /* if (pGame->pTileTextures[1])
+         SDL_DestroyTexture(pGame->pTileTextures[1]);
+     if (pGame->pTileTextures[2])
+         SDL_DestroyTexture(pGame->pTileTextures[2]);
+     if (pGame->pTileTextures[3])
+         SDL_DestroyTexture(pGame->pTileTextures[3]);*/
     if (pGame->pPlayerTexture)
         SDL_DestroyTexture(pGame->pPlayerTexture);
     if (pGame->ui.pGameFont)
