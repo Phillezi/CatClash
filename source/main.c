@@ -158,14 +158,7 @@ int init(Game *pGame)
         printf("Error: %s\n", SDL_GetError());
         return 1;
     }
-    /*
-        char tileTextures[TILES][20] = {"resources/Tile1.png", "resources/Tile2.png", "resources/Tile3.png", "resources/Tile4.png"};
-        if (initTextureTiles(pGame->pRenderer, pGame->pWindow, pGame->pTileTextures, tileTextures, TILES) == -1)
-        {
-            printf("Error: %s\n", SDL_GetError());
-            return 1;
-        }
-    */
+
     loadTileAtlas(pGame->pRenderer, pGame->pTileTextures, "resources/tileMap.png");
     if (!pGame->pTileTextures[0])
     {
@@ -482,26 +475,38 @@ void *updateScreen(void *pGameIn)
     static int count = 300;
     static char dir[4] = {'W', 'A', 'S', 'D'};
 
-    for (int i = 0; i < pGame->nrOfPlayers; i++) {
-        if (pGame->pMultiPlayer[i].charging == 1) check = 1;
+    for (int i = 0; i < pGame->nrOfPlayers; i++)
+    {
+        if (pGame->pMultiPlayer[i].charging == 1)
+            check = 1;
     }
 
-    if (count == 300){
-        if (check){
-            for (int i = 0; i < 4; i++) {
-                if ((id = playerCollision(*pGame->pPlayer, pGame->pMultiPlayer, pGame->nrOfPlayers, dir[i], pGame->world.tileSize)) != -1) 
-                    if (pGame->pMultiPlayer[id].charging) { collision = 1; break; }
-            } 
-            if (collision) {
+    if (count == 300)
+    {
+        if (check)
+        {
+            for (int i = 0; i < 4; i++)
+            {
+                if ((id = playerCollision(*pGame->pPlayer, pGame->pMultiPlayer, pGame->nrOfPlayers, dir[i], pGame->world.tileSize)) != -1)
+                    if (pGame->pMultiPlayer[id].charging)
+                    {
+                        collision = 1;
+                        break;
+                    }
+            }
+            if (collision)
+            {
                 printf("player charge: %d\tcolliding charge: %d\n", pGame->pPlayer->charge, pGame->pMultiPlayer[id].charge);
-                if (pGame->pPlayer->charge < pGame->pMultiPlayer[id].charge) {
+                if (pGame->pPlayer->charge < pGame->pMultiPlayer[id].charge)
+                {
                     pGame->pPlayer->hp -= (pGame->pMultiPlayer[id].charge * 2);
                     count = 0;
                 }
             }
         }
     }
-    else count++;
+    else
+        count++;
 
     for (int i = 0; i < MAPSIZE * MAPSIZE; i++)
     {
@@ -522,7 +527,7 @@ void *updateScreen(void *pGameIn)
                         SDL_RenderCopy(pGame->pRenderer, pGame->pTileTextures[(pGame->map[i - MAPSIZE].type)], NULL, &temp);
                         SDL_SetTextureColorMod(pGame->pTileTextures[(pGame->map[i - MAPSIZE].type)], 255, 255, 255);
                     }
-                    else if(pGame->map[i - MAPSIZE].type > 0)
+                    else if (pGame->map[i - MAPSIZE].type > 0)
                     {
                         temp = pGame->map[i].wall;
                         temp.h = ((float)pGame->world.tileSize * pGame->world.angle);
