@@ -445,27 +445,33 @@ int changePlayerTexture(SDL_Renderer *pRenderer, SDL_Window *pWindow, SDL_Textur
     return 0;
 }
 
-void loadMedia(SDL_Renderer *pRenderer, SDL_Texture **pPlayerTexture, SDL_Rect gSpriteClips[])
+void loadMedia(SDL_Renderer *pRenderer, SDL_Texture **pPlayerTexture, SDL_Rect gSpriteClips[], int playerID)
 {
+    static bool textureLoaded = false;
 
-    SDL_Surface *gCatSurface = IMG_Load("resources/cat3.PNG");
-    *pPlayerTexture = SDL_CreateTextureFromSurface(pRenderer, gCatSurface);
+    if (!textureLoaded)
+    {
+        SDL_Surface *gCatSurface = IMG_Load("resources/cat3.PNG");
+        *pPlayerTexture = SDL_CreateTextureFromSurface(pRenderer, gCatSurface);
+        textureLoaded = true;
+    }
+    
 
     int w = 24, h = 24;
 
     // IDLE
     gSpriteClips[0].x = 36;
-    gSpriteClips[0].y = 34;
+    gSpriteClips[0].y = 34 + ((playerID)*544);
     gSpriteClips[0].w = 24;
     gSpriteClips[0].h = 24;
 
     gSpriteClips[1].x = 36;
-    gSpriteClips[1].y = 290;
+    gSpriteClips[1].y = 290 + (playerID*544);
     gSpriteClips[1].w = 24;
     gSpriteClips[1].h = 24;
 
     gSpriteClips[2].x = 5;
-    gSpriteClips[2].y = 482;
+    gSpriteClips[2].y = 482 + (playerID*544);
     gSpriteClips[2].w = 24;
     gSpriteClips[2].h = 24;
 
