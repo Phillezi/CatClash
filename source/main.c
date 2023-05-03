@@ -12,6 +12,7 @@
 // #include "client.h"
 #include "clientUDP.h"
 #include "multiThreadedServer.h"
+#include <time.h>
 
 int init(Game *pGame);
 void run(Game *pGame);
@@ -238,12 +239,14 @@ int init(Game *pGame)
 
     loadMedia(pGame->pRenderer, &pGame->pPlayerTexture, pGame->gSpriteClips);
     pGame->pPlayer->idle = 1;
-    findPortal(pGame);
+
     return 0;
 }
 
 void run(Game *pGame)
 {
+    // srand(time(NULL));
+    findPortal(pGame);
     pGame->pPacket = SDLNet_AllocPacket(sizeof(PlayerUdpPkg));
     if (pGame->socketDesc = SDLNet_UDP_Open(0))
     {

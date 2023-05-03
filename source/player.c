@@ -128,6 +128,7 @@ void *handleInput(void *pGameIn) // Game *pGame)
     }
     else
     {
+        srand(time(NULL));
         for (int i = 0; i < pGame->movementAmount; i++)
         {
             pGame->pPlayer->idle = 1;
