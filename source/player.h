@@ -6,6 +6,7 @@ void centerPlayer(Game *pGame);
 void *handleInput(void *pGameIn);//Game *pGame);
 void movePlayer(Player *pPlayer, char direction);
 int checkCollision(Player player, Tile map[], char direction, int tileSize);
+int playerCollision(Player player, Player players[], int nrOfPlayers, char direction, int tileSize);
 SDL_Rect findEmptyTile(Tile map[]);
 SDL_Rect findSpawnTile(Tile map[]);
 void getPlayerSpawnPos(Game *pGame);
