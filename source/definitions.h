@@ -210,6 +210,7 @@ struct udpPlayerPackage
     char direction;
     Uint8 id;
     Uint8 idle;
+    Uint8 charge;
 };
 typedef struct udpPlayerPackage PlayerUdpPkg;
 
