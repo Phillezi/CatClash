@@ -106,36 +106,68 @@ void lvlhandleInput(Game *pGame, int *pMouseX, int *pMouseY)
     }
     else if (currentKeyStates[SDL_SCANCODE_3])
     {
-        static int type = 0;
-        int sides[4] = {0,0,0,0}, tmp;
-        if ((*pMouseY - pGame->map[0].wall.y) < (pGame->map[0].wall.w * MAPSIZE) && (*pMouseX - pGame->map[0].wall.x) < (pGame->map[0].wall.w * MAPSIZE))
-            tmp = (((*pMouseY - pGame->map[0].wall.y) / pGame->map[0].wall.w * MAPSIZE) + ((*pMouseX - pGame->map[0].wall.x) / pGame->map[0].wall.w)) - MAPSIZE;
-            if (tmp < 0 ? 0 : pGame->map[tmp].type == 0) sides[0] = 1; 
-            tmp = (((*pMouseY - pGame->map[0].wall.y) / pGame->map[0].wall.w * MAPSIZE) + ((*pMouseX - pGame->map[0].wall.x) / pGame->map[0].wall.w)) + MAPSIZE;
-            if (tmp >= 1024 ? 0 : pGame->map[tmp].type == 0) sides[2] = 1;
-            tmp = (((*pMouseY - pGame->map[0].wall.y) / pGame->map[0].wall.w * MAPSIZE) + ((*pMouseX - pGame->map[0].wall.x) / pGame->map[0].wall.w)) - 1;
-            if (tmp+1%32 == 0 ? 0 : pGame->map[tmp].type == 0) sides[3] = 1;
-            tmp = (((*pMouseY - pGame->map[0].wall.y) / pGame->map[0].wall.w * MAPSIZE) + ((*pMouseX - pGame->map[0].wall.x) / pGame->map[0].wall.w)) + 1;
-            if (tmp%32 == 0 ? 0 : pGame->map[tmp].type == 0) sides[1] = 1;
+        for (int i = 0; i < MAPSIZE * MAPSIZE; i++)
+        {
+            if (pGame->map[i].type > 1)
+            {
+                static int type = 0;
+                int sides[4] = {0, 0, 0, 0}, tmp;
+                /*
+                if ((*pMouseY - pGame->map[0].wall.y) < (pGame->map[0].wall.w * MAPSIZE) && (*pMouseX - pGame->map[0].wall.x) < (pGame->map[0].wall.w * MAPSIZE))
+                    tmp = (((*pMouseY - pGame->map[0].wall.y) / pGame->map[0].wall.w * MAPSIZE) + ((*pMouseX - pGame->map[0].wall.x) / pGame->map[0].wall.w)) - MAPSIZE;
+                    */
+                tmp = i - MAPSIZE;
+                if (tmp < 0 ? 0 : pGame->map[tmp].type == 0)
+                    sides[0] = 1;
+                // tmp = (((*pMouseY - pGame->map[0].wall.y) / pGame->map[0].wall.w * MAPSIZE) + ((*pMouseX - pGame->map[0].wall.x) / pGame->map[0].wall.w)) + MAPSIZE;
+                tmp = i + MAPSIZE;
+                if (tmp >= 1024 ? 0 : pGame->map[tmp].type == 0)
+                    sides[2] = 1;
+                // tmp = (((*pMouseY - pGame->map[0].wall.y) / pGame->map[0].wall.w * MAPSIZE) + ((*pMouseX - pGame->map[0].wall.x) / pGame->map[0].wall.w)) - 1;
+                tmp = i - 1;
+                if (tmp + 1 % 32 == 0 ? 0 : pGame->map[tmp].type == 0)
+                    sides[3] = 1;
+                // tmp = (((*pMouseY - pGame->map[0].wall.y) / pGame->map[0].wall.w * MAPSIZE) + ((*pMouseX - pGame->map[0].wall.x) / pGame->map[0].wall.w)) + 1;
+                tmp = i + 1;
+                if (tmp % 32 == 0 ? 0 : pGame->map[tmp].type == 0)
+                    sides[1] = 1;
 
-            if (sides[0] == 0 && sides[1] == 0 && sides[2] == 0 && sides[3] == 0) type = 0;
-            if (sides[0] == 0 && sides[1] == 0 && sides[2] == 0 && sides[3] == 1) type = 7; 
-            if (sides[0] == 0 && sides[1] == 0 && sides[2] == 1 && sides[3] == 0) type = 9; 
-            if (sides[0] == 0 && sides[1] == 0 && sides[2] == 1 && sides[3] == 1) type = 3; 
-            if (sides[0] == 0 && sides[1] == 1 && sides[2] == 0 && sides[3] == 0) type = 8;
-            if (sides[0] == 0 && sides[1] == 1 && sides[2] == 0 && sides[3] == 1) type = 12;
-            if (sides[0] == 0 && sides[1] == 1 && sides[2] == 1 && sides[3] == 0) type = 4;
-            if (sides[0] == 0 && sides[1] == 1 && sides[2] == 1 && sides[3] == 1) type = 13;
-            if (sides[0] == 1 && sides[1] == 0 && sides[2] == 0 && sides[3] == 0) type = 10;
-            if (sides[0] == 1 && sides[1] == 0 && sides[2] == 0 && sides[3] == 1) type = 5;
-            if (sides[0] == 1 && sides[1] == 0 && sides[2] == 1 && sides[3] == 0) type = 11;
-            if (sides[0] == 1 && sides[1] == 0 && sides[2] == 1 && sides[3] == 1) type = 16;
-            if (sides[0] == 1 && sides[1] == 1 && sides[2] == 0 && sides[3] == 0) type = 6;  
-            if (sides[0] == 1 && sides[1] == 1 && sides[2] == 0 && sides[3] == 1) type = 14; 
-            if (sides[0] == 1 && sides[1] == 1 && sides[2] == 1 && sides[3] == 0) type = 15; 
-            if (sides[0] == 1 && sides[1] == 1 && sides[2] == 1 && sides[3] == 1) type = 17;
+                if (sides[0] == 0 && sides[1] == 0 && sides[2] == 0 && sides[3] == 0)
+                    type = 18;
+                if (sides[0] == 0 && sides[1] == 0 && sides[2] == 0 && sides[3] == 1)
+                    type = 7;
+                if (sides[0] == 0 && sides[1] == 0 && sides[2] == 1 && sides[3] == 0)
+                    type = 9;
+                if (sides[0] == 0 && sides[1] == 0 && sides[2] == 1 && sides[3] == 1)
+                    type = 3;
+                if (sides[0] == 0 && sides[1] == 1 && sides[2] == 0 && sides[3] == 0)
+                    type = 8;
+                if (sides[0] == 0 && sides[1] == 1 && sides[2] == 0 && sides[3] == 1)
+                    type = 12;
+                if (sides[0] == 0 && sides[1] == 1 && sides[2] == 1 && sides[3] == 0)
+                    type = 4;
+                if (sides[0] == 0 && sides[1] == 1 && sides[2] == 1 && sides[3] == 1)
+                    type = 13;
+                if (sides[0] == 1 && sides[1] == 0 && sides[2] == 0 && sides[3] == 0)
+                    type = 10;
+                if (sides[0] == 1 && sides[1] == 0 && sides[2] == 0 && sides[3] == 1)
+                    type = 5;
+                if (sides[0] == 1 && sides[1] == 0 && sides[2] == 1 && sides[3] == 0)
+                    type = 11;
+                if (sides[0] == 1 && sides[1] == 0 && sides[2] == 1 && sides[3] == 1)
+                    type = 16;
+                if (sides[0] == 1 && sides[1] == 1 && sides[2] == 0 && sides[3] == 0)
+                    type = 6;
+                if (sides[0] == 1 && sides[1] == 1 && sides[2] == 0 && sides[3] == 1)
+                    type = 14;
+                if (sides[0] == 1 && sides[1] == 1 && sides[2] == 1 && sides[3] == 0)
+                    type = 15;
+                if (sides[0] == 1 && sides[1] == 1 && sides[2] == 1 && sides[3] == 1)
+                    type = 17;
 
-            pGame->map[(((*pMouseY - pGame->map[0].wall.y) / pGame->map[0].wall.w * MAPSIZE) + ((*pMouseX - pGame->map[0].wall.x) / pGame->map[0].wall.w))].type = type;
+                pGame->map[i].type = type;
+            }
+        }
     }
     else if (currentKeyStates[SDL_SCANCODE_4])
     {
@@ -161,7 +193,7 @@ void lvlhandleInput(Game *pGame, int *pMouseX, int *pMouseY)
     {
         for (int i = 0; i < MAPSIZE * MAPSIZE; i++)
         {
-            pGame->map[i].type = 1;
+            pGame->map[i].type = 3;
         }
     }
     else if (currentKeyStates[SDL_SCANCODE_W])
