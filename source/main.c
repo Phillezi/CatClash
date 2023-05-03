@@ -118,8 +118,8 @@ int init(Game *pGame)
         return 1;
     }
 
-    //pGame->windowWidth = (float)displayMode.w * 0.4; // 70% of avaliable space
-    //pGame->windowHeight = (float)displayMode.h * 0.4;
+    // pGame->windowWidth = (float)displayMode.w * 0.4; // 70% of avaliable space
+    // pGame->windowHeight = (float)displayMode.h * 0.4;
 
     pGame->windowWidth = 1920; // 70% of avaliable space
     pGame->windowHeight = 1080;
@@ -464,8 +464,15 @@ void close(Game *pGame)
 void *updateScreen(void *pGameIn)
 {
     Game *pGame = (Game *)pGameIn;
+
+    SDL_Rect backGround;
+    backGround.x = pGame->map[0].wall.x;
+    backGround.y = pGame->map[0].wall.y + (pGame->world.tileSize - pGame->map[0].wall.h);
+    backGround.w = MAPSIZE * pGame->map[0].wall.w;
+    backGround.h = MAPSIZE * pGame->map[0].wall.h;
     SDL_SetRenderDrawColor(pGame->pRenderer, 255, 255, 255, 255);
     SDL_RenderClear(pGame->pRenderer);
+    SDL_RenderCopy(pGame->pRenderer, pGame->pTileTextures[19], NULL, &backGround);
     SDL_Rect temp;
 
     translatePositionToScreen(pGame);
@@ -478,15 +485,22 @@ void *updateScreen(void *pGameIn)
                 SDL_RenderCopy(pGame->pRenderer, pGame->pTileTextures[pGame->map[i].type], NULL, &pGame->map[i].wall);
             else
             {
+                // SDL_RenderCopy(pGame->pRenderer, pGame->pTileTextures[19], NULL, &pGame->map[i].wall);
                 if (i > MAPSIZE - 1)
                 {
-                    if (pGame->map[i - MAPSIZE].type)
+                    if (pGame->map[i - MAPSIZE].type == 1)
                     {
                         temp = pGame->map[i].wall;
                         temp.h = ((float)pGame->world.tileSize * pGame->world.angle);
                         SDL_SetTextureColorMod(pGame->pTileTextures[(pGame->map[i - MAPSIZE].type)], 150, 150, 150);
                         SDL_RenderCopy(pGame->pRenderer, pGame->pTileTextures[(pGame->map[i - MAPSIZE].type)], NULL, &temp);
                         SDL_SetTextureColorMod(pGame->pTileTextures[(pGame->map[i - MAPSIZE].type)], 255, 255, 255);
+                    }
+                    else if(pGame->map[i - MAPSIZE].type)
+                    {
+                        temp = pGame->map[i].wall;
+                        temp.h = ((float)pGame->world.tileSize * pGame->world.angle);
+                        SDL_RenderCopy(pGame->pRenderer, pGame->pTileTextures[2], NULL, &temp);
                     }
                 }
             }

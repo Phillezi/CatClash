@@ -16,7 +16,7 @@
 #define FPS 165
 #define MAPSIZE 32
 #define TILESIZE 16
-#define TILES 19
+#define TILES 20
 #define MAX_NAME_LEN 21
 #define MAX_CHARGE 100
 #define TILE_WIDTH 32

@@ -675,7 +675,7 @@ int testSelectMenu(Game *pGame, char *mapName)
             SDL_RenderClear(pGame->pRenderer);
             for (int i = 0; i < MAPSIZE * MAPSIZE; i++)
             {
-                if (pGame->map[i].type > 0)
+                if (pGame->map[i].type > 0 && pGame->map[i].type < TILES)
                     SDL_RenderCopy(pGame->pRenderer, pGame->pTileTextures[pGame->map[i].type], NULL, &pGame->map[i].wall);
             }
             for (int i = 0; i < len; i++)

@@ -206,8 +206,14 @@ void lvlhandleInput(Game *pGame, int *pMouseX, int *pMouseY)
 }
 void lvlupdateScreen(Game *pGame, int mouseX, int mouseY)
 {
+    SDL_Rect backGround;
+    backGround.x = pGame->map[0].wall.x;
+    backGround.y = pGame->map[0].wall.y;
+    backGround.w = MAPSIZE * pGame->map[0].wall.w;
+    backGround.h = MAPSIZE * pGame->map[0].wall.h;
     SDL_SetRenderDrawColor(pGame->pRenderer, 255, 255, 255, 255);
     SDL_RenderClear(pGame->pRenderer);
+    SDL_RenderCopy(pGame->pRenderer, pGame->pTileTextures[19], NULL, &backGround);
     SDL_SetRenderDrawColor(pGame->pRenderer, 0, 0, 0, 255);
 
     for (int i = 0; i < MAPSIZE * MAPSIZE; i++)
@@ -220,6 +226,9 @@ void lvlupdateScreen(Game *pGame, int mouseX, int mouseY)
             {
                 SDL_SetRenderDrawColor(pGame->pRenderer, 0, 155, 0, 255);
                 SDL_RenderFillRect(pGame->pRenderer, &pGame->map[i].wall);
+            }
+            else{
+                //SDL_RenderCopy(pGame->pRenderer, pGame->pTileTextures[19], NULL, &pGame->map[i].wall);
             }
         }
     }
