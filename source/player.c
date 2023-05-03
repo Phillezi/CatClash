@@ -732,7 +732,7 @@ void drawPlayer(Game *pGame, Player player, int i)
         frame[i] %= 8;
 }
 
-Player *createNewMultiPlayer(Game *pGame, int size, PlayerUdpPkg data)
+Player *createNewMultiPlayer(Game *pGame, int size, Player data)
 {
     Player *pNew_arr;
     if (pGame->pMultiPlayer)
@@ -751,6 +751,9 @@ Player *createNewMultiPlayer(Game *pGame, int size, PlayerUdpPkg data)
         return NULL;
     }
 
+    pNew_arr[size] = data;
+
+    /*
     pNew_arr[size].id = data.id;
     pNew_arr[size].x = data.x;
     pNew_arr[size].y = data.y;
@@ -758,6 +761,7 @@ Player *createNewMultiPlayer(Game *pGame, int size, PlayerUdpPkg data)
     pNew_arr[size].prevKeyPressed = data.direction;
     pNew_arr[size].charge = data.charge;
     strcpy(pNew_arr[size].name, "Allocated");
+    */
 
     return pNew_arr;
 }

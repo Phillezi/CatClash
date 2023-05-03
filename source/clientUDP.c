@@ -50,50 +50,42 @@ void retrieveData(Game *pGame)
 
 int getPlayerData(Game *pGame, Player players[])
 {
-        while (SDLNet_UDP_Recv(pGame->socketDesc, pGame->pPacket))
-        {
-            PlayerUdpPkg tmp;
-            memcpy(&tmp, pGame->pPacket->data, sizeof(PlayerUdpPkg));
-            int playerId = tmp.id;
-            if(pGame->pPlayer->id < tmp.id)
-                playerId = tmp.id - 1;
+    while (SDLNet_UDP_Recv(pGame->socketDesc, pGame->pPacket))
+    {
+        PlayerUdpPkg tmp;
+        memcpy(&tmp, pGame->pPacket->data, sizeof(PlayerUdpPkg));
+        int playerId = tmp.id;
+        if (pGame->pPlayer->id < tmp.id)
+            playerId = tmp.id - 1;
 
-            if (playerId > pGame->nrOfPlayers)
-            {
-                pGame->pMultiPlayer = createNewMultiPlayer(pGame, pGame->nrOfPlayers, tmp);
-                pGame->nrOfPlayers++;
-                printf("A new player joined! (%d total)\n", pGame->nrOfPlayers );
-                /*
-                    Allocate memory for new player using Realloc
-                */
-            }
-            else
-            {
-                for (int j = 0; j < pGame->nrOfPlayers; j++)
-                {
-                    if (pGame->pMultiPlayer[j].id == tmp.id)
-                    {
-                        pGame->pMultiPlayer[j].x = tmp.x;
-                        pGame->pMultiPlayer[j].y = tmp.y;
-                        pGame->pMultiPlayer[j].idle = tmp.idle;
-                        pGame->pMultiPlayer[j].prevKeyPressed = tmp.direction;
-                        pGame->pMultiPlayer[j].charge = tmp.charge;
-                    }
-                }
-            }
+        /*if (playerId > pGame->nrOfPlayers)
+        {
+            pGame->pMultiPlayer = createNewMultiPlayer(pGame, pGame->nrOfPlayers, tmp);
+            pGame->nrOfPlayers++;
+            printf("A new player joined! (%d total)\n", pGame->nrOfPlayers );
             /*
-            if (!pGame->pPlayer->id)
+                Allocate memory for new player using Realloc
+            */
+        //}
+        // else
+        //{
+
+        for (int j = 0; j < pGame->nrOfPlayers; j++)
+        {
+            if (pGame->pMultiPlayer[j].id == tmp.id)
             {
-                if (tmp.id - 1 < MAX_PLAYERS)
-                {
-                    players[tmp.id - 1].x = tmp.x;
-                    players[tmp.id - 1].y = tmp.y;
-                    players[tmp.id - 1].id = tmp.id;
-                    players[tmp.id - 1].idle = tmp.idle;
-                    players[tmp.id - 1].prevKeyPressed = tmp.direction;
-                }
+                pGame->pMultiPlayer[j].x = tmp.x;
+                pGame->pMultiPlayer[j].y = tmp.y;
+                pGame->pMultiPlayer[j].idle = tmp.idle;
+                pGame->pMultiPlayer[j].prevKeyPressed = tmp.direction;
+                pGame->pMultiPlayer[j].charge = tmp.charge;
             }
-            else if (tmp.id - 1 < MAX_PLAYERS)
+        }
+        //}
+        /*
+        if (!pGame->pPlayer->id)
+        {
+            if (tmp.id - 1 < MAX_PLAYERS)
             {
                 players[tmp.id - 1].x = tmp.x;
                 players[tmp.id - 1].y = tmp.y;
@@ -101,9 +93,18 @@ int getPlayerData(Game *pGame, Player players[])
                 players[tmp.id - 1].idle = tmp.idle;
                 players[tmp.id - 1].prevKeyPressed = tmp.direction;
             }
-            */
-            // printf("Recived package\n");
         }
+        else if (tmp.id - 1 < MAX_PLAYERS)
+        {
+            players[tmp.id - 1].x = tmp.x;
+            players[tmp.id - 1].y = tmp.y;
+            players[tmp.id - 1].id = tmp.id;
+            players[tmp.id - 1].idle = tmp.idle;
+            players[tmp.id - 1].prevKeyPressed = tmp.direction;
+        }
+        */
+        // printf("Recived package\n");
+    }
 
     return 0;
 }

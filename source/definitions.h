@@ -115,6 +115,7 @@ typedef struct playerNet
 {
     UDPsocket socketUDP;
     TCPsocket socketTCP;
+    SDLNet_SocketSet sockets;
     char serverIP[16];
     int port;
     int id;
@@ -172,6 +173,9 @@ struct info
 {
     IPaddress address;
     int id;
+    TCPsocket tcpSocket;
+    Player data;
+    Uint32 timeout;
 };
 typedef struct info Info;
 

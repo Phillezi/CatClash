@@ -11,6 +11,7 @@
 #include "pthread.h"
 // #include "client.h"
 #include "clientUDP.h"
+#include "TCPclient.h"
 #include "multiThreadedServer.h"
 #include <time.h>
 
@@ -292,6 +293,7 @@ void run(Game *pGame)
         int deltaTime = SDL_GetTicks() - previousTime;
         if (deltaTime >= (1000 / FPS))
         {
+            checkTcp(pGame);
             /*
             if (pGame->config.multiThreading){
                 pthread_create(&renderThread, NULL, updateScreen, (void *)pGame);
@@ -411,6 +413,8 @@ void run(Game *pGame)
     }
     if (pGame->pPacket)
         SDLNet_FreePacket(pGame->pPacket);
+    SDLNet_TCP_Close(pGame->pClient->socketTCP);
+    SDLNet_FreeSocketSet(pGame->pClient->sockets);
 }
 
 void close(Game *pGame)
@@ -496,7 +500,7 @@ void *updateScreen(void *pGameIn)
                         SDL_RenderCopy(pGame->pRenderer, pGame->pTileTextures[(pGame->map[i - MAPSIZE].type)], NULL, &temp);
                         SDL_SetTextureColorMod(pGame->pTileTextures[(pGame->map[i - MAPSIZE].type)], 255, 255, 255);
                     }
-                    else if(pGame->map[i - MAPSIZE].type > 0)
+                    else if (pGame->map[i - MAPSIZE].type > 0)
                     {
                         temp = pGame->map[i].wall;
                         temp.h = ((float)pGame->world.tileSize * pGame->world.angle);
