@@ -11,7 +11,7 @@
 void centerPlayer(Game *pGame, Player *pPlayer)
 {
     int screenShiftAmount = pGame->movementAmount;
-    if (pPlayer->rect.x >= (4 * pGame->windowWidth) / 5 || pPlayer->rect.y <= pGame->windowWidth / 5)
+    if (pPlayer->rect.x >= (4 * pGame->windowWidth) / 5 || pPlayer->rect.x <= pGame->windowWidth / 5)
     {
         screenShiftAmount = pGame->movementAmount * 2;
     }
@@ -27,6 +27,16 @@ void centerPlayer(Game *pGame, Player *pPlayer)
     {
         screenShiftAmount = pGame->movementAmount * 10;
     }
+
+    if (pPlayer->rect.x >= pGame->windowWidth + pGame->world.tileSize || pPlayer->rect.x <= -pGame->world.tileSize)
+    {
+        screenShiftAmount = pGame->movementAmount * 30;
+    }
+    if (pPlayer->rect.y >= pGame->windowHeight + pGame->world.tileSize || pPlayer->rect.y <= -pGame->world.tileSize)
+    {
+        screenShiftAmount = pGame->movementAmount *  30;
+    }
+
     if (pPlayer->rect.y < (2 * pGame->windowHeight) / 5)
     {
         for (int i = 0; i < MAPSIZE * MAPSIZE; i++)
@@ -241,6 +251,16 @@ void *handleInput(void *pGameIn) // Game *pGame)
                 */
         }
     }
+    
+
+    int offsetX = pGame->map[0].wall.x - pGame->map[0].x;
+    int offsetY = pGame->map[0].wall.y - pGame->map[0].y;
+    pGame->pPlayer->rect.x = ((float)pGame->pPlayer->x * scaleX) + offsetX;
+    pGame->pPlayer->rect.y = ((float)pGame->pPlayer->y * scaleY) + offsetY;
+
+    pGame->pPlayer->rect.h = (pGame->world.tileSize / 2) + ((pGame->world.tileSize / 2) * (1 - (float)pGame->pPlayer->charge / MAX_CHARGE));
+    pGame->pPlayer->rect.y += pGame->world.tileSize - pGame->pPlayer->rect.h;
+
     // CENTER PLAYER + SPECTATE
 
     switch (pGame->pPlayer->state)
@@ -253,14 +273,6 @@ void *handleInput(void *pGameIn) // Game *pGame)
             centerPlayer(pGame, &pGame->pMultiPlayer[pGame->tempID]);
         break;
     }
-
-    int offsetX = pGame->map[0].wall.x - pGame->map[0].x;
-    int offsetY = pGame->map[0].wall.y - pGame->map[0].y;
-    pGame->pPlayer->rect.x = ((float)pGame->pPlayer->x * scaleX) + offsetX;
-    pGame->pPlayer->rect.y = ((float)pGame->pPlayer->y * scaleY) + offsetY;
-
-    pGame->pPlayer->rect.h = (pGame->world.tileSize / 2) + ((pGame->world.tileSize / 2) * (1 - (float)pGame->pPlayer->charge / MAX_CHARGE));
-    pGame->pPlayer->rect.y += pGame->world.tileSize - pGame->pPlayer->rect.h;
     return 0;
 }
 
