@@ -477,6 +477,32 @@ void *updateScreen(void *pGameIn)
 
     translatePositionToScreen(pGame);
 
+    // Checking if other players charge into you
+    int id = 0, check = 0, collision = 0;
+    static int count = 300;
+    static char dir[4] = {'W', 'A', 'S', 'D'};
+
+    for (int i = 0; i < pGame->nrOfPlayers; i++) {
+        if (pGame->pMultiPlayer[i].charging == 1) check = 1;
+    }
+
+    if (count == 300){
+        if (check){
+            for (int i = 0; i < 4; i++) {
+                if ((id = playerCollision(*pGame->pPlayer, pGame->pMultiPlayer, pGame->nrOfPlayers, dir[i], pGame->world.tileSize)) != -1) 
+                    if (pGame->pMultiPlayer[id].charging) { collision = 1; break; }
+            } 
+            if (collision) {
+                printf("player charge: %d\tcolliding charge: %d\n", pGame->pPlayer->charge, pGame->pMultiPlayer[id].charge);
+                if (pGame->pPlayer->charge < pGame->pMultiPlayer[id].charge) {
+                    pGame->pPlayer->hp -= (pGame->pMultiPlayer[id].charge * 2);
+                    count = 0;
+                }
+            }
+        }
+    }
+    else count++;
+
     for (int i = 0; i < MAPSIZE * MAPSIZE; i++)
     {
         if (((pGame->map[i].wall.x <= pGame->windowWidth) && (pGame->map[i].wall.x + pGame->world.tileSize >= 0)) && ((pGame->map[i].wall.y <= pGame->windowHeight) && (pGame->map[i].wall.y + pGame->world.tileSize >= 0)))

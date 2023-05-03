@@ -73,6 +73,7 @@ void *handleInput(void *pGameIn) // Game *pGame)
     const Uint8 *currentKeyStates = SDL_GetKeyboardState(NULL);
     float scaleY = (float)pGame->map[0].wall.h / pGame->world.tileSize;
     float scaleX = (float)pGame->map[0].wall.w / pGame->world.tileSize;
+    pGame->pPlayer->charging = 0;
 
     if (currentKeyStates[SDL_SCANCODE_Q])
     {
@@ -122,8 +123,9 @@ void *handleInput(void *pGameIn) // Game *pGame)
     else if (pGame->pPlayer->charge > 0)
     {
         srand(time(NULL));
-        int damage = 0;
-        int id = 0;
+        int damage = 0, id = 0; 
+        static int flag = 0;
+        pGame->pPlayer->charging = 1;
 
         for (int i = 0; i < 2 * (pGame->pPlayer->charge / 2); i++)
         {
@@ -139,15 +141,12 @@ void *handleInput(void *pGameIn) // Game *pGame)
             }
             else
             {
+                //damage = pGame->pPlayer->charge * 2;    // Collided with wall
                 if (id != -1) {
-                    if (pGame->pPlayer->charge < pGame->pMultiPlayer[id].charge){
-                        damage = pGame->pMultiPlayer->charge * 2;    // Collided with player
-                        printf("Your charge: %d\nCharge of player you collided with: %d\n", pGame->pPlayer->charge, pGame->pMultiPlayer[id].charge);
-                    }
-                    else damage = 0;                             // Collided with player but you have higher charge
+                    if (flag) { pGame->pPlayer->charge = 1; flag = 0; }
+                    else flag = 1;
                 }
-                else damage = pGame->pPlayer->charge * 2;    // Collided with wall
-                pGame->pPlayer->charge = 1;
+                else { damage = pGame->pPlayer->charge * 2; pGame->pPlayer->charge = 1; }
                 break;
             }
         }
@@ -764,6 +763,7 @@ Player *createNewMultiPlayer(Game *pGame, int size, PlayerUdpPkg data)
     pNew_arr[size].idle = data.idle;
     pNew_arr[size].prevKeyPressed = data.direction;
     pNew_arr[size].charge = data.charge;
+    pNew_arr[size].charging = data.charging;
     strcpy(pNew_arr[size].name, "Allocated");
 
     return pNew_arr;

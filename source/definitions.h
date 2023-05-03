@@ -60,9 +60,10 @@ typedef enum selectedMode SelectedMode;
 struct player
 {
     char prevKeyPressed;
-    int idle;
+    Uint8 idle;
     int charge;
-    int id;                      // The id of the player (Multiplayer purposes)
+    Uint8 id;                      // The id of the player (Multiplayer purposes)
+    Uint8 charging;
     char name[MAX_NAME_LEN + 1]; // The name of the player (Multiplayer purposes)
     int hp;                      // Health-points
     PlayerState state;           // State of the player (alive or dead)
@@ -212,6 +213,7 @@ struct udpPlayerPackage
     Uint8 id;
     Uint8 idle;
     Uint8 charge;
+    Uint8 charging;
 };
 typedef struct udpPlayerPackage PlayerUdpPkg;
 
