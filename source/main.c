@@ -247,7 +247,7 @@ int init(Game *pGame)
     SDL_SetWindowIcon(pGame->pWindow, pSurface);
     SDL_FreeSurface(pSurface);
 
-    loadMedia(pGame->pRenderer, &pGame->pPlayerTexture, pGame->gSpriteClips);
+    loadMedia(pGame->pRenderer, &pGame->pPlayerTexture, pGame->gSpriteClips, pGame->pPlayer->id);
     pGame->pPlayer->idle = 1;
 
     pGame->tempID = 0;
@@ -506,12 +506,14 @@ void *updateScreen(void *pGameIn)
             }
             if (i == (((pGame->pPlayer->y / pGame->map[0].wall.w) * MAPSIZE) + ((pGame->pPlayer->x - 1) / pGame->map[0].wall.w) + 2))
             {
+                loadMedia(pGame->pRenderer, &pGame->pPlayerTexture, pGame->gSpriteClips, pGame->pPlayer->id);
                 drawPlayer(pGame, *pGame->pPlayer, pGame->pPlayer->id);
             }
             for (int j = 0; j < pGame->nrOfPlayers; j++)
             {
                 if (i == (((pGame->pMultiPlayer[j].y / pGame->map[0].wall.w) * MAPSIZE) + ((pGame->pMultiPlayer[j].x - 1) / pGame->map[0].wall.w) + 2))
                 {
+                    loadMedia(pGame->pRenderer, &pGame->pPlayerTexture, pGame->gSpriteClips, pGame->pMultiPlayer[j].id);
                     char buffer[31];
                     sprintf(buffer, "p:%d,i:%d", pGame->pMultiPlayer[j].id, j);
                     drawPlayer(pGame, pGame->pMultiPlayer[j], pGame->pMultiPlayer[j].id);
