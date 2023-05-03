@@ -22,6 +22,7 @@
 #define TILE_WIDTH 32
 #define TILE_HEIGHT 32
 #define MAX_PLAYERS 5
+#define HEIGHT_OF_PLAYER_SPRITE 544
 
 // ADTS
 
