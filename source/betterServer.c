@@ -1,13 +1,16 @@
 #include "definitions.h"
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_net.h>
+#include <SDL2/SDL_ttf.h>
 #include "init.h"
+#include "text.h"
 #define PORT 1234
 
 int initServer(Server *pServer);
 void checkIncommingTCP(Server *pServer);
 void checkIncommingUDP(Server *pServer);
 void checkUDPClient(Server *pServer, PlayerUdpPkg data);
+void updateServerWindow(Server *pServer);
 void dbgPrint();
 void closeS(Server *pServer);
 
@@ -22,6 +25,15 @@ int main(int argv, char **args)
         {
             checkIncommingTCP(&server);
             checkIncommingUDP(&server);
+            updateServerWindow(&server);
+            SDL_Event event;
+            while (SDL_PollEvent(&event))
+            {
+                if (event.type == SDL_QUIT)
+                {
+                    exit = true;
+                }
+            }
         }
     }
 
@@ -31,11 +43,55 @@ int main(int argv, char **args)
 
 int initServer(Server *pServer)
 {
-    if (SDL_Init(SDL_INIT_EVERYTHING))
+    // INITIALIZE SDL
+    if (SDL_Init(SDL_INIT_VIDEO))
     {
         dbgPrint();
         return 1;
     }
+
+    SDL_DisplayMode displayMode;
+    if (SDL_GetDesktopDisplayMode(0, &displayMode) < 0)
+    {
+        dbgPrint();
+        return 1;
+    }
+
+    pServer->windowWidth = (float)displayMode.w * 0.4; // 40% of avaliable space
+    pServer->windowHeight = (float)displayMode.h * 0.4;
+
+    pServer->fontSize = pServer->windowHeight / 10;
+
+    pServer->nrOfClients = 0;
+
+    pServer->pWindow = SDL_CreateWindow("TCP & UDP SERVER", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, pServer->windowWidth, pServer->windowHeight, 0);
+    if (!pServer->pWindow)
+    {
+        dbgPrint();
+        return 1;
+    }
+
+    pServer->pRenderer = SDL_CreateRenderer(pServer->pWindow, -1, SDL_RENDERER_ACCELERATED);
+    if (!pServer->pRenderer)
+    {
+        dbgPrint();
+        return 1;
+    }
+
+    // INITIALIZE TTF
+    if (TTF_Init())
+    {
+        dbgPrint();
+        return 1;
+    }
+
+    pServer->pFont = TTF_OpenFont("resources/fonts/RetroGaming.ttf", pServer->fontSize);
+    if (!pServer->pFont)
+    {
+        dbgPrint();
+        return 1;
+    }
+
     if (SDLNet_Init())
     {
         dbgPrint();
@@ -173,6 +229,9 @@ void checkIncommingTCP(Server *pServer)
                     {
                         printf("Error: Client Recived client isnt the same as joined client");
                     }
+                    char buffer[32];
+                    sprintf(buffer, "%d %s", pServer->clients[pServer->nrOfClients].data.id, pServer->clients[pServer->nrOfClients].data.name);
+                    pServer->pClientText[i] = createText(pServer->pRenderer, 0, 0, 0, pServer->pFont, buffer, pServer->windowWidth / 2, i * pServer->fontSize + 3 * pServer->fontSize);
                     pServer->nrOfClients++;
                     pServer->tcpState++;
                 }
@@ -259,6 +318,18 @@ void checkUDPClient(Server *pServer, PlayerUdpPkg data)
     }
 }
 
+void updateServerWindow(Server *pServer)
+{
+    SDL_SetRenderDrawColor(pServer->pRenderer, 255, 255, 255, 255);
+    SDL_RenderClear(pServer->pRenderer);
+
+    for (int i = 0; i < MAX_PLAYERS; i++)
+        if (pServer->pClientText[i])
+            drawText(pServer->pClientText[i], pServer->pRenderer);
+
+    SDL_RenderPresent(pServer->pRenderer);
+}
+
 void dbgPrint()
 {
     printf("Error: %s\n", SDL_GetError());
@@ -287,6 +358,21 @@ void closeS(Server *pServer)
 
     if (pServer->socketUDP)
         SDLNet_UDP_Close(pServer->socketUDP);
+
+    for (int i = 0; i < MAX_PLAYERS; i++)
+        if (pServer->pClientText[i])
+            freeText(pServer->pClientText[i]);
+
+    if (pServer->pJoining)
+        freeText(pServer->pJoining);
+
+    if (pServer->pIP)
+        freeText(pServer->pIP);
+
+    if (pServer->pFont)
+        TTF_CloseFont(pServer->pFont);
+
+    TTF_Quit();
 
     SDLNet_Quit();
 
