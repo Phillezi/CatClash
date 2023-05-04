@@ -192,6 +192,8 @@ struct server
     SDL_Renderer *pRenderer;
     TTF_Font *pFont;
     Text *pSpace, *pClosed, *pJoining, *pRunning, *pIP;
+    Text *pServerStateText;
+    SDL_Rect progressBar;
 
     Text *pClientText[MAX_PLAYERS];
 

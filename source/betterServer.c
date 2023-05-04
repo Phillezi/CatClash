@@ -4,6 +4,7 @@
 #include <SDL2/SDL_ttf.h>
 #include "init.h"
 #include "text.h"
+#include <string.h>
 #define PORT 1234
 
 int initServer(Server *pServer);
@@ -136,11 +137,18 @@ int initServer(Server *pServer)
     {
         pServer->clients[i].address.port = 8888;
         pServer->clients[i].address.host = 8888;
-        pServer->clients[i].id           = 8888;
+        pServer->clients[i].id = 8888;
     }
 
     if (initMap(pServer->map, "map", 16))
         return 1;
+
+    pServer->pServerStateText = createText(pServer->pRenderer, 0, 0, 0, pServer->pFont, "Server is Ready", pServer->windowWidth / 2, pServer->fontSize);
+    pServer->progressBar.x = (pServer->windowWidth / 2) - ((pServer->fontSize * IDLE)/2);
+    pServer->progressBar.y = 1.5*pServer->fontSize;
+    pServer->progressBar.h = pServer->fontSize;
+    pServer->progressBar.w = 0;
+
 
     return 0;
 }
@@ -173,12 +181,16 @@ void checkIncommingTCP(Server *pServer)
                 for (i; i < pServer->nrOfClients; i++)
                 {
                     if (i + 1 < MAX_PLAYERS)
+                    {
                         pServer->clients[i] = pServer->clients[i + 1];
+                        pServer->pClientText[i] = pServer->pClientText[i + 1];
+                    }
                     else
                     {
                         pServer->clients[i].address.port = 8888;
                         pServer->clients[i].address.host = 8888;
-                        pServer->clients[i].id           = 8888;
+                        pServer->clients[i].id = 8888;
+                        freeText(pServer->pClientText[i]);
                     }
                 }
                 pServer->nrOfClients--;
@@ -189,6 +201,7 @@ void checkIncommingTCP(Server *pServer)
     switch (pServer->tcpState)
     {
     case IDLE:
+        pServer->progressBar.w = 0;
         break;
     case CLIENT_JOINING:
         pServer->mapPos = 0;
@@ -252,7 +265,33 @@ void checkIncommingTCP(Server *pServer)
     }
     if (prevState != pServer->tcpState)
     {
-        printf("Server state changed to: %d\n", pServer->tcpState);
+        char buffer[31];
+        switch (pServer->tcpState)
+        {
+        case IDLE:
+            strcpy(buffer, "Server is IDLE");
+            break;
+        case CLIENT_JOINING:
+            strcpy(buffer, "CLIENT IS JOINING");
+            break;
+        case SENDING_MAP:
+            strcpy(buffer, "SENDING MAP TO CLIENT");
+            break;
+        case SENDING_PLAYER_ID:
+            strcpy(buffer, "SENDING PLAYER ID");
+            break;
+        case GET_PLAYER_DATA:
+            strcpy(buffer, "WAITING FOR PLAYER DATA");
+            break;
+        case SEND_NEW_PLATER_DATA:
+            strcpy(buffer, "SENDING DATA TO NEW PLAYER");
+            break;
+        }
+        printf("Server state changed to: %s\n", buffer);
+        if(pServer->pServerStateText)
+            freeText(pServer->pServerStateText);
+        pServer->pServerStateText = createText(pServer->pRenderer, 0, 0, 0, pServer->pFont, buffer, pServer->windowWidth / 2, pServer->fontSize);
+        pServer->progressBar.w = pServer->fontSize * pServer->tcpState;
     }
 }
 
@@ -329,6 +368,12 @@ void updateServerWindow(Server *pServer)
         if (pServer->pClientText[i])
             drawText(pServer->pClientText[i], pServer->pRenderer);
 
+    if (pServer->pServerStateText)
+        drawText(pServer->pServerStateText, pServer->pRenderer);
+
+    SDL_SetRenderDrawColor(pServer->pRenderer, 0, 255, 0, 255);
+    SDL_RenderFillRect(pServer->pRenderer, &pServer->progressBar);
+
     SDL_RenderPresent(pServer->pRenderer);
 }
 
@@ -339,7 +384,8 @@ void dbgPrint()
 
 void closeS(Server *pServer)
 {
-
+    if (pServer->pServerStateText)
+        freeText(pServer->pServerStateText);
     for (int i = 0; i < pServer->nrOfClients; i++)
     {
         SDLNet_TCP_Close(pServer->clients[i].tcpSocket);
