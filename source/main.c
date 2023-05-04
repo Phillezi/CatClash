@@ -412,6 +412,9 @@ void run(Game *pGame)
             }
         }
     }
+    SDLNet_TCP_Close(pGame->pClient->socketTCP);
+    SDLNet_FreeSocketSet(pGame->pClient->sockets);
+    free(pGame->pClient);
 }
 
 void close(Game *pGame)
