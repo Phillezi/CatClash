@@ -136,7 +136,7 @@ int initServer(Server *pServer)
     {
         pServer->clients[i].address.port = 8888;
         pServer->clients[i].address.host = 8888;
-        pServer->clients[i].id = 8888;
+        pServer->clients[i].id           = 8888;
     }
 
     if (initMap(pServer->map, "map", 16))
@@ -178,7 +178,7 @@ void checkIncommingTCP(Server *pServer)
                     {
                         pServer->clients[i].address.port = 8888;
                         pServer->clients[i].address.host = 8888;
-                        pServer->clients[i].id = 8888;
+                        pServer->clients[i].id           = 8888;
                     }
                 }
                 pServer->nrOfClients--;

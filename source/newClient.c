@@ -100,6 +100,7 @@ void checkTCP(Game *pGame)
             if (bytesRecv != sizeof(Player))
             {
                 printf("Error: Packetloss when reciving Playerdata over TCP\n");
+                printf("Recived: x:%d, y:%d, id:%d, name:%s\n", data.x, data.y, data.id, data.name);
             }
             else
             {
