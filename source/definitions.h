@@ -169,6 +169,9 @@ enum serverState
 };
 typedef enum serverState ServerState;
 
+enum STCPSTATE{CLIENT_JOINING, SENDING_MAP, SENDING_PLAYER_ID, GET_PLAYER_DATA, SEND_NEW_PLATER_DATA, IDLE};
+typedef enum STCPSTATE TcpState;
+
 struct info
 {
     IPaddress address;
@@ -181,6 +184,8 @@ typedef struct info Info;
 
 struct server
 {
+    int mapPos;
+    TcpState tcpState;
     SDL_Window *pWindow;
     SDL_Renderer *pRenderer;
     TTF_Font *pFont;
