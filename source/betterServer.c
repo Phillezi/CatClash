@@ -289,7 +289,9 @@ void checkIncommingUDP(Server *pServer)
                 pServer->clients[i].data.x = data.x;
                 pServer->clients[i].data.y = data.y;
                 pServer->clients[i].data.prevKeyPressed = data.direction;
-                // pServer->clients[i].data.idle = data.idle;
+                pServer->clients[i].data.idle = data.idle;
+                pServer->clients[i].data.charging = data.charging;
+                pServer->clients[i].data.charge = data.charge;
             }
         }
     }
