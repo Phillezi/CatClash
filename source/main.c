@@ -242,6 +242,7 @@ int init(Game *pGame)
 
     loadMedia(pGame->pRenderer, &pGame->pPlayerTexture, pGame->gSpriteClips, pGame->pPlayer->id);
     pGame->pPlayer->idle = 1;
+    pGame->pPlayer->charging = 0;
 
     pGame->tempID = 0;
 

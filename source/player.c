@@ -73,7 +73,7 @@ void *handleInput(void *pGameIn) // Game *pGame)
     const Uint8 *currentKeyStates = SDL_GetKeyboardState(NULL);
     float scaleY = (float)pGame->map[0].wall.h / pGame->world.tileSize;
     float scaleX = (float)pGame->map[0].wall.w / pGame->world.tileSize;
-    pGame->pPlayer->charging = 0;
+    if (pGame->pPlayer->charge == 0) pGame->pPlayer->charging = 0;
 
     if (currentKeyStates[SDL_SCANCODE_Q])
     {
@@ -107,7 +107,7 @@ void *handleInput(void *pGameIn) // Game *pGame)
             }
         }
     }
-    if (currentKeyStates[SDL_SCANCODE_SPACE])
+    if (currentKeyStates[SDL_SCANCODE_SPACE] && pGame->pPlayer->charging == 0)
     {
         pGame->pPlayer->idle = 1;
         pGame->state = START;
@@ -143,10 +143,10 @@ void *handleInput(void *pGameIn) // Game *pGame)
             {
                 //damage = pGame->pPlayer->charge * 2;    // Collided with wall
                 if (id != -1) {
-                    if (flag) { pGame->pPlayer->charge = 1; flag = 0; }
+                    if (flag) { pGame->pPlayer->charge = 1; flag = 0;}
                     else flag = 1;
                 }
-                else { damage = pGame->pPlayer->charge * 2; pGame->pPlayer->charge = 1; }
+                else { damage = pGame->pPlayer->charge * 2; pGame->pPlayer->charge = 1;}
                 break;
             }
         }
