@@ -114,9 +114,18 @@ void checkIncommingTCP(Server *pServer)
                 printf("Player %d timed out\n Disconnection them\n", i);
                 SDLNet_TCP_Close(pServer->clients[i].tcpSocket);
                 SDLNet_DelSocket(pServer->socketSetTCP, pServer->clients[i].tcpSocket);
-                pServer->clients[i].address.port = 8888;
-                pServer->clients[i].address.host = 8888;
-                pServer->clients[i].id = 8888;
+                for (i; i < pServer->nrOfClients; i++)
+                {
+                    if (i + 1 < MAX_PLAYERS)
+                        pServer->clients[i] = pServer->clients[i + 1];
+                    else
+                    {
+                        pServer->clients[i].address.port = 8888;
+                        pServer->clients[i].address.host = 8888;
+                        pServer->clients[i].id = 8888;
+                    }
+                }
+                pServer->nrOfClients--;
             }
         }
     }
