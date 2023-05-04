@@ -34,7 +34,7 @@ void centerPlayer(Game *pGame, Player *pPlayer)
     }
     if (pPlayer->rect.y >= pGame->windowHeight + pGame->world.tileSize || pPlayer->rect.y <= -pGame->world.tileSize)
     {
-        screenShiftAmount = pGame->movementAmount *  30;
+        screenShiftAmount = pGame->movementAmount * 30;
     }
 
     if (pPlayer->rect.y < (2 * pGame->windowHeight) / 5)
@@ -73,7 +73,8 @@ void *handleInput(void *pGameIn) // Game *pGame)
     const Uint8 *currentKeyStates = SDL_GetKeyboardState(NULL);
     float scaleY = (float)pGame->map[0].wall.h / pGame->world.tileSize;
     float scaleX = (float)pGame->map[0].wall.w / pGame->world.tileSize;
-    if (pGame->pPlayer->charge == 0) pGame->pPlayer->charging = 0;
+    if (pGame->pPlayer->charge == 0)
+        pGame->pPlayer->charging = 0;
 
     if (currentKeyStates[SDL_SCANCODE_Q])
     {
@@ -123,13 +124,14 @@ void *handleInput(void *pGameIn) // Game *pGame)
     else if (pGame->pPlayer->charge > 0)
     {
         srand(time(NULL));
-        int damage = 0, id = 0; 
+        int damage = 0, id = 0;
         static int flag = 0;
         pGame->pPlayer->charging = 1;
 
         for (int i = 0; i < 2 * (pGame->pPlayer->charge / 2); i++)
         {
-            if (checkCollision(*pGame->pPlayer, pGame->map, pGame->pPlayer->prevKeyPressed, pGame->world.tileSize) == 1) {
+            if (checkCollision(*pGame->pPlayer, pGame->map, pGame->pPlayer->prevKeyPressed, pGame->world.tileSize) == 1)
+            {
                 int temp = rand() % pGame->nrOfPortals;
                 pGame->pPlayer->x = pGame->portalList[temp].x;
                 pGame->pPlayer->y = pGame->portalList[temp].y;
@@ -141,12 +143,22 @@ void *handleInput(void *pGameIn) // Game *pGame)
             }
             else
             {
-                //damage = pGame->pPlayer->charge * 2;    // Collided with wall
-                if (id != -1) {
-                    if (flag) { pGame->pPlayer->charge = 1; flag = 0;}
-                    else flag = 1;
+                // damage = pGame->pPlayer->charge * 2;    // Collided with wall
+                if (id != -1)
+                {
+                    if (flag)
+                    {
+                        pGame->pPlayer->charge = 1;
+                        flag = 0;
+                    }
+                    else
+                        flag = 1;
                 }
-                else { damage = pGame->pPlayer->charge * 2; pGame->pPlayer->charge = 1;}
+                else
+                {
+                    damage = pGame->pPlayer->charge * 2;
+                    pGame->pPlayer->charge = 1;
+                }
                 break;
             }
         }
@@ -165,8 +177,12 @@ void *handleInput(void *pGameIn) // Game *pGame)
                 if (checkCollision(*pGame->pPlayer, pGame->map, 'W', pGame->world.tileSize) == 1)
                 {
                     int temp = rand() % pGame->nrOfPortals;
-                    pGame->pPlayer->x = pGame->portalList[temp].x;
-                    pGame->pPlayer->y = pGame->portalList[temp].y;
+                    while ((pGame->portalList[temp].y / pGame->world.tileSize) - (pGame->pPlayer->y / pGame->world.tileSize) >= -1 && (pGame->portalList[temp].y / pGame->world.tileSize) - (pGame->pPlayer->y / pGame->world.tileSize) <= 1)
+                    {
+                        int temp = rand() % pGame->nrOfPortals;
+                        pGame->pPlayer->x = pGame->portalList[temp].x;
+                        pGame->pPlayer->y = pGame->portalList[temp].y;
+                    }
                 }
                 if ((checkCollision(*pGame->pPlayer, pGame->map, 'W', pGame->world.tileSize) < 1) && (playerCollision(*pGame->pPlayer, pGame->pMultiPlayer, pGame->nrOfPlayers, 'W', pGame->world.tileSize) == -1))
                 {
@@ -185,8 +201,12 @@ void *handleInput(void *pGameIn) // Game *pGame)
                 if (checkCollision(*pGame->pPlayer, pGame->map, 'A', pGame->world.tileSize) == 1)
                 {
                     int temp = rand() % pGame->nrOfPortals;
-                    pGame->pPlayer->x = pGame->portalList[temp].x;
-                    pGame->pPlayer->y = pGame->portalList[temp].y;
+                    while ((pGame->portalList[temp].x / pGame->world.tileSize) - (pGame->pPlayer->x / pGame->world.tileSize) >= -1 && (pGame->portalList[temp].x / pGame->world.tileSize) - (pGame->pPlayer->x / pGame->world.tileSize) <= 1)
+                    {
+                        int temp = rand() % pGame->nrOfPortals;
+                        pGame->pPlayer->x = pGame->portalList[temp].x;
+                        pGame->pPlayer->y = pGame->portalList[temp].y;
+                    }
                 }
                 if ((checkCollision(*pGame->pPlayer, pGame->map, 'A', pGame->world.tileSize) < 1) && (playerCollision(*pGame->pPlayer, pGame->pMultiPlayer, pGame->nrOfPlayers, 'A', pGame->world.tileSize) == -1))
                 {
@@ -204,8 +224,12 @@ void *handleInput(void *pGameIn) // Game *pGame)
                 if (checkCollision(*pGame->pPlayer, pGame->map, 'S', pGame->world.tileSize) == 1)
                 {
                     int temp = rand() % pGame->nrOfPortals;
-                    pGame->pPlayer->x = pGame->portalList[temp].x;
-                    pGame->pPlayer->y = pGame->portalList[temp].y;
+                    while ((pGame->portalList[temp].y / pGame->world.tileSize) - (pGame->pPlayer->y / pGame->world.tileSize) >= -1 && (pGame->portalList[temp].y / pGame->world.tileSize) - (pGame->pPlayer->y / pGame->world.tileSize) <= 1)
+                    {
+                        int temp = rand() % pGame->nrOfPortals;
+                        pGame->pPlayer->x = pGame->portalList[temp].x;
+                        pGame->pPlayer->y = pGame->portalList[temp].y;
+                    }
                 }
                 if ((checkCollision(*pGame->pPlayer, pGame->map, 'S', pGame->world.tileSize) < 1) && (playerCollision(*pGame->pPlayer, pGame->pMultiPlayer, pGame->nrOfPlayers, 'S', pGame->world.tileSize) == -1))
                 {
@@ -223,8 +247,12 @@ void *handleInput(void *pGameIn) // Game *pGame)
                 if (checkCollision(*pGame->pPlayer, pGame->map, 'D', pGame->world.tileSize) == 1)
                 {
                     int temp = rand() % pGame->nrOfPortals;
-                    pGame->pPlayer->x = pGame->portalList[temp].x;
-                    pGame->pPlayer->y = pGame->portalList[temp].y;
+                    while ((pGame->portalList[temp].x / pGame->world.tileSize) - (pGame->pPlayer->x / pGame->world.tileSize) >= -1 && (pGame->portalList[temp].x / pGame->world.tileSize) - (pGame->pPlayer->x / pGame->world.tileSize) <= 1)
+                    {
+                        int temp = rand() % pGame->nrOfPortals;
+                        pGame->pPlayer->x = pGame->portalList[temp].x;
+                        pGame->pPlayer->y = pGame->portalList[temp].y;
+                    }
                 }
                 if ((checkCollision(*pGame->pPlayer, pGame->map, 'D', pGame->world.tileSize) < 1) && (playerCollision(*pGame->pPlayer, pGame->pMultiPlayer, pGame->nrOfPlayers, 'D', pGame->world.tileSize) == -1))
                 {
@@ -250,7 +278,6 @@ void *handleInput(void *pGameIn) // Game *pGame)
                 */
         }
     }
-    
 
     int offsetX = pGame->map[0].wall.x - pGame->map[0].x;
     int offsetY = pGame->map[0].wall.y - pGame->map[0].y;
@@ -299,28 +326,36 @@ void movePlayer(Player *pPlayer, char direction)
     }
 }
 
-int playerCollision(Player player, Player players[], int nrOfPlayers, char direction, int tileSize) {
-    if (nrOfPlayers == 0) return -1;
-    for (int i = 0; i < nrOfPlayers; i++) {
-        switch (direction) {
-        case 'W':   // First checks if rows overlap then if columns overlap
-            if ((player.y > players[i].y) && (player.y-1 < players[i].y+tileSize-1)) 
-                if (((player.x == players[i].x) || ((players[i].x + (tileSize-1) > player.x) && (players[i].x < player.x)) || ((players[i].x > player.x) && (players[i].x < player.x + (tileSize-1))))) return i;
+int playerCollision(Player player, Player players[], int nrOfPlayers, char direction, int tileSize)
+{
+    if (nrOfPlayers == 0)
+        return -1;
+    for (int i = 0; i < nrOfPlayers; i++)
+    {
+        switch (direction)
+        {
+        case 'W': // First checks if rows overlap then if columns overlap
+            if ((player.y > players[i].y) && (player.y - 1 < players[i].y + tileSize - 1))
+                if (((player.x == players[i].x) || ((players[i].x + (tileSize - 1) > player.x) && (players[i].x < player.x)) || ((players[i].x > player.x) && (players[i].x < player.x + (tileSize - 1)))))
+                    return i;
             return -1;
             break;
-        case 'A':   // First checks if columns overlap then if rows overlap
-            if ((player.x > players[i].x) && (player.x-1 < players[i].x+tileSize-1))
-                if (((player.y == players[i].y) || ((players[i].y + (tileSize-1) > player.y) && (players[i].y < player.y)) || ((players[i].y > player.y) && (players[i].y < player.y + (tileSize-1))))) return i;
+        case 'A': // First checks if columns overlap then if rows overlap
+            if ((player.x > players[i].x) && (player.x - 1 < players[i].x + tileSize - 1))
+                if (((player.y == players[i].y) || ((players[i].y + (tileSize - 1) > player.y) && (players[i].y < player.y)) || ((players[i].y > player.y) && (players[i].y < player.y + (tileSize - 1)))))
+                    return i;
             return -1;
             break;
-        case 'S':   // First checks if rows overlap then if columns overlap
+        case 'S': // First checks if rows overlap then if columns overlap
             if ((player.y < players[i].y) && (player.y + tileSize > players[i].y))
-                if (((player.x == players[i].x) || ((players[i].x + (tileSize-1) > player.x) && (players[i].x < player.x)) || ((players[i].x > player.x) && (players[i].x < player.x + (tileSize-1))))) return i;
+                if (((player.x == players[i].x) || ((players[i].x + (tileSize - 1) > player.x) && (players[i].x < player.x)) || ((players[i].x > player.x) && (players[i].x < player.x + (tileSize - 1)))))
+                    return i;
             return -1;
             break;
-        case 'D':   // First checks if columns overlap then if rows overlap
-            if ((player.x < players[i].x) && (player.x + tileSize > players[i].x)) 
-                if (((player.y == players[i].y) || ((players[i].y + (tileSize-1) > player.y) && (players[i].y < player.y)) || ((players[i].y > player.y) && (players[i].y < player.y + (tileSize-1))))) return i;
+        case 'D': // First checks if columns overlap then if rows overlap
+            if ((player.x < players[i].x) && (player.x + tileSize > players[i].x))
+                if (((player.y == players[i].y) || ((players[i].y + (tileSize - 1) > player.y) && (players[i].y < player.y)) || ((players[i].y > player.y) && (players[i].y < player.y + (tileSize - 1)))))
+                    return i;
             return -1;
             break;
         }
@@ -522,11 +557,10 @@ void loadMedia(SDL_Renderer *pRenderer, SDL_Texture **pPlayerTexture, SDL_Rect g
         *pPlayerTexture = SDL_CreateTextureFromSurface(pRenderer, gCatSurface);
         textureLoaded = true;
     }
-    
 
     int w = 24, h = 24;
-    //playerID--;   //for testing
- 
+    // playerID--;   //for testing
+
     // IDLE
     gSpriteClips[0].x = 36;
     gSpriteClips[0].y = 34 + ((playerID - 1) * HEIGHT_OF_PLAYER_SPRITE);
