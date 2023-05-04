@@ -14,6 +14,7 @@ int connectToServer(Game *pGame)
         printf("Error: Initialization of tcp connection failed\n");
         return 1;
     }
+    printf("DONE: Initialized TCP\n");
     enum TCPSTATE tcpState = FETCHING_MAP;
     bool exit = false;
     int i = 0;
@@ -21,7 +22,7 @@ int connectToServer(Game *pGame)
 
     while (!exit)
     {
-        while (SDLNet_CheckSockets(pGame->pClient->sockets, 0) > 0)
+        if (SDLNet_CheckSockets(pGame->pClient->sockets, 0) > 0)
         {
             if (SDLNet_SocketReady(pGame->pClient->socketTCP))
             {
@@ -62,6 +63,7 @@ int connectToServer(Game *pGame)
             }
         }
     }
+    return 0;
 }
 
 int initTCPConnection(Game *pGame)

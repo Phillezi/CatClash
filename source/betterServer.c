@@ -128,6 +128,7 @@ void checkIncommingTCP(Server *pServer)
                 pServer->nrOfClients--;
             }
         }
+        
     }
 
     switch (pServer->tcpState)
@@ -162,7 +163,7 @@ void checkIncommingTCP(Server *pServer)
             {
                 if (SDLNet_SocketReady(pServer->clients[i].tcpSocket))
                 {
-                    // pServer->clients[i].timeout = SDL_GetTicks();
+                    pServer->clients[i].timeout = SDL_GetTicks();
                     bytesRecv = SDLNet_TCP_Recv(pServer->clients[pServer->nrOfClients].tcpSocket, &pServer->clients[pServer->nrOfClients].data, sizeof(Player));
                     if (bytesRecv != sizeof(Player))
                     {

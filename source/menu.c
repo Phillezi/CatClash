@@ -465,9 +465,11 @@ int joinServerMenu(Game *pGame)
                     freeText(pPrompt2);
                     return 1;
                 }
+                printf("Connected to Server\n");
                 initMapFromTCP(pGame->map, pGame->world.tileSize);
                 getPlayerSpawnPos(pGame);
                 SDLNet_ResolveHost(&pGame->serverAddress, text, 1234);
+                printf("Resolved UDP host\n");
                 exit = true;
             }
             else

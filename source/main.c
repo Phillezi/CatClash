@@ -72,6 +72,7 @@ int main(int argv, char **args)
                 break;
             break;
         case HOST:
+            break;
             if (game.serverIsHosted == false)
             {
                 if (testSelectMenu(&game, mapName))
