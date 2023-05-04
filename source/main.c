@@ -9,11 +9,7 @@
 #include "player.h"
 #include "levelEditor.h"
 #include "pthread.h"
-// #include "client.h"
-//#include "clientUDP.h"
-//#include "TCPclient.h"
 #include "newClient.h"
-#include "multiThreadedServer.h"
 #include <time.h>
 
 int init(Game *pGame);
@@ -24,10 +20,10 @@ void *updateScreen(void *pGameIn);
 int main(int argv, char **args)
 {
     Game game;
-    game.serverThread;
+    //game.serverThread;
     char mapName[31];
 
-    game.serverIsHosted = false;
+    //game.serverIsHosted = false;
 
     if (init(&game))
     {
@@ -50,6 +46,7 @@ int main(int argv, char **args)
             break;
         case QUIT:
             printf("Closing...\n");
+            /*
             if (game.serverIsHosted)
             {
                 printf("Closing server...\n");
@@ -57,6 +54,7 @@ int main(int argv, char **args)
                 pthread_join(game.serverThread, NULL);
                 game.serverIsHosted = false;
             }
+            */
             printf("Closing game...\n");
             close(&game);
             printf("Done closing!\n");
@@ -73,6 +71,7 @@ int main(int argv, char **args)
             break;
         case HOST:
             break;
+            /*
             if (game.serverIsHosted == false)
             {
                 if (testSelectMenu(&game, mapName))
@@ -86,6 +85,7 @@ int main(int argv, char **args)
             {
                 printf("SERVER IS ALREADY HOSTED\n");
             }
+            */
             break;
         default:
             break;
