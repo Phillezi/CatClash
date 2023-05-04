@@ -205,6 +205,7 @@ int init(Game *pGame)
     pGame->pPlayer->rect.h = pGame->world.tileSize;
 
     pGame->pPlayer->hp = 255;
+    pGame->pPlayer->state = ALIVE;
 
     pGame->ui.chargebar.x = ((pGame->windowWidth / 2) - (MAX_CHARGE / 2));
     pGame->ui.chargebar.y = ((3 * pGame->windowHeight) / 4);
