@@ -402,8 +402,6 @@ void run(Game *pGame)
             }
         }
     }
-    if (pGame->pPacket)
-        SDLNet_FreePacket(pGame->pPacket);
 }
 
 void close(Game *pGame)
