@@ -106,6 +106,7 @@ void checkTCP(Game *pGame)
             {
                 pGame->pMultiPlayer = createNewMultiPlayer(pGame, pGame->nrOfPlayers, data);
                 pGame->nrOfPlayers++;
+                printf("Recived: x:%d, y:%d, id:%d, name:%s\n", data.x, data.y, data.id, data.name);
                 printf("A new player joined! (%d total)\n", pGame->nrOfPlayers);
             }
         }

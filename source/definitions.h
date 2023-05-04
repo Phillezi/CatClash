@@ -101,7 +101,7 @@ struct uiElements
     SDL_Rect healthbar;
     SDL_Rect fpsFrame;
     Text *pMenuText, *pOverText, *pFpsText, *pPlayerName;
-    TTF_Font *pGameFont, *pFpsFont;
+    TTF_Font *pGameFont, *pFpsFont, *pNameTagFont;
 };
 typedef struct uiElements UiE;
 

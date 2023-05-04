@@ -20,10 +20,10 @@ void *updateScreen(void *pGameIn);
 int main(int argv, char **args)
 {
     Game game;
-    //game.serverThread;
+    // game.serverThread;
     char mapName[31];
 
-    //game.serverIsHosted = false;
+    // game.serverIsHosted = false;
 
     if (init(&game))
     {
@@ -121,11 +121,11 @@ int init(Game *pGame)
         return 1;
     }
 
-    // pGame->windowWidth = (float)displayMode.w * 0.4; // 70% of avaliable space
-    // pGame->windowHeight = (float)displayMode.h * 0.4;
+    pGame->windowWidth = (float)displayMode.w * 0.3; // 70% of avaliable space
+    pGame->windowHeight = (float)displayMode.h * 0.3;
 
-    pGame->windowWidth = 1920; // 70% of avaliable space
-    pGame->windowHeight = 1080;
+    // pGame->windowWidth = 1920; // 70% of avaliable space
+    // pGame->windowHeight = 1080;
 
     pGame->world.tileSize = (pGame->windowHeight / MAPSIZE) * 4;
 
@@ -184,6 +184,13 @@ int init(Game *pGame)
 
     pGame->ui.pFpsFont = TTF_OpenFont("resources/fonts/RetroGaming.ttf", pGame->world.tileSize);
     if (!pGame->ui.pFpsFont)
+    {
+        printf("Error: %s\n", TTF_GetError());
+        return 1;
+    }
+
+    pGame->ui.pNameTagFont = TTF_OpenFont("resources/fonts/RetroGaming.ttf", (int)((float)pGame->world.tileSize / 4));
+    if (!pGame->ui.pNameTagFont)
     {
         printf("Error: %s\n", TTF_GetError());
         return 1;
@@ -330,7 +337,7 @@ void run(Game *pGame)
                     getPlayerData(pGame);
                     handleInput(pGame);
                     int keepAliveDelta = SDL_GetTicks() - prevUDPTransfer;
-                    if (oldX != pGame->pPlayer->x || oldY != pGame->pPlayer->y || oldCharge != pGame->pPlayer->charge|| keepAliveDelta > 4500)
+                    if (oldX != pGame->pPlayer->x || oldY != pGame->pPlayer->y || oldCharge != pGame->pPlayer->charge || keepAliveDelta > 4500)
                     {
                         prevUDPTransfer = SDL_GetTicks();
                         oldX = pGame->pPlayer->x;
@@ -447,6 +454,8 @@ void close(Game *pGame)
          SDL_DestroyTexture(pGame->pTileTextures[3]);*/
     if (pGame->pPlayerTexture)
         SDL_DestroyTexture(pGame->pPlayerTexture);
+    if (pGame->ui.pNameTagFont)
+        TTF_CloseFont(pGame->ui.pNameTagFont);
     if (pGame->ui.pGameFont)
         TTF_CloseFont(pGame->ui.pGameFont);
     if (pGame->ui.pFpsFont)
@@ -560,10 +569,8 @@ void *updateScreen(void *pGameIn)
                 if (i == (((pGame->pMultiPlayer[j].y / pGame->map[0].wall.w) * MAPSIZE) + ((pGame->pMultiPlayer[j].x - 1) / pGame->map[0].wall.w) + 2))
                 {
                     loadMedia(pGame->pRenderer, &pGame->pPlayerTexture, pGame->gSpriteClips, pGame->pMultiPlayer[j].id);
-                    char buffer[31];
-                    sprintf(buffer, "p:%d,i:%d", pGame->pMultiPlayer[j].id, j);
                     drawPlayer(pGame, pGame->pMultiPlayer[j], pGame->pMultiPlayer[j].id);
-                    pGame->ui.pPlayerName = createText(pGame->pRenderer, 0, 0, 0, pGame->ui.pFpsFont, buffer, pGame->pMultiPlayer[j].rect.x, pGame->pMultiPlayer[j].rect.y + (pGame->world.tileSize / 2));
+                    pGame->ui.pPlayerName = createText(pGame->pRenderer, 0, 0, 0, pGame->ui.pNameTagFont, pGame->pMultiPlayer[j].name, pGame->pMultiPlayer[j].rect.x+(pGame->pMultiPlayer[j].rect.w/2), pGame->pMultiPlayer[j].rect.y);
                     drawText(pGame->ui.pPlayerName, pGame->pRenderer);
                     freeText(pGame->ui.pPlayerName);
                 }
