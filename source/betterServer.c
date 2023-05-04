@@ -107,16 +107,20 @@ void checkIncommingTCP(Server *pServer)
                 pServer->tcpState = CLIENT_JOINING;
             }
         }
-    }
-    /*
-    for (int i = 0; i < pServer->nrOfClients; i++)
-    {
-        if (SDL_GetTicks() - pServer->clients[i].timeout > 5000)
+        for (int i = 0; i < pServer->nrOfClients; i++)
         {
-            // PLAYER TIMED OUT
+            if (SDL_GetTicks() - pServer->clients[i].timeout > 5000)
+            {
+                printf("Player %d timed out\n Disconnection them\n", i);
+                SDLNet_TCP_Close(pServer->clients[i].tcpSocket);
+                SDLNet_DelSocket(pServer->socketSetTCP, pServer->clients[i].tcpSocket);
+                pServer->clients[i].address.port = 8888;
+                pServer->clients[i].address.host = 8888;
+                pServer->clients[i].id = 8888;
+            }
         }
     }
-    */
+
     switch (pServer->tcpState)
     {
     case IDLE:
@@ -213,6 +217,7 @@ void checkIncommingUDP(Server *pServer)
             }
             else if (pServer->clients[i].data.id == data.id)
             {
+                pServer->clients[i].timeout = SDL_GetTicks();
                 pServer->clients[i].data.x = data.x;
                 pServer->clients[i].data.y = data.y;
                 pServer->clients[i].data.prevKeyPressed = data.direction;
