@@ -10,7 +10,9 @@
 #include "levelEditor.h"
 #include "pthread.h"
 // #include "client.h"
-#include "clientUDP.h"
+//#include "clientUDP.h"
+//#include "TCPclient.h"
+#include "newClient.h"
 #include "multiThreadedServer.h"
 #include <time.h>
 
@@ -266,6 +268,7 @@ void run(Game *pGame)
     int oldX = 0;
     int oldY = 0;
     int oldCharge = 0;
+    int prevUDPTransfer = 0;
     pthread_t movementThread;
     bool exit = false;
     pGame->config.fps = 60;
@@ -287,6 +290,7 @@ void run(Game *pGame)
         int deltaTime = SDL_GetTicks() - previousTime;
         if (deltaTime >= (1000 / FPS))
         {
+            checkTCP(pGame);
             /*
             if (pGame->config.multiThreading){
                 pthread_create(&renderThread, NULL, updateScreen, (void *)pGame);
@@ -300,10 +304,12 @@ void run(Game *pGame)
                 if (pGame->config.multiThreading)
                 {
                     static int idle = 0;
-                    getPlayerData(pGame, pGame->pMultiPlayer);
+                    getPlayerData(pGame);
                     pthread_join(movementThread, NULL);
-                    if (oldX != pGame->pPlayer->x || oldY != pGame->pPlayer->y || oldCharge != pGame->pPlayer->charge)
+                    int keepAliveDelta = SDL_GetTicks() - prevUDPTransfer;
+                    if (oldX != pGame->pPlayer->x || oldY != pGame->pPlayer->y || oldCharge != pGame->pPlayer->charge || keepAliveDelta > 4500)
                     {
+                        prevUDPTransfer = SDL_GetTicks();
                         oldX = pGame->pPlayer->x;
                         oldY = pGame->pPlayer->y;
                         oldCharge = pGame->pPlayer->charge;
@@ -320,10 +326,12 @@ void run(Game *pGame)
                 }
                 else
                 {
-                    getPlayerData(pGame, pGame->pMultiPlayer);
+                    getPlayerData(pGame);
                     handleInput(pGame);
-                    if (oldX != pGame->pPlayer->x || oldY != pGame->pPlayer->y || oldCharge != pGame->pPlayer->charge)
+                    int keepAliveDelta = SDL_GetTicks() - prevUDPTransfer;
+                    if (oldX != pGame->pPlayer->x || oldY != pGame->pPlayer->y || oldCharge != pGame->pPlayer->charge|| keepAliveDelta > 4500)
                     {
+                        prevUDPTransfer = SDL_GetTicks();
                         oldX = pGame->pPlayer->x;
                         oldY = pGame->pPlayer->y;
                         oldCharge = pGame->pPlayer->charge;

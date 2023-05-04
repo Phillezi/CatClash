@@ -117,6 +117,7 @@ typedef struct playerNet
 {
     UDPsocket socketUDP;
     TCPsocket socketTCP;
+    SDLNet_SocketSet sockets;
     char serverIP[16];
     int port;
     int id;
@@ -170,15 +171,23 @@ enum serverState
 };
 typedef enum serverState ServerState;
 
+enum STCPSTATE{CLIENT_JOINING, SENDING_MAP, SENDING_PLAYER_ID, GET_PLAYER_DATA, SEND_NEW_PLATER_DATA, IDLE};
+typedef enum STCPSTATE TcpState;
+
 struct info
 {
     IPaddress address;
     int id;
+    TCPsocket tcpSocket;
+    Player data;
+    Uint32 timeout;
 };
 typedef struct info Info;
 
 struct server
 {
+    int mapPos;
+    TcpState tcpState;
     SDL_Window *pWindow;
     SDL_Renderer *pRenderer;
     TTF_Font *pFont;

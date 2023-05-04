@@ -7,6 +7,7 @@
 #include "definitions.h"
 
 int joinServerTCP(Game *pGame);
+void checkTcp(Game *pGame);
 PlayerNet *createClient(char *serverIP, int port, int id, int x, int y);
 
 #endif

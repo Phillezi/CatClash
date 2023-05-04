@@ -55,7 +55,6 @@ void *MThostServer(void *mapName)
             }
             pthread_join(threads.tcp, NULL);
             pthread_join(threads.udp, NULL);
-            
         }
     }
     closeThreads((void *)&threads);
@@ -193,7 +192,7 @@ void *MTtcpServer(void *pServerIn)
 {
     Server *pServer = (Server *)pServerIn;
     TCPsocket tmpClient;
-    int running = 1;
+    int running = 1, bytesSent = 0, bytesRecv = 0;
 
     pthread_setcancelstate(PTHREAD_CANCEL_ENABLE, NULL);
 
@@ -211,23 +210,44 @@ void *MTtcpServer(void *pServerIn)
             SDLNet_TCP_AddSocket(pServer->socketSetTCP, tmpClient);
             printf("User: %d joined!\n", ++pServer->nrOfClients);
             for (int i = 0; i < MAPSIZE * MAPSIZE; i++)
-                SDLNet_TCP_Send(tmpClient, &pServer->map[i].type, sizeof(pServer->map[i].type)); // send map to client
-            SDLNet_TCP_Send(tmpClient, &pServer->nrOfClients, sizeof(int));
+            {
+                bytesSent = SDLNet_TCP_Send(tmpClient, &pServer->map[i].type, sizeof(pServer->map[i].type)); // send map to client
+                if (bytesSent != sizeof(pServer->map[i].type))
+                {
+                    printf("Error: packet loss when sending map nr:%d\n", i);
+                }
+            }
+            printf("Done: Sending map\n");
             /*
-            int bytesRecv = SDLNet_TCP_Recv(tmpClient, &pServer->playerData[pServer->nrOfClients], sizeof(Player));
-            if(bytesRecv != sizeof(Player)){
+            Uint8 clientRecvCorrectlyFlag = 0;
+            bytesRecv = SDLNet_TCP_Recv(tmpClient, &clientRecvCorrectlyFlag, sizeof(Uint8));
+            if(bytesRecv != sizeof(Uint8)){
+                printf("Error: packet loss when reciving clientRecvCorrectlyFlag\n");
+            }
+            */
+
+            bytesSent = SDLNet_TCP_Send(tmpClient, &pServer->nrOfClients, sizeof(pServer->nrOfClients));
+            if (bytesSent != sizeof(pServer->nrOfClients))
+            {
+                printf("Error: packet loss when sending player id\n");
+            }
+
+            bytesRecv = SDLNet_TCP_Recv(tmpClient, &pServer->clients[pServer->nrOfClients].data, sizeof(Player));
+            if (bytesRecv != sizeof(Player))
+            {
                 printf("Error when reciving Player struct over TCP\n");
                 debugPrint();
             }
-            for(int i = 0; i < pServer->nrOfClients; i++){
-                SDLNet_TCP_Send(tmpClient, &pServer->playerData[i], sizeof(Player));
+            printf("Player %d joined\n", pServer->clients[pServer->nrOfClients].data.id);
+            for (int i = 0; i < pServer->nrOfClients - 1; i++)
+            {
+                SDLNet_TCP_Send(tmpClient, &pServer->clients[i].data, sizeof(Player));
+                printf("Sent Playerdata of id: %d to new player\n", pServer->clients[i].data.id);
+                SDLNet_TCP_Send(pServer->clients[i].tcpSocket, &pServer->clients[pServer->nrOfClients].data, sizeof(Player));
             }
-            */
-            /*
-                Skicka Player data till alla som har anslutit sig här
-                Dvs spara alla tmpSockets i socketSetTCP och iterera genom listan och skicka till alla
-            */
+            printf("DONE: reciving and sending PLAYERDATA!\n");
             SDLNet_TCP_Close(tmpClient); // close client
+            printf("I didnt crash here\n");
             char buffer[31];
             sprintf(buffer, "%d Players Connected", pServer->nrOfClients);
             if (pServer->pJoining)
@@ -239,6 +259,25 @@ void *MTtcpServer(void *pServerIn)
             printf("MAX players reached\n");
         }
     }
+    /*
+    while (SDLNet_CheckSockets(pServer->socketSetTCP, 0) > 0)
+    {
+        for (int i = 0; i < pServer->nrOfClients; i++)
+        {
+            if (SDLNet_SocketReady(pServer->clients[i].tcpSocket))
+            {
+                pServer->clients[i].timeout = SDL_GetTicks();
+            }
+        }
+    }
+    for (int i = 0; i < pServer->nrOfClients; i++)
+    {
+        if (SDL_GetTicks() - pServer->clients[i].timeout > 5000)
+        {
+            // PLAYER TIMED OUT
+        }
+    }
+    */
 
     pthread_cleanup_pop(0);
     pthread_exit(NULL);
@@ -291,7 +330,7 @@ void MTcheckUdpClient(Server *pServer, PlayerUdpPkg data)
                 pServer->clients[i].address.host = pServer->pRecieve->address.host;
                 pServer->clients[i].id = data.id;
                 char buffer[32];
-                sprintf(buffer, "%d %s", data.id, pServer->playerData[data.id].name);
+                sprintf(buffer, "%d %s", data.id, pServer->clients[data.id].data.name);
                 pServer->pClientText[i] = createText(pServer->pRenderer, 255, 255, 255, pServer->pFont, buffer, pServer->windowWidth / 2, i * pServer->fontSize + 3 * pServer->fontSize);
                 return;
             }
