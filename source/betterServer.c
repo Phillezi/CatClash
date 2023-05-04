@@ -128,7 +128,6 @@ void checkIncommingTCP(Server *pServer)
                 pServer->nrOfClients--;
             }
         }
-        
     }
 
     switch (pServer->tcpState)
@@ -267,6 +266,13 @@ void dbgPrint()
 
 void closeS(Server *pServer)
 {
+
+    for (int i = 0; i < pServer->nrOfClients; i++)
+    {
+        SDLNet_TCP_Close(pServer->clients[i].tcpSocket);
+        SDLNet_DelSocket(pServer->socketSetTCP, pServer->clients[i].tcpSocket);
+    }
+
     // CLOSE NET
     if (pServer->socketSetTCP)
         SDLNet_FreeSocketSet(pServer->socketSetTCP);
