@@ -129,7 +129,7 @@ int init(Game *pGame)
 
     pGame->world.tileSize = (pGame->windowHeight / MAPSIZE) * 4;
 
-    pGame->pPlayer = createPlayer(0, "test", pGame->world.tileSize);
+    pGame->pPlayer = createPlayer(0, "Name", pGame->world.tileSize);
 
     if (!pGame->pPlayer)
     {

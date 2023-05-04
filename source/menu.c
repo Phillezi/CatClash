@@ -9,7 +9,7 @@
 #include <SDL2/SDL_image.h>
 #include <SDL2/SDL_ttf.h>
 #include "ioHandler.h"
-//#include "TCPclient.h"
+// #include "TCPclient.h"
 #include "newClient.h"
 
 int menu(Game *pGame)
@@ -768,6 +768,13 @@ int mainMenu(Game *pGame)
     TTF_SizeText(pGame->ui.pFpsFont, "Cat Selection", &catSelectW, NULL);
     TTF_SizeText(pGame->ui.pFpsFont, "Host Server", &hostW, NULL);
 
+    // PLAYERNAME TEST ADDITION---------------------------------------------------------------------------------------------------------------------------
+    int playerNameW, playerNameH, previousSecond = 0;
+    TTF_SizeText(pGame->ui.pFpsFont, pGame->pPlayer->name, &playerNameW, &playerNameH);
+    Text *pName = createText(pGame->pRenderer, 200, 200, 200, pGame->ui.pFpsFont, pGame->pPlayer->name, playerNameW / 2, pGame->windowHeight - (playerNameH / 2));
+    bool editPlayerName = false, drawLine = false, updatePlayerNameFlag = false;
+    //----------------------------------------------------------------------------------------------------------------------------------------------------
+
     while (!quit)
     {
         int previousMode = mode;
@@ -797,6 +804,20 @@ int mainMenu(Game *pGame)
                         pGame->serverIsHosted = false;
                     }
                 }
+            }
+            else if (editPlayerName)
+            {
+                // EDIT PLAYERNAME ADDITION
+                if (getStringFromUser(pGame->pPlayer->name, event))
+                {
+                    editPlayerName = false;
+                    updatePlayerNameFlag = false;
+                    TTF_SizeText(pGame->ui.pFpsFont, pGame->pPlayer->name, &playerNameW, &playerNameH);
+                    freeText(pName);
+                    pName = createText(pGame->pRenderer, 200, 200, 200, pGame->ui.pFpsFont, pGame->pPlayer->name, playerNameW / 2, pGame->windowHeight - (playerNameH / 2));
+                }
+                else
+                    updatePlayerNameFlag = true;
             }
             else if (event.type == SDL_KEYDOWN)
             {
@@ -873,8 +894,47 @@ int mainMenu(Game *pGame)
                         quit = true;
                     }
                 }
+                else if (0 < mouseX && mouseX < playerNameW && pGame->windowHeight - playerNameH < mouseY && mouseY < pGame->windowHeight)
+                {
+                    if (buttons & SDL_BUTTON(SDL_BUTTON_LEFT))
+                    {
+                        editPlayerName = true;
+                    }
+                }
             }
         }
+
+        // EDIT PLAYERNAME ADDITION-------------------------------------------------------------------------------------------------------------------------
+        if (updatePlayerNameFlag || (SDL_GetTicks() - previousSecond >= 1000) && editPlayerName)
+        {
+            char buffer[31];
+            if (SDL_GetTicks() - previousSecond >= 1000) // DRAW A | every other second
+            {
+                previousSecond = SDL_GetTicks();
+                if (drawLine)
+                    drawLine = false;
+                else
+                    drawLine = true;
+            }
+
+            switch (drawLine)
+            {
+            case false:
+                strcpy(buffer, pGame->pPlayer->name);
+                break;
+            case true:
+                sprintf(buffer, "%s|", pGame->pPlayer->name);
+                break;
+            }
+            
+            if (!pGame->pPlayer->name[0])
+                strcpy(buffer, "Name");
+
+            TTF_SizeText(pGame->ui.pFpsFont, buffer, &playerNameW, &playerNameH);
+            freeText(pName);
+            pName = createText(pGame->pRenderer, 0, 0, 0, pGame->ui.pFpsFont, buffer, playerNameW / 2, pGame->windowHeight - (playerNameH / 2));
+        }
+        //--------------------------------------------------------------------------------------------------------------------------------------------------
 
         if (mode != previousMode)
         {
@@ -990,6 +1050,7 @@ int mainMenu(Game *pGame)
             drawText(pJoinServer, pGame->pRenderer);
             drawText(pCatSelect, pGame->pRenderer);
             drawText(pHost, pGame->pRenderer);
+            drawText(pName, pGame->pRenderer); // PLAYERNAME ADDITION TEST
             SDL_RenderPresent(pGame->pRenderer);
         }
     }
@@ -999,6 +1060,7 @@ int mainMenu(Game *pGame)
     freeText(pJoinServer);
     freeText(pCatSelect);
     freeText(pHost);
+    freeText(pName); // PLAYERNAME ADDITION TEST
 
     return mode;
 }
