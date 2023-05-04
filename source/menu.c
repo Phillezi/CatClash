@@ -700,7 +700,7 @@ int catSelMenu(Game *pGame)
 {
     int previousTime = 0;
     bool exit = false;
-    Text *pSelPrompt = createText(pGame->pRenderer, 0, 0, 0, pGame->ui.pFpsFont, "Select your cat", pGame->windowWidth / 2, (pGame->windowHeight / 5));
+    Text *pSelPrompt = createText(pGame->pRenderer, 0, 0, 0, pGame->ui.pFpsFont, "COMING SOON!", pGame->windowWidth / 2, (pGame->windowHeight / 2));
 
     while (!exit)
     {
