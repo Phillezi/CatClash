@@ -125,8 +125,8 @@ int init(Game *pGame)
     pGame->windowWidth = (float)displayMode.w * 0.3; // 70% of avaliable space
     pGame->windowHeight = (float)displayMode.h * 0.3;
 
-    //pGame->windowWidth = 1920; // 70% of avaliable space
-    //pGame->windowHeight = 1080;
+    // pGame->windowWidth = 1920; // 70% of avaliable space
+    // pGame->windowHeight = 1080;
 
     pGame->world.tileSize = (pGame->windowHeight / MAPSIZE) * 4;
 
@@ -137,8 +137,6 @@ int init(Game *pGame)
         printf("Error: Failed to create player\n");
         return 1;
     }
-
-    
 
     pGame->pWindow = SDL_CreateWindow(WINDOW_NAME, SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, pGame->windowWidth, pGame->windowHeight, 0);
     if (!pGame->pWindow)
@@ -535,10 +533,19 @@ void *updateScreen(void *pGameIn)
 
     translatePositionToScreen(pGame);
     static int k = 0;
-    if (k < MAX_PLAYERS) {
-        if (k == pGame->pPlayer->id) { loadMedia(pGame->pRenderer, &pGame->pPlayerTexture, pGame->gSpriteClips, pGame->pPlayer->id); k++; }
+    if (k < MAX_PLAYERS)
+    {
+        if (k == pGame->pPlayer->id)
+        {
+            loadMedia(pGame->pRenderer, &pGame->pPlayerTexture, pGame->gSpriteClips, pGame->pPlayer->id);
+            k++;
+        }
         for (int i = 0; i < pGame->nrOfPlayers; i++)
-            if (k == pGame->pMultiPlayer[i].id) { loadMedia(pGame->pRenderer, &pGame->pPlayerTexture, pGame->gSpriteClips, pGame->pMultiPlayer[i].id); k++; }
+            if (k == pGame->pMultiPlayer[i].id)
+            {
+                loadMedia(pGame->pRenderer, &pGame->pPlayerTexture, pGame->gSpriteClips, pGame->pMultiPlayer[i].id);
+                k++;
+            }
     }
 
     // Checking if other players charge into you
@@ -585,10 +592,10 @@ void *updateScreen(void *pGameIn)
     {
         if (((pGame->map[i].wall.x <= pGame->windowWidth) && (pGame->map[i].wall.x + pGame->world.tileSize >= 0)) && ((pGame->map[i].wall.y <= pGame->windowHeight) && (pGame->map[i].wall.y + pGame->world.tileSize >= 0)))
         {
-            if(pGame->pPlayer->state == ALIVE)
-                darkness = (255*((float)(abs(pGame->map[i].x - pGame->pPlayer->x) + abs(pGame->map[i].y - pGame->pPlayer->y)) / (16*pGame->world.tileSize)));
-                if (darkness>255)
-                    darkness = 255;
+            if (pGame->pPlayer->state == ALIVE)
+                darkness = (255 * ((float)(abs(pGame->map[i].x - pGame->pPlayer->x) + abs(pGame->map[i].y - pGame->pPlayer->y)) / (16 * pGame->world.tileSize)));
+            if (darkness > 255)
+                darkness = 255;
             if (pGame->map[i].type > 0)
             {
                 SDL_RenderCopy(pGame->pRenderer, pGame->pTileTextures[pGame->map[i].type], NULL, &pGame->map[i].wall);
@@ -629,7 +636,13 @@ void *updateScreen(void *pGameIn)
             }
             SDL_SetRenderDrawBlendMode(pGame->pRenderer, SDL_BLENDMODE_BLEND);
             SDL_SetRenderDrawColor(pGame->pRenderer, 0, 0, 0, darkness);
-            //if(pGame->map[i].type>0)
+            if (pGame->map[i].type <= 0)
+            {
+                temp = pGame->map[i].wall;
+                temp.y += ((float)pGame->world.tileSize * pGame->world.angle);
+                SDL_RenderFillRect(pGame->pRenderer, &temp);
+            }
+            else
                 SDL_RenderFillRect(pGame->pRenderer, &pGame->map[i].wall);
             /*else
             {
