@@ -144,11 +144,10 @@ int initServer(Server *pServer)
         return 1;
 
     pServer->pServerStateText = createText(pServer->pRenderer, 0, 0, 0, pServer->pFont, "Server is Ready", pServer->windowWidth / 2, pServer->fontSize);
-    pServer->progressBar.x = (pServer->windowWidth / 2) - ((pServer->fontSize * IDLE)/2);
-    pServer->progressBar.y = 1.5*pServer->fontSize;
+    pServer->progressBar.x = (pServer->windowWidth / 2) - ((pServer->fontSize * IDLE) / 2);
+    pServer->progressBar.y = 1.5 * pServer->fontSize;
     pServer->progressBar.h = pServer->fontSize;
     pServer->progressBar.w = 0;
-
 
     return 0;
 }
@@ -214,7 +213,19 @@ void checkIncommingTCP(Server *pServer)
         }
         pServer->mapPos++;
         if (pServer->mapPos == MAPSIZE * MAPSIZE)
+        {
+            // Change the spawntile to occupied since the newly joined player will spawn there
+            for (int i = 0; i < MAPSIZE * MAPSIZE; i++)
+            {
+                if (pServer->map[i].type == -1)
+                {
+                    pServer->map[i].type = 0;
+                    i = MAPSIZE * MAPSIZE;
+                }
+            }
             pServer->tcpState++;
+        }
+
         break;
     case SENDING_PLAYER_ID:
         bytesSent = SDLNet_TCP_Send(pServer->clients[pServer->nrOfClients].tcpSocket, &pServer->nrOfClients, sizeof(pServer->nrOfClients));
@@ -288,7 +299,7 @@ void checkIncommingTCP(Server *pServer)
             break;
         }
         printf("Server state changed to: %s\n", buffer);
-        if(pServer->pServerStateText)
+        if (pServer->pServerStateText)
             freeText(pServer->pServerStateText);
         pServer->pServerStateText = createText(pServer->pRenderer, 0, 0, 0, pServer->pFont, buffer, pServer->windowWidth / 2, pServer->fontSize);
         pServer->progressBar.w = pServer->fontSize * pServer->tcpState;
