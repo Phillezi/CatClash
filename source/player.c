@@ -619,7 +619,7 @@ void loadMedia(SDL_Renderer *pRenderer, SDL_Texture **pPlayerTexture, SDL_Rect g
     gSpriteClips[playerID][10].h = h;
 
     // RUNNING UP
-    y[0] = 289 + (playerID - 1 * HEIGHT_OF_PLAYER_SPRITE), y[1] = 321 + (playerID * HEIGHT_OF_PLAYER_SPRITE);
+    y[0] = 289 + (playerID * HEIGHT_OF_PLAYER_SPRITE), y[1] = 321 + (playerID * HEIGHT_OF_PLAYER_SPRITE);
 
     gSpriteClips[playerID][11].x = x[0];
     gSpriteClips[playerID][11].y = y[1];
