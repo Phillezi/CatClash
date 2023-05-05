@@ -531,6 +531,7 @@ void *updateScreen(void *pGameIn)
     SDL_Rect temp;
 
     translatePositionToScreen(pGame);
+    static int k = 0;
 
     // Checking if other players charge into you
     int id = 0, check = 0, collision = 0;
@@ -599,14 +600,14 @@ void *updateScreen(void *pGameIn)
             }
             if (i == (((pGame->pPlayer->y / pGame->map[0].wall.w) * MAPSIZE) + ((pGame->pPlayer->x - 1) / pGame->map[0].wall.w) + 2))
             {
-                loadMedia(pGame->pRenderer, &pGame->pPlayerTexture, pGame->gSpriteClips, pGame->pPlayer->id);
+                if (k == pGame->pPlayer->id) { loadMedia(pGame->pRenderer, &pGame->pPlayerTexture, pGame->gSpriteClips, pGame->pPlayer->id); k++; }
                 drawPlayer(pGame, *pGame->pPlayer, pGame->pPlayer->id);
             }
             for (int j = 0; j < pGame->nrOfPlayers; j++)
             {
                 if (i == (((pGame->pMultiPlayer[j].y / pGame->map[0].wall.w) * MAPSIZE) + ((pGame->pMultiPlayer[j].x - 1) / pGame->map[0].wall.w) + 2))
                 {
-                    loadMedia(pGame->pRenderer, &pGame->pPlayerTexture, pGame->gSpriteClips, pGame->pMultiPlayer[j].id);
+                    if (k == pGame->pMultiPlayer[j].id) { loadMedia(pGame->pRenderer, &pGame->pPlayerTexture, pGame->gSpriteClips, pGame->pMultiPlayer[j].id); k++; }
                     drawPlayer(pGame, pGame->pMultiPlayer[j], pGame->pMultiPlayer[j].id);
                     pGame->ui.pPlayerName = createText(pGame->pRenderer, 0, 0, 0, pGame->ui.pNameTagFont, pGame->pMultiPlayer[j].name, pGame->pMultiPlayer[j].rect.x + (pGame->pMultiPlayer[j].rect.w / 2), pGame->pMultiPlayer[j].rect.y);
                     drawText(pGame->ui.pPlayerName, pGame->pRenderer);
