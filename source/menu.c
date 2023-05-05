@@ -926,13 +926,19 @@ int mainMenu(Game *pGame)
                 sprintf(buffer, "%s|", pGame->pPlayer->name);
                 break;
             }
-            
-            if (!pGame->pPlayer->name[0])
-                strcpy(buffer, "Name");
 
-            TTF_SizeText(pGame->ui.pFpsFont, buffer, &playerNameW, &playerNameH);
-            freeText(pName);
-            pName = createText(pGame->pRenderer, 0, 0, 0, pGame->ui.pFpsFont, buffer, playerNameW / 2, pGame->windowHeight - (playerNameH / 2));
+            if (!buffer[0])
+            {
+                TTF_SizeText(pGame->ui.pFpsFont, buffer, &playerNameW, &playerNameH);
+                freeText(pName);
+                pName = createText(pGame->pRenderer, 0, 0, 0, pGame->ui.pFpsFont, " ", playerNameW / 2, pGame->windowHeight - (playerNameH / 2));
+            }
+            else
+            {
+                TTF_SizeText(pGame->ui.pFpsFont, buffer, &playerNameW, &playerNameH);
+                freeText(pName);
+                pName = createText(pGame->pRenderer, 0, 0, 0, pGame->ui.pFpsFont, buffer, playerNameW / 2, pGame->windowHeight - (playerNameH / 2));
+            }
         }
         //--------------------------------------------------------------------------------------------------------------------------------------------------
 
@@ -1050,7 +1056,8 @@ int mainMenu(Game *pGame)
             drawText(pJoinServer, pGame->pRenderer);
             drawText(pCatSelect, pGame->pRenderer);
             drawText(pHost, pGame->pRenderer);
-            drawText(pName, pGame->pRenderer); // PLAYERNAME ADDITION TEST
+            if(pName)
+                drawText(pName, pGame->pRenderer); // PLAYERNAME ADDITION TEST
             SDL_RenderPresent(pGame->pRenderer);
         }
     }
