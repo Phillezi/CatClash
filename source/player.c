@@ -338,28 +338,25 @@ int playerCollision(Player player, Player players[], int nrOfPlayers, char direc
             if ((player.y > players[i].y) && (player.y - 1 < players[i].y + tileSize - 1))
                 if (((player.x == players[i].x) || ((players[i].x + (tileSize - 1) > player.x) && (players[i].x < player.x)) || ((players[i].x > player.x) && (players[i].x < player.x + (tileSize - 1)))))
                     return i;
-            return -1;
             break;
         case 'A': // First checks if columns overlap then if rows overlap
             if ((player.x > players[i].x) && (player.x - 1 < players[i].x + tileSize - 1))
                 if (((player.y == players[i].y) || ((players[i].y + (tileSize - 1) > player.y) && (players[i].y < player.y)) || ((players[i].y > player.y) && (players[i].y < player.y + (tileSize - 1)))))
                     return i;
-            return -1;
             break;
         case 'S': // First checks if rows overlap then if columns overlap
             if ((player.y < players[i].y) && (player.y + tileSize > players[i].y))
                 if (((player.x == players[i].x) || ((players[i].x + (tileSize - 1) > player.x) && (players[i].x < player.x)) || ((players[i].x > player.x) && (players[i].x < player.x + (tileSize - 1)))))
                     return i;
-            return -1;
             break;
         case 'D': // First checks if columns overlap then if rows overlap
             if ((player.x < players[i].x) && (player.x + tileSize > players[i].x))
                 if (((player.y == players[i].y) || ((players[i].y + (tileSize - 1) > player.y) && (players[i].y < player.y)) || ((players[i].y > player.y) && (players[i].y < player.y + (tileSize - 1)))))
                     return i;
-            return -1;
             break;
         }
     }
+    return -1;
 }
 
 int checkCollision(Player player, Tile map[], char direction, int tileSize)
