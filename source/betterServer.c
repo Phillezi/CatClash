@@ -331,6 +331,7 @@ void checkIncommingUDP(Server *pServer)
                 pServer->clients[i].data.idle = data.idle;
                 pServer->clients[i].data.charging = data.charging;
                 pServer->clients[i].data.charge = data.charge;
+                pServer->clients[i].data.state = data.state;
             }
         }
     }
