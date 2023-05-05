@@ -570,7 +570,7 @@ void *updateScreen(void *pGameIn)
     }
     else
         count++;
-
+    pGame->isDrawing = true; // temporary fix to screen-tearing?
     for (int i = 0; i < MAPSIZE * MAPSIZE; i++)
     {
         if (((pGame->map[i].wall.x <= pGame->windowWidth) && (pGame->map[i].wall.x + pGame->world.tileSize >= 0)) && ((pGame->map[i].wall.y <= pGame->windowHeight) && (pGame->map[i].wall.y + pGame->world.tileSize >= 0)))
@@ -632,22 +632,7 @@ void *updateScreen(void *pGameIn)
             }*/
         }
     }
-
-    SDL_SetRenderDrawColor(pGame->pRenderer, 0, 0, 255, 255);
-
-    /*
-    // Draw players
-    drawPlayer(pGame, *pGame->pPlayer, pGame->pPlayer->id);
-    for (int i = 0; i < pGame->nrOfPlayers; i++)
-    {
-        char buffer[31];
-        sprintf(buffer, "P: %d", pGame->pMultiPlayer[i].id);
-        drawPlayer(pGame, pGame->pMultiPlayer[i], pGame->pMultiPlayer[i].id);
-        pGame->ui.pPlayerName = createText(pGame->pRenderer, 0, 0, 0, pGame->ui.pFpsFont, buffer, pGame->pMultiPlayer[i].rect.x, pGame->pMultiPlayer[i].rect.y + (pGame->world.tileSize / 2));
-        drawText(pGame->ui.pPlayerName, pGame->pRenderer);
-        freeText(pGame->ui.pPlayerName);
-    }
-    */
+    pGame->isDrawing = false; // temporary fix to screen-tearing?
 
     if (pGame->pPlayer->state == DEAD)
     {

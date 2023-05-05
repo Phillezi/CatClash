@@ -128,6 +128,7 @@ typedef struct playerNet
 struct game
 {
     bool isConnected;
+    bool isDrawing;
     int tempID;
     int nrOfPlayers;
     int nrOfPlayersAlive;

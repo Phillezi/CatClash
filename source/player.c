@@ -10,6 +10,7 @@
 
 void centerPlayer(Game *pGame, Player *pPlayer)
 {
+    while(pGame->isDrawing); //temporary fix to screenTearing?
     int screenShiftAmount = pGame->movementAmount;
     if (pPlayer->rect.x >= (4 * pGame->windowWidth) / 5 || pPlayer->rect.x <= pGame->windowWidth / 5)
     {
