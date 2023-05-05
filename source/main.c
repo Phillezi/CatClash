@@ -580,7 +580,7 @@ void *updateScreen(void *pGameIn)
         if (((pGame->map[i].wall.x <= pGame->windowWidth) && (pGame->map[i].wall.x + pGame->world.tileSize >= 0)) && ((pGame->map[i].wall.y <= pGame->windowHeight) && (pGame->map[i].wall.y + pGame->world.tileSize >= 0)))
         {
             if(pGame->pPlayer->state == ALIVE)
-                darkness = (255*((float)(abs(pGame->map[i].x - pGame->pPlayer->x) + abs(pGame->map[i].y - pGame->pPlayer->y)) / (48*pGame->world.tileSize)));
+                darkness = (255*((float)(abs(pGame->map[i].x - pGame->pPlayer->x) + abs(pGame->map[i].y - pGame->pPlayer->y)) / (16*pGame->world.tileSize)));
                 if (darkness>255)
                     darkness = 255;
             if (pGame->map[i].type > 0)
