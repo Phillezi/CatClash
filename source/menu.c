@@ -361,7 +361,7 @@ int mapSelection(Game *pGame)
                 freeText(pPrompt2);
                 return 1;
             }
-            else
+            /*else
             {
                 if (getStringFromUser(text, event))
                 {
@@ -383,7 +383,7 @@ int mapSelection(Game *pGame)
                         pMap = createText(pGame->pRenderer, 0, 0, 0, pGame->ui.pFpsFont, text, pGame->windowWidth / 2, pGame->windowHeight / 2);
                     }
                 }
-            }
+            }*/
         }
         if (SDL_GetTicks() - previousTime >= 1000 / 60)
         {
@@ -433,7 +433,7 @@ int joinServerMenu(Game *pGame)
                 freeText(pPrompt2);
                 return 1;
             }
-            else if (event.type == SDL_WINDOWEVENT && event.window.event == SDL_WINDOWEVENT_CLOSE)
+            /*else if (event.type == SDL_WINDOWEVENT && event.window.event == SDL_WINDOWEVENT_CLOSE)
             {
 
                 if (SDL_GetWindowID(pGame->pWindow) == event.window.windowID)
@@ -451,7 +451,7 @@ int joinServerMenu(Game *pGame)
                         pGame->serverIsHosted = false;
                     }
                 }
-            }
+            }*/
             else if (getStringFromUser(text, event))
             {
                 pGame->pClient = createClient(text, 1234, 0, 100, 100);
@@ -583,7 +583,7 @@ int testSelectMenu(Game *pGame, char *mapName)
                 return 1;
                 break;
             }
-            else if (event.type == SDL_WINDOWEVENT && event.window.event == SDL_WINDOWEVENT_CLOSE)
+            /*else if (event.type == SDL_WINDOWEVENT && event.window.event == SDL_WINDOWEVENT_CLOSE)
             {
                 if (SDL_GetWindowID(pGame->pWindow) == event.window.windowID)
                 {
@@ -605,7 +605,7 @@ int testSelectMenu(Game *pGame, char *mapName)
                         pGame->serverIsHosted = false;
                     }
                 }
-            }
+            }*/
             else if (event.type == SDL_MOUSEWHEEL || event.type == SDL_KEYDOWN || event.type == SDL_MOUSEBUTTONDOWN)
             {
                 if (event.wheel.y < 0 && event.type == SDL_MOUSEWHEEL || event.key.keysym.sym == SDLK_DOWN) // scroll up
@@ -703,7 +703,7 @@ int catSelMenu(Game *pGame)
             {
                 exit = true;
             }
-            else if (event.type == SDL_WINDOWEVENT && event.window.event == SDL_WINDOWEVENT_CLOSE)
+            /*else if (event.type == SDL_WINDOWEVENT && event.window.event == SDL_WINDOWEVENT_CLOSE)
             {
                 if (SDL_GetWindowID(pGame->pWindow) == event.window.windowID)
                 {
@@ -719,7 +719,7 @@ int catSelMenu(Game *pGame)
                         pGame->serverIsHosted = false;
                     }
                 }
-            }
+            }*/
         }
         if (SDL_GetTicks() - previousTime >= 1000 / 60)
         {
@@ -786,7 +786,7 @@ int mainMenu(Game *pGame)
                 mode = QUIT;
                 quit = true;
             }
-            else if (event.type == SDL_WINDOWEVENT && event.window.event == SDL_WINDOWEVENT_CLOSE)
+            /*else if (event.type == SDL_WINDOWEVENT && event.window.event == SDL_WINDOWEVENT_CLOSE)
             {
 
                 if (SDL_GetWindowID(pGame->pWindow) == event.window.windowID)
@@ -804,7 +804,7 @@ int mainMenu(Game *pGame)
                         pGame->serverIsHosted = false;
                     }
                 }
-            }
+            }*/
             else if (editPlayerName)
             {
                 // EDIT PLAYERNAME ADDITION

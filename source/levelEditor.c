@@ -17,7 +17,7 @@ int levelEditor(Game *pGame)
                 exit = true;
                 break;
             }
-            else if (event.type == SDL_WINDOWEVENT && event.window.event == SDL_WINDOWEVENT_CLOSE)
+            /*else if (event.type == SDL_WINDOWEVENT && event.window.event == SDL_WINDOWEVENT_CLOSE)
             {
 
                 if (SDL_GetWindowID(pGame->pWindow) == event.window.windowID)
@@ -25,7 +25,7 @@ int levelEditor(Game *pGame)
                     exit = true;
                     break;
                 }
-            }
+            }*/
             else if (event.type == SDL_MOUSEWHEEL)
             {
                 lvlhandleZoom(pGame, event.wheel.y);

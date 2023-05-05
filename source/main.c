@@ -125,8 +125,8 @@ int init(Game *pGame)
     pGame->windowWidth = (float)displayMode.w * 0.3; // 70% of avaliable space
     pGame->windowHeight = (float)displayMode.h * 0.3;
 
-    // pGame->windowWidth = 1920; // 70% of avaliable space
-    // pGame->windowHeight = 1080;
+    //pGame->windowWidth = 1920; // 70% of avaliable space
+    //pGame->windowHeight = 1080;
 
     pGame->world.tileSize = (pGame->windowHeight / MAPSIZE) * 4;
 
@@ -137,6 +137,8 @@ int init(Game *pGame)
         printf("Error: Failed to create player\n");
         return 1;
     }
+
+    
 
     pGame->pWindow = SDL_CreateWindow(WINDOW_NAME, SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, pGame->windowWidth, pGame->windowHeight, 0);
     if (!pGame->pWindow)
@@ -415,6 +417,7 @@ void run(Game *pGame)
                 exit = true;
                 break;
             }
+            /*
             else if (event.type == SDL_WINDOWEVENT && event.window.event == SDL_WINDOWEVENT_CLOSE)
             {
 
@@ -433,7 +436,7 @@ void run(Game *pGame)
                         pGame->serverIsHosted = false;
                     }
                 }
-            }
+            }*/
             else if (event.type == SDL_KEYDOWN)
             {
                 if (event.key.keysym.sym == SDLK_RIGHT)
@@ -577,7 +580,7 @@ void *updateScreen(void *pGameIn)
         if (((pGame->map[i].wall.x <= pGame->windowWidth) && (pGame->map[i].wall.x + pGame->world.tileSize >= 0)) && ((pGame->map[i].wall.y <= pGame->windowHeight) && (pGame->map[i].wall.y + pGame->world.tileSize >= 0)))
         {
             if(pGame->pPlayer->state == ALIVE)
-                darkness = (255*((float)(abs(pGame->map[i].x - pGame->pPlayer->x) + abs(pGame->map[i].y - pGame->pPlayer->y)) / (16*pGame->world.tileSize)));
+                darkness = (255*((float)(abs(pGame->map[i].x - pGame->pPlayer->x) + abs(pGame->map[i].y - pGame->pPlayer->y)) / (48*pGame->world.tileSize)));
                 if (darkness>255)
                     darkness = 255;
             if (pGame->map[i].type > 0)

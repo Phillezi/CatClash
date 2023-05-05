@@ -215,9 +215,8 @@ Tile createTile(int col, int row, int type, int tileSize)
     return i;
 }
 
-int readConfig(Config *pConfig)
+int readConfig(Game *pGame)
 {
-
     FILE *fp;
 
     fp = fopen("resources/config.txt", "r");
@@ -225,6 +224,9 @@ int readConfig(Config *pConfig)
     if (fp != NULL)
     {
         // kod som kollar igenom config.txt och uppdaterar config structen därefter
+        fscanf(fp,"FPS=%d", pGame->config.fps);
+        fscanf(fp,"RES=%dx%d", pGame->windowWidth, pGame->windowHeight);
+        fscanf(fp,"NAME=%31s", pGame->pPlayer->name);
         fclose(fp);
     }
     else
