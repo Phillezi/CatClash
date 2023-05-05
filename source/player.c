@@ -365,27 +365,27 @@ int checkCollision(Player player, Tile map[], char direction, int tileSize)
     switch (direction)
     {
     case 'W':
-        if (map[(((player.y - 1) / tileSize) * MAPSIZE) + (player.x / tileSize)].type)
+        if (map[(((player.y - 1) / tileSize) * MAPSIZE) + (player.x / tileSize)].type > 0)
             return map[(((player.y - 1) / tileSize) * MAPSIZE) + (player.x / tileSize)].type;
-        else if (map[(((player.y - 1) / tileSize) * MAPSIZE) + ((player.x + (tileSize - 1)) / tileSize)].type)
+        else if (map[(((player.y - 1) / tileSize) * MAPSIZE) + ((player.x + (tileSize - 1)) / tileSize)].type > 0)
             return map[(((player.y - 1) / tileSize) * MAPSIZE) + ((player.x + (tileSize - 1)) / tileSize)].type;
         break;
     case 'A':
-        if (map[(((player.y) / tileSize) * MAPSIZE) + ((player.x - 1) / tileSize)].type)
+        if (map[(((player.y) / tileSize) * MAPSIZE) + ((player.x - 1) / tileSize)].type > 0)
             return map[(((player.y) / tileSize) * MAPSIZE) + ((player.x - 1) / tileSize)].type;
-        else if (map[(((player.y + (tileSize - 1)) / tileSize) * MAPSIZE) + ((player.x - 1) / tileSize)].type)
+        else if (map[(((player.y + (tileSize - 1)) / tileSize) * MAPSIZE) + ((player.x - 1) / tileSize)].type > 0)
             return map[(((player.y + (tileSize - 1)) / tileSize) * MAPSIZE) + ((player.x - 1) / tileSize)].type;
         break;
     case 'S':
-        if (map[(((player.y + tileSize) / tileSize) * MAPSIZE) + (player.x / tileSize)].type)
+        if (map[(((player.y + tileSize) / tileSize) * MAPSIZE) + (player.x / tileSize)].type > 0)
             return map[(((player.y + tileSize) / tileSize) * MAPSIZE) + (player.x / tileSize)].type;
-        else if (map[(((player.y + tileSize) / tileSize) * MAPSIZE) + ((player.x + (tileSize - 1)) / tileSize)].type)
+        else if (map[(((player.y + tileSize) / tileSize) * MAPSIZE) + ((player.x + (tileSize - 1)) / tileSize)].type > 0)
             return map[(((player.y + tileSize) / tileSize) * MAPSIZE) + ((player.x + (tileSize - 1)) / tileSize)].type;
         break;
     case 'D':
-        if (map[(((player.y) / tileSize) * MAPSIZE) + ((player.x + tileSize) / tileSize)].type)
+        if (map[(((player.y) / tileSize) * MAPSIZE) + ((player.x + tileSize) / tileSize)].type > 0)
             return map[(((player.y) / tileSize) * MAPSIZE) + ((player.x + tileSize) / tileSize)].type;
-        else if (map[(((player.y + (tileSize - 1)) / tileSize) * MAPSIZE) + ((player.x + tileSize) / tileSize)].type)
+        else if (map[(((player.y + (tileSize - 1)) / tileSize) * MAPSIZE) + ((player.x + tileSize) / tileSize)].type > 0)
             return map[(((player.y + (tileSize - 1)) / tileSize) * MAPSIZE) + ((player.x + tileSize) / tileSize)].type;
         break;
     default:
