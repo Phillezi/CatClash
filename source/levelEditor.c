@@ -110,6 +110,8 @@ void lvlhandleInput(Game *pGame, int *pMouseX, int *pMouseY)
     }
     else if (currentKeyStates[SDL_SCANCODE_3])
     {
+        if ((*pMouseY - pGame->map[0].wall.y) < (pGame->map[0].wall.w * MAPSIZE) && (*pMouseX - pGame->map[0].wall.x) < (pGame->map[0].wall.w * MAPSIZE))
+            pGame->map[(((*pMouseY - pGame->map[0].wall.y) / pGame->map[0].wall.w * MAPSIZE) + ((*pMouseX - pGame->map[0].wall.x) / pGame->map[0].wall.w))].type = -1;
     }
     else if (currentKeyStates[SDL_SCANCODE_4])
     {
@@ -292,16 +294,16 @@ void lvlAutoWalls(Game *pGame)
             int sides[4] = {0, 0, 0, 0}, tmp;
 
             tmp = i - MAPSIZE;
-            if (tmp < 0 ? 0 : pGame->map[tmp].type == 0)
+            if (tmp < 0 ? 0 : pGame->map[tmp].type < 1)
                 sides[0] = 1;
             tmp = i + MAPSIZE;
-            if (tmp >= 1024 ? 0 : pGame->map[tmp].type == 0)
+            if (tmp >= 1024 ? 0 : pGame->map[tmp].type < 1)
                 sides[2] = 1;
             tmp = i - 1;
-            if (tmp + 1 % 32 == 0 ? 0 : pGame->map[tmp].type == 0)
+            if (tmp + 1 % 32 == 0 ? 0 : pGame->map[tmp].type < 1)
                 sides[3] = 1;
             tmp = i + 1;
-            if (tmp % 32 == 0 ? 0 : pGame->map[tmp].type == 0)
+            if (tmp % 32 == 0 ? 0 : pGame->map[tmp].type < 1)
                 sides[1] = 1;
 
             if (sides[0] == 0 && sides[1] == 0 && sides[2] == 0 && sides[3] == 0)
