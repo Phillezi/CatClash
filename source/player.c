@@ -807,6 +807,28 @@ Player *createNewMultiPlayer(Game *pGame, int size, Player data)
     return pNew_arr;
 }
 
-void deadPlayer(Game *pGame)
+int getAlivePlayers(Game *pGame)
 {
+    int nrOfPlayersAlive = 0;
+    for(int i = 0; i < pGame->nrOfPlayers; i++)
+    {
+        if(pGame->pMultiPlayer[i].state == ALIVE)
+        {
+            nrOfPlayersAlive++;
+        }
+    }
+    return nrOfPlayersAlive;
+}
+
+int getDeadPlayers(Game *pGame)
+{
+    int deadPlayers = 0;
+    for(int i = 0; i < pGame->nrOfPlayers; i++)
+    {
+        if(pGame->pMultiPlayer[i].state == DEAD)
+        {
+            deadPlayers++;
+        }
+    }
+    return deadPlayers;
 }

@@ -196,6 +196,7 @@ int init(Game *pGame)
         return 1;
     }
 
+    pGame->ui.pWinText = createText(pGame->pRenderer, 0, 0, 0, pGame->ui.pFpsFont, "YOU WIN!!", pGame->windowWidth / 2, pGame->windowHeight / 5);
     pGame->ui.pMenuText = createText(pGame->pRenderer, 0, 0, 0, pGame->ui.pFpsFont, "Use <- -> To Spectate", pGame->windowWidth / 2, pGame->windowHeight - pGame->windowHeight / 5);
     pGame->ui.pOverText = createText(pGame->pRenderer, 0, 0, 0, pGame->ui.pFpsFont, "You Died!", pGame->windowWidth / 2, pGame->windowHeight / 5);
     if (!pGame->ui.pMenuText || !pGame->ui.pOverText)
@@ -351,7 +352,14 @@ void run(Game *pGame)
                 if (pGame->pPlayer->hp <= 0 && pGame->pPlayer->state == ALIVE)
                 {
                     pGame->pPlayer->state = DEAD;
-                    deadPlayer(pGame);
+                }
+
+                if (getAlivePlayers(pGame) == 0 && getDeadPlayers(pGame) >= 1)
+                {
+                    if(pGame->pPlayer->state == ALIVE)
+                    {
+                        pGame->pPlayer->state = WIN;
+                    }
                 }
 
                 pGame->ui.healthbar.w = pGame->pPlayer->hp;
@@ -400,22 +408,30 @@ void run(Game *pGame)
             else if (event.type == SDL_KEYDOWN)
             {
                 if (event.key.keysym.sym == SDLK_RIGHT)
-                {
+                {   
                     if (pGame->tempID >= pGame->nrOfPlayers - 1)
                         pGame->tempID = 0;
                     else
                         pGame->tempID += 1;
-                    //                   while (pGame->pMultiPlayer[pGame->tempID].state == DEAD)
-                    //                        pGame->tempID += 1;
+
+                    while (pGame->pMultiPlayer[pGame->tempID].state == DEAD)
+                    if (pGame->tempID >= pGame->nrOfPlayers - 1)
+                        pGame->tempID = 0;
+                    else
+                        pGame->tempID += 1;
                 }
                 else if (event.key.keysym.sym == SDLK_LEFT)
                 {
                     if (pGame->tempID <= 0)
-                        pGame->tempID = pGame->nrOfPlayers - 1;
+                        pGame->tempID = pGame->nrOfPlayers-1;
                     else
                         pGame->tempID -= 1;
-                    //                    while (pGame->pMultiPlayer[pGame->tempID].state == DEAD)
-                    //                        pGame->tempID -= 1;
+                    
+                    while (pGame->pMultiPlayer[pGame->tempID].state == DEAD)
+                        if (pGame->tempID <= 0)
+                            pGame->tempID = pGame->nrOfPlayers-1;
+                        else
+                            pGame->tempID -= 1;
                 }
             }
         }
@@ -464,6 +480,8 @@ void close(Game *pGame)
         freeText(pGame->ui.pMenuText);
     if (pGame->ui.pOverText)
         freeText(pGame->ui.pOverText);
+    if (pGame->ui.pWinText)
+        freeText(pGame->ui.pWinText);
     if (pGame->ui.pFpsText)
         freeText(pGame->ui.pFpsText);
     TTF_Quit();
@@ -570,7 +588,7 @@ void *updateScreen(void *pGameIn)
                 {
                     loadMedia(pGame->pRenderer, &pGame->pPlayerTexture, pGame->gSpriteClips, pGame->pMultiPlayer[j].id);
                     drawPlayer(pGame, pGame->pMultiPlayer[j], pGame->pMultiPlayer[j].id);
-                    pGame->ui.pPlayerName = createText(pGame->pRenderer, 0, 0, 0, pGame->ui.pNameTagFont, pGame->pMultiPlayer[j].name, pGame->pMultiPlayer[j].rect.x+(pGame->pMultiPlayer[j].rect.w/2), pGame->pMultiPlayer[j].rect.y);
+                    pGame->ui.pPlayerName = createText(pGame->pRenderer, 0, 0, 0, pGame->ui.pNameTagFont, pGame->pMultiPlayer[j].name, pGame->pMultiPlayer[j].rect.x + (pGame->pMultiPlayer[j].rect.w / 2), pGame->pMultiPlayer[j].rect.y);
                     drawText(pGame->ui.pPlayerName, pGame->pRenderer);
                     freeText(pGame->ui.pPlayerName);
                 }
@@ -598,6 +616,11 @@ void *updateScreen(void *pGameIn)
     {
         drawText(pGame->ui.pOverText, pGame->pRenderer);
         drawText(pGame->ui.pMenuText, pGame->pRenderer);
+    }
+
+    if (pGame->pPlayer->state == WIN)
+    {
+        drawText(pGame->ui.pWinText, pGame->pRenderer);
     }
 
     drawText(pGame->ui.pFpsText, pGame->pRenderer);

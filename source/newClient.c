@@ -141,6 +141,7 @@ void sendData(Game *pGame)
     pkg.y = pGame->pPlayer->y;
     pkg.direction = pGame->pPlayer->prevKeyPressed;
     pkg.charge = pGame->pPlayer->charge;
+    pkg.state = pGame->pPlayer->state;
     memcpy(pGame->pPacket->data, &pkg, sizeof(PlayerUdpPkg));
 
     pGame->pPacket->len = sizeof(PlayerUdpPkg);
@@ -170,6 +171,7 @@ void getPlayerData(Game *pGame)
                 pGame->pMultiPlayer[j].idle = tmp.idle;
                 pGame->pMultiPlayer[j].prevKeyPressed = tmp.direction;
                 pGame->pMultiPlayer[j].charge = tmp.charge;
+                pGame->pMultiPlayer[j].state = tmp.state;
             }
         }
     }

@@ -42,7 +42,8 @@ typedef struct tile Tile;
 enum playerState
 {
     ALIVE,
-    DEAD
+    DEAD,
+    WIN
 };
 typedef enum playerState PlayerState;
 
@@ -100,7 +101,7 @@ struct uiElements
     SDL_Rect chargebar;
     SDL_Rect healthbar;
     SDL_Rect fpsFrame;
-    Text *pMenuText, *pOverText, *pFpsText, *pPlayerName;
+    Text *pMenuText, *pOverText, *pFpsText, *pPlayerName, *pWinText;
     TTF_Font *pGameFont, *pFpsFont, *pNameTagFont;
 };
 typedef struct uiElements UiE;
@@ -128,6 +129,7 @@ struct game
 {
     int tempID;
     int nrOfPlayers;
+    int nrOfPlayersAlive;
     bool serverIsHosted;
     pthread_t serverThread;
     Player *pMultiPlayer;
@@ -225,6 +227,7 @@ struct udpPlayerPackage
     Uint8 idle;
     Uint8 charge;
     Uint8 charging;
+    PlayerState state;
 };
 typedef struct udpPlayerPackage PlayerUdpPkg;
 
