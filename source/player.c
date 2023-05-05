@@ -544,12 +544,11 @@ int changePlayerTexture(SDL_Renderer *pRenderer, SDL_Window *pWindow, SDL_Textur
     return 0;
 }
 
-void loadMedia(SDL_Renderer *pRenderer, SDL_Texture **pPlayerTexture, SDL_Rect gSpriteClips[], int playerID)
+void loadMedia(SDL_Renderer *pRenderer, SDL_Texture **pPlayerTexture, SDL_Rect gSpriteClips[][27], int playerID)
 {
     static bool textureLoaded = false;
 
-    if (!textureLoaded)
-    {
+    if (!textureLoaded) {
         SDL_Surface *gCatSurface = IMG_Load("resources/cat3.PNG");
         *pPlayerTexture = SDL_CreateTextureFromSurface(pRenderer, gCatSurface);
         textureLoaded = true;
@@ -559,151 +558,151 @@ void loadMedia(SDL_Renderer *pRenderer, SDL_Texture **pPlayerTexture, SDL_Rect g
     // playerID--;   //for testing
 
     // IDLE
-    gSpriteClips[0].x = 36;
-    gSpriteClips[0].y = 34 + (playerID * HEIGHT_OF_PLAYER_SPRITE);
-    gSpriteClips[0].w = 24;
-    gSpriteClips[0].h = 24;
+    gSpriteClips[playerID][0].x = 36;
+    gSpriteClips[playerID][0].y = 34 + (playerID * HEIGHT_OF_PLAYER_SPRITE);
+    gSpriteClips[playerID][0].w = 24;
+    gSpriteClips[playerID][0].h = 24;
 
-    gSpriteClips[1].x = 36;
-    gSpriteClips[1].y = 290 + (playerID * HEIGHT_OF_PLAYER_SPRITE);
-    gSpriteClips[1].w = 24;
-    gSpriteClips[1].h = 24;
+    gSpriteClips[playerID][1].x = 36;
+    gSpriteClips[playerID][1].y = 290 + (playerID * HEIGHT_OF_PLAYER_SPRITE);
+    gSpriteClips[playerID][1].w = 24;
+    gSpriteClips[playerID][1].h = 24;
 
-    gSpriteClips[2].x = 5;
-    gSpriteClips[2].y = 482 + (playerID * HEIGHT_OF_PLAYER_SPRITE);
-    gSpriteClips[2].w = 24;
-    gSpriteClips[2].h = 24;
+    gSpriteClips[playerID][2].x = 5;
+    gSpriteClips[playerID][2].y = 482 + (playerID * HEIGHT_OF_PLAYER_SPRITE);
+    gSpriteClips[playerID][2].w = 24;
+    gSpriteClips[playerID][2].h = 24;
 
     // RUNNING DOWN
     int x[4] = {644, 676, 708, 740};
     int y[2] = {32 + (playerID * HEIGHT_OF_PLAYER_SPRITE), 63 + (playerID * HEIGHT_OF_PLAYER_SPRITE)};
 
-    gSpriteClips[3].x = x[0];
-    gSpriteClips[3].y = y[1];
-    gSpriteClips[3].w = w;
-    gSpriteClips[3].h = h;
+    gSpriteClips[playerID][3].x = x[0];
+    gSpriteClips[playerID][3].y = y[1];
+    gSpriteClips[playerID][3].w = w;
+    gSpriteClips[playerID][3].h = h;
 
-    gSpriteClips[4].x = x[1];
-    gSpriteClips[4].y = y[1];
-    gSpriteClips[4].w = w;
-    gSpriteClips[4].h = h;
+    gSpriteClips[playerID][4].x = x[1];
+    gSpriteClips[playerID][4].y = y[1];
+    gSpriteClips[playerID][4].w = w;
+    gSpriteClips[playerID][4].h = h;
 
-    gSpriteClips[5].x = x[2];
-    gSpriteClips[5].y = y[1];
-    gSpriteClips[5].w = w;
-    gSpriteClips[5].h = h;
+    gSpriteClips[playerID][5].x = x[2];
+    gSpriteClips[playerID][5].y = y[1];
+    gSpriteClips[playerID][5].w = w;
+    gSpriteClips[playerID][5].h = h;
 
-    gSpriteClips[6].x = x[3];
-    gSpriteClips[6].y = y[1];
-    gSpriteClips[6].w = w;
-    gSpriteClips[6].h = h;
+    gSpriteClips[playerID][6].x = x[3];
+    gSpriteClips[playerID][6].y = y[1];
+    gSpriteClips[playerID][6].w = w;
+    gSpriteClips[playerID][6].h = h;
 
-    gSpriteClips[7].x = x[0];
-    gSpriteClips[7].y = y[0];
-    gSpriteClips[7].w = w;
-    gSpriteClips[7].h = h;
+    gSpriteClips[playerID][7].x = x[0];
+    gSpriteClips[playerID][7].y = y[0];
+    gSpriteClips[playerID][7].w = w;
+    gSpriteClips[playerID][7].h = h;
 
-    gSpriteClips[8].x = x[1];
-    gSpriteClips[8].y = y[0];
-    gSpriteClips[8].w = w;
-    gSpriteClips[8].h = h;
+    gSpriteClips[playerID][8].x = x[1];
+    gSpriteClips[playerID][8].y = y[0];
+    gSpriteClips[playerID][8].w = w;
+    gSpriteClips[playerID][8].h = h;
 
-    gSpriteClips[9].x = x[2];
-    gSpriteClips[9].y = y[0];
-    gSpriteClips[9].w = w;
-    gSpriteClips[9].h = h;
+    gSpriteClips[playerID][9].x = x[2];
+    gSpriteClips[playerID][9].y = y[0];
+    gSpriteClips[playerID][9].w = w;
+    gSpriteClips[playerID][9].h = h;
 
-    gSpriteClips[10].x = x[3];
-    gSpriteClips[10].y = y[0];
-    gSpriteClips[10].w = w;
-    gSpriteClips[10].h = h;
+    gSpriteClips[playerID][10].x = x[3];
+    gSpriteClips[playerID][10].y = y[0];
+    gSpriteClips[playerID][10].w = w;
+    gSpriteClips[playerID][10].h = h;
 
     // RUNNING UP
     y[0] = 289 + (playerID - 1 * HEIGHT_OF_PLAYER_SPRITE), y[1] = 321 + (playerID * HEIGHT_OF_PLAYER_SPRITE);
 
-    gSpriteClips[11].x = x[0];
-    gSpriteClips[11].y = y[1];
-    gSpriteClips[11].w = w;
-    gSpriteClips[11].h = h;
+    gSpriteClips[playerID][11].x = x[0];
+    gSpriteClips[playerID][11].y = y[1];
+    gSpriteClips[playerID][11].w = w;
+    gSpriteClips[playerID][11].h = h;
 
-    gSpriteClips[12].x = x[1];
-    gSpriteClips[12].y = y[1];
-    gSpriteClips[12].w = w;
-    gSpriteClips[12].h = h;
+    gSpriteClips[playerID][12].x = x[1];
+    gSpriteClips[playerID][12].y = y[1];
+    gSpriteClips[playerID][12].w = w;
+    gSpriteClips[playerID][12].h = h;
 
-    gSpriteClips[13].x = x[2];
-    gSpriteClips[13].y = y[1];
-    gSpriteClips[13].w = w;
-    gSpriteClips[13].h = h;
+    gSpriteClips[playerID][13].x = x[2];
+    gSpriteClips[playerID][13].y = y[1];
+    gSpriteClips[playerID][13].w = w;
+    gSpriteClips[playerID][13].h = h;
 
-    gSpriteClips[14].x = x[3];
-    gSpriteClips[14].y = y[1];
-    gSpriteClips[14].w = w;
-    gSpriteClips[14].h = h;
+    gSpriteClips[playerID][14].x = x[3];
+    gSpriteClips[playerID][14].y = y[1];
+    gSpriteClips[playerID][14].w = w;
+    gSpriteClips[playerID][14].h = h;
 
-    gSpriteClips[15].x = x[0];
-    gSpriteClips[15].y = y[0];
-    gSpriteClips[15].w = w;
-    gSpriteClips[15].h = h;
+    gSpriteClips[playerID][15].x = x[0];
+    gSpriteClips[playerID][15].y = y[0];
+    gSpriteClips[playerID][15].w = w;
+    gSpriteClips[playerID][15].h = h;
 
-    gSpriteClips[16].x = x[1];
-    gSpriteClips[16].y = y[0];
-    gSpriteClips[16].w = w;
-    gSpriteClips[16].h = h;
+    gSpriteClips[playerID][16].x = x[1];
+    gSpriteClips[playerID][16].y = y[0];
+    gSpriteClips[playerID][16].w = w;
+    gSpriteClips[playerID][16].h = h;
 
-    gSpriteClips[17].x = x[2];
-    gSpriteClips[17].y = y[0];
-    gSpriteClips[17].w = w;
-    gSpriteClips[17].h = h;
+    gSpriteClips[playerID][17].x = x[2];
+    gSpriteClips[playerID][17].y = y[0];
+    gSpriteClips[playerID][17].w = w;
+    gSpriteClips[playerID][17].h = h;
 
-    gSpriteClips[18].x = x[3];
-    gSpriteClips[18].y = y[0];
-    gSpriteClips[18].w = w;
-    gSpriteClips[18].h = h;
+    gSpriteClips[playerID][18].x = x[3];
+    gSpriteClips[playerID][18].y = y[0];
+    gSpriteClips[playerID][18].w = w;
+    gSpriteClips[playerID][18].h = h;
 
     // RUNNING LEFT/RIGHT
     x[0] = 642, x[1] = 674, x[2] = 706, x[3] = 738;
     y[0] = 482 + (playerID * HEIGHT_OF_PLAYER_SPRITE), y[1] = 512 + (playerID * HEIGHT_OF_PLAYER_SPRITE);
 
-    gSpriteClips[19].x = x[0];
-    gSpriteClips[19].y = y[1];
-    gSpriteClips[19].w = w;
-    gSpriteClips[19].h = h;
+    gSpriteClips[playerID][19].x = x[0];
+    gSpriteClips[playerID][19].y = y[1];
+    gSpriteClips[playerID][19].w = w;
+    gSpriteClips[playerID][19].h = h;
 
-    gSpriteClips[20].x = x[1];
-    gSpriteClips[20].y = y[1];
-    gSpriteClips[20].w = w;
-    gSpriteClips[20].h = h;
+    gSpriteClips[playerID][20].x = x[1];
+    gSpriteClips[playerID][20].y = y[1];
+    gSpriteClips[playerID][20].w = w;
+    gSpriteClips[playerID][20].h = h;
 
-    gSpriteClips[21].x = x[2];
-    gSpriteClips[21].y = y[1];
-    gSpriteClips[21].w = w;
-    gSpriteClips[21].h = h;
+    gSpriteClips[playerID][21].x = x[2];
+    gSpriteClips[playerID][21].y = y[1];
+    gSpriteClips[playerID][21].w = w;
+    gSpriteClips[playerID][21].h = h;
 
-    gSpriteClips[22].x = x[3];
-    gSpriteClips[22].y = y[1];
-    gSpriteClips[22].w = w;
-    gSpriteClips[22].h = h;
+    gSpriteClips[playerID][22].x = x[3];
+    gSpriteClips[playerID][22].y = y[1];
+    gSpriteClips[playerID][22].w = w;
+    gSpriteClips[playerID][22].h = h;
 
-    gSpriteClips[23].x = x[0];
-    gSpriteClips[23].y = y[0];
-    gSpriteClips[23].w = w;
-    gSpriteClips[23].h = h;
+    gSpriteClips[playerID][23].x = x[0];
+    gSpriteClips[playerID][23].y = y[0];
+    gSpriteClips[playerID][23].w = w;
+    gSpriteClips[playerID][23].h = h;
 
-    gSpriteClips[24].x = x[1];
-    gSpriteClips[24].y = y[0];
-    gSpriteClips[24].w = w;
-    gSpriteClips[24].h = h;
+    gSpriteClips[playerID][24].x = x[1];
+    gSpriteClips[playerID][24].y = y[0];
+    gSpriteClips[playerID][24].w = w;
+    gSpriteClips[playerID][24].h = h;
 
-    gSpriteClips[25].x = x[2];
-    gSpriteClips[25].y = y[0];
-    gSpriteClips[25].w = w;
-    gSpriteClips[25].h = h;
+    gSpriteClips[playerID][25].x = x[2];
+    gSpriteClips[playerID][25].y = y[0];
+    gSpriteClips[playerID][25].w = w;
+    gSpriteClips[playerID][25].h = h;
 
-    gSpriteClips[26].x = x[3];
-    gSpriteClips[26].y = y[0];
-    gSpriteClips[26].w = w;
-    gSpriteClips[26].h = h;
+    gSpriteClips[playerID][26].x = x[3];
+    gSpriteClips[playerID][26].y = y[0];
+    gSpriteClips[playerID][26].w = w;
+    gSpriteClips[playerID][26].h = h;
 }
 
 void drawPlayer(Game *pGame, Player player, int i)
@@ -722,40 +721,40 @@ void drawPlayer(Game *pGame, Player player, int i)
         {
             frame[i] = 0;
             counter[i] = 10;
-            SDL_RenderCopyEx(pGame->pRenderer, pGame->pPlayerTexture, &pGame->gSpriteClips[1], &player.rect, 0, NULL, SDL_FLIP_NONE);
+            SDL_RenderCopyEx(pGame->pRenderer, pGame->pPlayerTexture, &pGame->gSpriteClips[i][1], &player.rect, 0, NULL, SDL_FLIP_NONE);
         }
         else
-            SDL_RenderCopyEx(pGame->pRenderer, pGame->pPlayerTexture, &pGame->gSpriteClips[frame[i] + 3 + 8], &player.rect, 0, NULL, SDL_FLIP_NONE);
+            SDL_RenderCopyEx(pGame->pRenderer, pGame->pPlayerTexture, &pGame->gSpriteClips[i][frame[i] + 3 + 8], &player.rect, 0, NULL, SDL_FLIP_NONE);
         break;
     case 'S':
         if (player.idle)
         {
             frame[i] = 0;
             counter[i] = 10;
-            SDL_RenderCopyEx(pGame->pRenderer, pGame->pPlayerTexture, &pGame->gSpriteClips[0], &player.rect, 0, NULL, SDL_FLIP_NONE);
+            SDL_RenderCopyEx(pGame->pRenderer, pGame->pPlayerTexture, &pGame->gSpriteClips[i][0], &player.rect, 0, NULL, SDL_FLIP_NONE);
         }
         else
-            SDL_RenderCopyEx(pGame->pRenderer, pGame->pPlayerTexture, &pGame->gSpriteClips[frame[i] + 3], &player.rect, 0, NULL, SDL_FLIP_NONE);
+            SDL_RenderCopyEx(pGame->pRenderer, pGame->pPlayerTexture, &pGame->gSpriteClips[i][frame[i] + 3], &player.rect, 0, NULL, SDL_FLIP_NONE);
         break;
     case 'D':
         if (player.idle)
         {
             frame[i] = 0;
             counter[i] = 10;
-            SDL_RenderCopyEx(pGame->pRenderer, pGame->pPlayerTexture, &pGame->gSpriteClips[2], &player.rect, 0, NULL, SDL_FLIP_NONE);
+            SDL_RenderCopyEx(pGame->pRenderer, pGame->pPlayerTexture, &pGame->gSpriteClips[i][2], &player.rect, 0, NULL, SDL_FLIP_NONE);
         }
         else
-            SDL_RenderCopyEx(pGame->pRenderer, pGame->pPlayerTexture, &pGame->gSpriteClips[frame[i] + 3 + 8 + 8], &player.rect, 0, NULL, SDL_FLIP_NONE);
+            SDL_RenderCopyEx(pGame->pRenderer, pGame->pPlayerTexture, &pGame->gSpriteClips[i][frame[i] + 3 + 8 + 8], &player.rect, 0, NULL, SDL_FLIP_NONE);
         break;
     case 'A':
         if (player.idle)
         {
             frame[i] = 0;
             counter[i] = 10;
-            SDL_RenderCopyEx(pGame->pRenderer, pGame->pPlayerTexture, &pGame->gSpriteClips[2], &player.rect, 0, NULL, flip);
+            SDL_RenderCopyEx(pGame->pRenderer, pGame->pPlayerTexture, &pGame->gSpriteClips[i][2], &player.rect, 0, NULL, flip);
         }
         else
-            SDL_RenderCopyEx(pGame->pRenderer, pGame->pPlayerTexture, &pGame->gSpriteClips[frame[i] + 3 + 8 + 8], &player.rect, 0, NULL, flip);
+            SDL_RenderCopyEx(pGame->pRenderer, pGame->pPlayerTexture, &pGame->gSpriteClips[i][frame[i] + 3 + 8 + 8], &player.rect, 0, NULL, flip);
         break;
     }
     if (counter[i] > 0)

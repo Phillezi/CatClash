@@ -140,7 +140,7 @@ struct game
 
     SDL_Texture *pTileTextures[TILES];
     SDL_Texture *pPlayerTexture;
-    SDL_Rect gSpriteClips[27];
+    SDL_Rect gSpriteClips[MAX_PLAYERS][27];
 
     SDL_Rect portalList[MAPSIZE * MAPSIZE];
     int nrOfPortals;
