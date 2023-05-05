@@ -446,7 +446,7 @@ void run(Game *pGame)
                 else if (event.key.keysym.sym == SDLK_LEFT)
                 {
                     if (pGame->tempID <= 0)
-                        pGame->tempID = pGame->nrOfPlayers-1;
+                        pGame->tempID = pGame->nrOfPlayers - 1;
                     else
                         pGame->tempID -= 1;
                 }
@@ -525,7 +525,7 @@ void *updateScreen(void *pGameIn)
     backGround.y = pGame->map[0].wall.y + (pGame->world.tileSize - pGame->map[0].wall.h);
     backGround.w = MAPSIZE * pGame->map[0].wall.w;
     backGround.h = MAPSIZE * pGame->map[0].wall.h;
-    SDL_SetRenderDrawColor(pGame->pRenderer, 255, 255, 255, 255);
+    SDL_SetRenderDrawColor(pGame->pRenderer, 0, 0, 0, 255);
     SDL_RenderClear(pGame->pRenderer);
     SDL_RenderCopy(pGame->pRenderer, pGame->pTileTextures[19], NULL, &backGround);
     SDL_Rect temp;
@@ -574,11 +574,15 @@ void *updateScreen(void *pGameIn)
     {
         if (((pGame->map[i].wall.x <= pGame->windowWidth) && (pGame->map[i].wall.x + pGame->world.tileSize >= 0)) && ((pGame->map[i].wall.y <= pGame->windowHeight) && (pGame->map[i].wall.y + pGame->world.tileSize >= 0)))
         {
+            int darkness = (255*((float)(abs(pGame->map[i].x - pGame->pPlayer->x) + abs(pGame->map[i].y - pGame->pPlayer->y)) / (16*pGame->world.tileSize)));
+                if (darkness>255)
+                    darkness = 255;
             if (pGame->map[i].type > 0)
+            {
                 SDL_RenderCopy(pGame->pRenderer, pGame->pTileTextures[pGame->map[i].type], NULL, &pGame->map[i].wall);
+            }
             else
             {
-                // SDL_RenderCopy(pGame->pRenderer, pGame->pTileTextures[19], NULL, &pGame->map[i].wall);
                 if (i > MAPSIZE - 1)
                 {
                     if (pGame->map[i - MAPSIZE].type == 1)
@@ -613,6 +617,18 @@ void *updateScreen(void *pGameIn)
                     freeText(pGame->ui.pPlayerName);
                 }
             }
+            SDL_SetRenderDrawBlendMode(pGame->pRenderer, SDL_BLENDMODE_BLEND);
+            SDL_SetRenderDrawColor(pGame->pRenderer, 0, 0, 0, darkness);
+            //if(pGame->map[i].type>0)
+                SDL_RenderFillRect(pGame->pRenderer, &pGame->map[i].wall);
+            /*else
+            {
+                temp = pGame->map[i].wall;
+                //if(i > MAPSIZE - 1 && pGame->map[i - MAPSIZE].type > 0)
+                //    temp.h = (float)pGame->map[i].wall.h - ((float)pGame->world.tileSize * pGame->world.angle);
+                temp.h += pGame->map[i].wall.h - ((float)pGame->world.tileSize * pGame->world.angle);
+                SDL_RenderFillRect(pGame->pRenderer, &temp);
+            }*/
         }
     }
 
