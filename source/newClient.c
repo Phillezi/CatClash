@@ -57,6 +57,7 @@ int connectToServer(Game *pGame)
                         return 1;
                     }
                     exit = true;
+                    pGame->isConnected = true;
                     tcpState++;
                     break;
                 }
@@ -152,6 +153,7 @@ void sendData(Game *pGame)
 
     if (!SDLNet_UDP_Send(pGame->socketDesc, -1, pGame->pPacket))
     {
+        pGame->isConnected = false;
         printf("Could not send package\n");
     }
 }

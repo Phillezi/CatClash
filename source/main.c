@@ -95,6 +95,7 @@ int main(int argv, char **args)
 
 int init(Game *pGame)
 {
+    pGame->isConnected = false;
     char windowTitle[100] = "CatClash   |";
     if (SDL_Init(SDL_INIT_EVERYTHING) != 0)
     {
@@ -263,15 +264,20 @@ int init(Game *pGame)
 
 void run(Game *pGame)
 {
+    bool playerWasConnected = false;
     findPortal(pGame);
     char windowTitle[31];
     sprintf(windowTitle, "CLIENT: %d", pGame->pPlayer->id);
     SDL_SetWindowTitle(pGame->pWindow, windowTitle);
-    pGame->pPacket = SDLNet_AllocPacket(sizeof(PlayerUdpPkg));
-    if (pGame->socketDesc = SDLNet_UDP_Open(0))
+    if (pGame->isConnected)
     {
-        printf("UDP init\n");
+        pGame->pPacket = SDLNet_AllocPacket(sizeof(PlayerUdpPkg));
+        if (pGame->socketDesc = SDLNet_UDP_Open(0))
+        {
+            printf("UDP init\n");
+        }
     }
+
     // if(pGame->config.multiThreading)
     // pthread_t renderThread;
     int oldX = 0;
@@ -299,7 +305,21 @@ void run(Game *pGame)
         int deltaTime = SDL_GetTicks() - previousTime;
         if (deltaTime >= (1000 / FPS))
         {
-            checkTCP(pGame);
+            if (pGame->isConnected)
+            {
+                checkTCP(pGame);
+                playerWasConnected = true;
+            }
+            else if (playerWasConnected)
+            {
+                playerWasConnected = false;
+                pGame->nrOfPlayers = 0;
+                if (pGame->pMultiPlayer)
+                    free(pGame->pMultiPlayer);
+                SDLNet_TCP_Close(pGame->pClient->socketTCP);
+                SDLNet_FreeSocketSet(pGame->pClient->sockets);
+                free(pGame->pClient);
+            }
             /*
             if (pGame->config.multiThreading){
                 pthread_create(&renderThread, NULL, updateScreen, (void *)pGame);
@@ -313,39 +333,48 @@ void run(Game *pGame)
                 if (pGame->config.multiThreading)
                 {
                     static int idle = 0;
-                    getPlayerData(pGame);
+                    if (pGame->isConnected)
+                        getPlayerData(pGame);
                     pthread_join(movementThread, NULL);
                     int keepAliveDelta = SDL_GetTicks() - prevUDPTransfer;
-                    if (oldX != pGame->pPlayer->x || oldY != pGame->pPlayer->y || oldCharge != pGame->pPlayer->charge || keepAliveDelta > 4500)
+                    if (pGame->isConnected)
                     {
-                        prevUDPTransfer = SDL_GetTicks();
-                        oldX = pGame->pPlayer->x;
-                        oldY = pGame->pPlayer->y;
-                        oldCharge = pGame->pPlayer->charge;
-                        // printf("Trying to send data\n");
-                        sendData(pGame);
-                        idle = 1;
+                        if (oldX != pGame->pPlayer->x || oldY != pGame->pPlayer->y || oldCharge != pGame->pPlayer->charge || keepAliveDelta > 4500)
+                        {
+                            prevUDPTransfer = SDL_GetTicks();
+                            oldX = pGame->pPlayer->x;
+                            oldY = pGame->pPlayer->y;
+                            oldCharge = pGame->pPlayer->charge;
+                            // printf("Trying to send data\n");
+                            sendData(pGame);
+                            idle = 1;
+                        }
+                        else if (idle)
+                        {
+                            sendData(pGame);
+                            idle = 0;
+                        } // Send one last data packet så other players know you are idle
                     }
-                    else if (idle)
-                    {
-                        sendData(pGame);
-                        idle = 0;
-                    } // Send one last data packet så other players know you are idle
+
                     pthread_create(&movementThread, NULL, handleInput, (void *)pGame);
                 }
                 else
                 {
-                    getPlayerData(pGame);
+                    if (pGame->isConnected)
+                        getPlayerData(pGame);
                     handleInput(pGame);
                     int keepAliveDelta = SDL_GetTicks() - prevUDPTransfer;
-                    if (oldX != pGame->pPlayer->x || oldY != pGame->pPlayer->y || oldCharge != pGame->pPlayer->charge || keepAliveDelta > 4500)
+                    if (pGame->isConnected)
                     {
-                        prevUDPTransfer = SDL_GetTicks();
-                        oldX = pGame->pPlayer->x;
-                        oldY = pGame->pPlayer->y;
-                        oldCharge = pGame->pPlayer->charge;
-                        // printf("Trying to send data\n");
-                        sendData(pGame);
+                        if (oldX != pGame->pPlayer->x || oldY != pGame->pPlayer->y || oldCharge != pGame->pPlayer->charge || keepAliveDelta > 4500)
+                        {
+                            prevUDPTransfer = SDL_GetTicks();
+                            oldX = pGame->pPlayer->x;
+                            oldY = pGame->pPlayer->y;
+                            oldCharge = pGame->pPlayer->charge;
+                            // printf("Trying to send data\n");
+                            sendData(pGame);
+                        }
                     }
                 }
 
@@ -356,7 +385,7 @@ void run(Game *pGame)
 
                 if (getAlivePlayers(pGame) == 0 && getDeadPlayers(pGame) >= 1)
                 {
-                    if(pGame->pPlayer->state == ALIVE)
+                    if (pGame->pPlayer->state == ALIVE)
                     {
                         pGame->pPlayer->state = WIN;
                     }
@@ -408,37 +437,40 @@ void run(Game *pGame)
             else if (event.type == SDL_KEYDOWN)
             {
                 if (event.key.keysym.sym == SDLK_RIGHT)
-                {   
+                {
                     if (pGame->tempID >= pGame->nrOfPlayers - 1)
                         pGame->tempID = 0;
                     else
                         pGame->tempID += 1;
 
                     while (pGame->pMultiPlayer[pGame->tempID].state == DEAD)
-                    if (pGame->tempID >= pGame->nrOfPlayers - 1)
-                        pGame->tempID = 0;
-                    else
-                        pGame->tempID += 1;
+                        if (pGame->tempID >= pGame->nrOfPlayers - 1)
+                            pGame->tempID = 0;
+                        else
+                            pGame->tempID += 1;
                 }
                 else if (event.key.keysym.sym == SDLK_LEFT)
                 {
                     if (pGame->tempID <= 0)
-                        pGame->tempID = pGame->nrOfPlayers-1;
+                        pGame->tempID = pGame->nrOfPlayers - 1;
                     else
                         pGame->tempID -= 1;
-                    
+
                     while (pGame->pMultiPlayer[pGame->tempID].state == DEAD)
                         if (pGame->tempID <= 0)
-                            pGame->tempID = pGame->nrOfPlayers-1;
+                            pGame->tempID = pGame->nrOfPlayers - 1;
                         else
                             pGame->tempID -= 1;
                 }
             }
         }
     }
-    SDLNet_TCP_Close(pGame->pClient->socketTCP);
-    SDLNet_FreeSocketSet(pGame->pClient->sockets);
-    free(pGame->pClient);
+    if (pGame->isConnected)
+    {
+        SDLNet_TCP_Close(pGame->pClient->socketTCP);
+        SDLNet_FreeSocketSet(pGame->pClient->sockets);
+        free(pGame->pClient);
+    }
 }
 
 void close(Game *pGame)
