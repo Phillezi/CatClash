@@ -413,12 +413,6 @@ void run(Game *pGame)
                         pGame->tempID = 0;
                     else
                         pGame->tempID += 1;
-
-                    while (pGame->pMultiPlayer[pGame->tempID].state == DEAD)
-                    if (pGame->tempID >= pGame->nrOfPlayers - 1)
-                        pGame->tempID = 0;
-                    else
-                        pGame->tempID += 1;
                 }
                 else if (event.key.keysym.sym == SDLK_LEFT)
                 {
@@ -426,12 +420,6 @@ void run(Game *pGame)
                         pGame->tempID = pGame->nrOfPlayers-1;
                     else
                         pGame->tempID -= 1;
-                    
-                    while (pGame->pMultiPlayer[pGame->tempID].state == DEAD)
-                        if (pGame->tempID <= 0)
-                            pGame->tempID = pGame->nrOfPlayers-1;
-                        else
-                            pGame->tempID -= 1;
                 }
             }
         }
