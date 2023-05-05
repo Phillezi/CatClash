@@ -596,6 +596,8 @@ void *updateScreen(void *pGameIn)
                 darkness = (255 * ((float)(abs(pGame->map[i].x - pGame->pPlayer->x) + abs(pGame->map[i].y - pGame->pPlayer->y)) / (16 * pGame->world.tileSize)));
             if (darkness > 255)
                 darkness = 255;
+            SDL_SetRenderDrawBlendMode(pGame->pRenderer, SDL_BLENDMODE_BLEND);
+            SDL_SetRenderDrawColor(pGame->pRenderer, 0, 0, 0, darkness);
             if (pGame->map[i].type > 0)
             {
                 SDL_RenderCopy(pGame->pRenderer, pGame->pTileTextures[pGame->map[i].type], NULL, &pGame->map[i].wall);
@@ -617,6 +619,7 @@ void *updateScreen(void *pGameIn)
                         temp = pGame->map[i].wall;
                         temp.h = ((float)pGame->world.tileSize * pGame->world.angle);
                         SDL_RenderCopy(pGame->pRenderer, pGame->pTileTextures[2], NULL, &temp);
+                        SDL_RenderFillRect(pGame->pRenderer, &temp);
                     }
                 }
             }
@@ -634,7 +637,7 @@ void *updateScreen(void *pGameIn)
                     freeText(pGame->ui.pPlayerName);
                 }
             }
-            SDL_SetRenderDrawBlendMode(pGame->pRenderer, SDL_BLENDMODE_BLEND);
+
             SDL_SetRenderDrawColor(pGame->pRenderer, 0, 0, 0, darkness);
             if (pGame->map[i].type <= 0)
             {
