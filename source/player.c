@@ -10,7 +10,8 @@
 
 void centerPlayer(Game *pGame, Player *pPlayer)
 {
-    while(pGame->isDrawing); //temporary fix to screenTearing?
+    while (pGame->isDrawing)
+        ; // temporary fix to screenTearing?
     int screenShiftAmount = pGame->movementAmount;
     if (pPlayer->rect.x >= (4 * pGame->windowWidth) / 5 || pPlayer->rect.x <= pGame->windowWidth / 5)
     {
@@ -266,17 +267,6 @@ void *handleInput(void *pGameIn) // Game *pGame)
                     // printf("COLLISION D\n");
                 }
             }
-
-            /*
-            if (!checkCollision(*pPlayer, map, *pPrevKeypressed))
-                {
-                    movePlayer(pPlayer, *pPrevKeypressed);
-                }
-                else
-                {
-                    printf("COLLISION %c\n", *pPrevKeypressed);
-                }
-                */
         }
     }
 
@@ -422,12 +412,6 @@ SDL_Rect findSpawnTile(Tile map[])
 void getPlayerSpawnPos(Game *pGame)
 {
     SDL_Rect spawnTile = findSpawnTile(pGame->map); // this function returns a valid spawn tile
-    /*
-    pGame->player.x = spawnTile.x;
-    pGame->player.y = spawnTile.y;
-    pGame->pPlayer->rect.x = spawnTile.x; // windowWidth / 2;
-    pGame->pPlayer->rect.y = spawnTile.y; // windowHeight / 2;
-    */
 
     // for adt
     pGame->pPlayer->x = spawnTile.x;
@@ -549,7 +533,8 @@ void loadMedia(SDL_Renderer *pRenderer, SDL_Texture **pPlayerTexture, SDL_Rect g
 {
     static bool textureLoaded = false;
 
-    if (!textureLoaded) {
+    if (!textureLoaded)
+    {
         SDL_Surface *gCatSurface = IMG_Load("resources/cat3.PNG");
         *pPlayerTexture = SDL_CreateTextureFromSurface(pRenderer, gCatSurface);
         textureLoaded = true;
@@ -790,26 +775,15 @@ Player *createNewMultiPlayer(Game *pGame, int size, Player data)
 
     pNew_arr[size] = data;
 
-    /*
-    pNew_arr[size].id = data.id;
-    pNew_arr[size].x = data.x;
-    pNew_arr[size].y = data.y;
-    pNew_arr[size].idle = data.idle;
-    pNew_arr[size].prevKeyPressed = data.direction;
-    pNew_arr[size].charge = data.charge;
-    pNew_arr[size].charging = data.charging;
-    strcpy(pNew_arr[size].name, "Allocated");
-    */
-
     return pNew_arr;
 }
 
 int getAlivePlayers(Game *pGame)
 {
     int nrOfPlayersAlive = 0;
-    for(int i = 0; i < pGame->nrOfPlayers; i++)
+    for (int i = 0; i < pGame->nrOfPlayers; i++)
     {
-        if(pGame->pMultiPlayer[i].state == ALIVE)
+        if (pGame->pMultiPlayer[i].state == ALIVE)
         {
             nrOfPlayersAlive++;
         }
@@ -820,9 +794,9 @@ int getAlivePlayers(Game *pGame)
 int getDeadPlayers(Game *pGame)
 {
     int deadPlayers = 0;
-    for(int i = 0; i < pGame->nrOfPlayers; i++)
+    for (int i = 0; i < pGame->nrOfPlayers; i++)
     {
-        if(pGame->pMultiPlayer[i].state == DEAD)
+        if (pGame->pMultiPlayer[i].state == DEAD)
         {
             deadPlayers++;
         }

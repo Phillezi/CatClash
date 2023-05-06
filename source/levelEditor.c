@@ -17,15 +17,7 @@ int levelEditor(Game *pGame)
                 exit = true;
                 break;
             }
-            /*else if (event.type == SDL_WINDOWEVENT && event.window.event == SDL_WINDOWEVENT_CLOSE)
-            {
 
-                if (SDL_GetWindowID(pGame->pWindow) == event.window.windowID)
-                {
-                    exit = true;
-                    break;
-                }
-            }*/
             else if (event.type == SDL_MOUSEWHEEL)
             {
                 lvlhandleZoom(pGame, event.wheel.y);
@@ -185,19 +177,6 @@ void lvlhandleInput(Game *pGame, int *pMouseX, int *pMouseY)
     {
         if ((*pMouseY - pGame->map[0].wall.y) < (pGame->map[0].wall.w * MAPSIZE) && (*pMouseX - pGame->map[0].wall.x) < (pGame->map[0].wall.w * MAPSIZE))
             pGame->map[(((*pMouseY - pGame->map[0].wall.y) / pGame->map[0].wall.w * MAPSIZE) + ((*pMouseX - pGame->map[0].wall.x) / pGame->map[0].wall.w))].type = 3;
-        /*
-        else if ((mouseY >= saveButton.y && mouseX >= saveButton.x) && (mouseY <= (saveButton.y + saveButton.h) && mouseX <= (saveButton.x + saveButton.w)))
-        {
-            printf("What would you like to name the file?\n: ");
-            scanf(" %30s", fileName);
-            saveToFile(map, fileName);
-            printf("saved file\n");
-        }
-        else if ((mouseY >= openButton.y && mouseX >= openButton.x) && (mouseY <= (openButton.y + openButton.h) && mouseX <= (openButton.x + openButton.w)))
-        {
-            printf("You pressed the OPEN button!\n");
-        }
-        */
     }
 
     if (buttons & SDL_BUTTON(SDL_BUTTON_RIGHT))
@@ -228,9 +207,6 @@ void lvlupdateScreen(Game *pGame, int mouseX, int mouseY)
             {
                 SDL_SetRenderDrawColor(pGame->pRenderer, 0, 155, 0, 255);
                 SDL_RenderFillRect(pGame->pRenderer, &pGame->map[i].wall);
-            }
-            else{
-                //SDL_RenderCopy(pGame->pRenderer, pGame->pTileTextures[19], NULL, &pGame->map[i].wall);
             }
         }
     }

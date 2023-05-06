@@ -46,15 +46,7 @@ int main(int argv, char **args)
             break;
         case QUIT:
             printf("Closing...\n");
-            /*
-            if (game.serverIsHosted)
-            {
-                printf("Closing server...\n");
-                pthread_cancel(game.serverThread);
-                pthread_join(game.serverThread, NULL);
-                game.serverIsHosted = false;
-            }
-            */
+
             printf("Closing game...\n");
             close(&game);
             printf("Done closing!\n");
@@ -71,21 +63,7 @@ int main(int argv, char **args)
             break;
         case HOST:
             break;
-            /*
-            if (game.serverIsHosted == false)
-            {
-                if (testSelectMenu(&game, mapName))
-                    break;
-                if (!pthread_create(&game.serverThread, NULL, MThostServer, (void *)mapName))
-                {
-                    game.serverIsHosted = true;
-                }
-            }
-            else
-            {
-                printf("SERVER IS ALREADY HOSTED\n");
-            }
-            */
+
             break;
         default:
             break;
@@ -320,11 +298,6 @@ void run(Game *pGame)
                 SDLNet_FreeSocketSet(pGame->pClient->sockets);
                 free(pGame->pClient);
             }
-            /*
-            if (pGame->config.multiThreading){
-                pthread_create(&renderThread, NULL, updateScreen, (void *)pGame);
-            }
-            */
 
             int movementDeltaTime = SDL_GetTicks() - movementPreviousTime;
             if (movementDeltaTime >= (1000 / 60))
@@ -395,9 +368,7 @@ void run(Game *pGame)
                 pGame->ui.chargebar.w = pGame->pPlayer->charge;
             }
             previousTime = SDL_GetTicks();
-            // if (pGame->config.multiThreading)
-            //  pthread_join(renderThread, NULL);
-            // else
+
             updateScreen(pGame);
             frameCounter++;
         }
@@ -415,26 +386,7 @@ void run(Game *pGame)
                 exit = true;
                 break;
             }
-            /*
-            else if (event.type == SDL_WINDOWEVENT && event.window.event == SDL_WINDOWEVENT_CLOSE)
-            {
 
-                if (SDL_GetWindowID(pGame->pWindow) == event.window.windowID)
-                {
-                    exit = true;
-                    break;
-                }
-                else
-                {
-                    if (pGame->serverIsHosted)
-                    {
-                        printf("Closing server...\n");
-                        pthread_cancel(pGame->serverThread);
-                        pthread_join(pGame->serverThread, NULL);
-                        pGame->serverIsHosted = false;
-                    }
-                }
-            }*/
             else if (event.type == SDL_KEYDOWN)
             {
                 if (event.key.keysym.sym == SDLK_RIGHT)
@@ -483,12 +435,7 @@ void close(Game *pGame)
         if (pGame->pTileTextures[i])
             SDL_DestroyTexture(pGame->pTileTextures[i]);
     }
-    /* if (pGame->pTileTextures[1])
-         SDL_DestroyTexture(pGame->pTileTextures[1]);
-     if (pGame->pTileTextures[2])
-         SDL_DestroyTexture(pGame->pTileTextures[2]);
-     if (pGame->pTileTextures[3])
-         SDL_DestroyTexture(pGame->pTileTextures[3]);*/
+
     if (pGame->pPlayerTexture)
         SDL_DestroyTexture(pGame->pPlayerTexture);
     if (pGame->ui.pNameTagFont)
@@ -610,9 +557,9 @@ void *updateScreen(void *pGameIn)
                     {
                         temp = pGame->map[i].wall;
                         temp.h = ((float)pGame->world.tileSize * pGame->world.angle);
-                        //SDL_SetTextureColorMod(pGame->pTileTextures[(pGame->map[i - MAPSIZE].type)], 150, 150, 150);
+
                         SDL_RenderCopy(pGame->pRenderer, pGame->pTileTextures[(pGame->map[i - MAPSIZE].type)], NULL, &temp);
-                        //SDL_SetTextureColorMod(pGame->pTileTextures[(pGame->map[i - MAPSIZE].type)], 255, 255, 255);
+
                         SDL_RenderFillRect(pGame->pRenderer, &temp);
                     }
                     else if (pGame->map[i - MAPSIZE].type > 0)
@@ -648,14 +595,6 @@ void *updateScreen(void *pGameIn)
             }
             else
                 SDL_RenderFillRect(pGame->pRenderer, &pGame->map[i].wall);
-            /*else
-            {
-                temp = pGame->map[i].wall;
-                //if(i > MAPSIZE - 1 && pGame->map[i - MAPSIZE].type > 0)
-                //    temp.h = (float)pGame->map[i].wall.h - ((float)pGame->world.tileSize * pGame->world.angle);
-                temp.h += pGame->map[i].wall.h - ((float)pGame->world.tileSize * pGame->world.angle);
-                SDL_RenderFillRect(pGame->pRenderer, &temp);
-            }*/
         }
     }
     pGame->isDrawing = false; // temporary fix to screen-tearing?

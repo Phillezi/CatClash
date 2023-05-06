@@ -361,29 +361,6 @@ int mapSelection(Game *pGame)
                 freeText(pPrompt2);
                 return 1;
             }
-            /*else
-            {
-                if (getStringFromUser(text, event))
-                {
-                    if (initMap(pGame->map, text, pGame->world.tileSize))
-                    {
-                        printf("No file found\n");
-                    }
-                    else
-                    {
-                        getPlayerSpawnPos(pGame);
-                        exit = true;
-                    }
-                }
-                else
-                {
-                    if (text[0])
-                    {
-                        freeText(pMap);
-                        pMap = createText(pGame->pRenderer, 0, 0, 0, pGame->ui.pFpsFont, text, pGame->windowWidth / 2, pGame->windowHeight / 2);
-                    }
-                }
-            }*/
         }
         if (SDL_GetTicks() - previousTime >= 1000 / 60)
         {
@@ -433,25 +410,7 @@ int joinServerMenu(Game *pGame)
                 freeText(pPrompt2);
                 return 1;
             }
-            /*else if (event.type == SDL_WINDOWEVENT && event.window.event == SDL_WINDOWEVENT_CLOSE)
-            {
 
-                if (SDL_GetWindowID(pGame->pWindow) == event.window.windowID)
-                {
-                    exit = true;
-                    break;
-                }
-                else
-                {
-                    if (pGame->serverIsHosted)
-                    {
-                        printf("Closing server...\n");
-                        pthread_cancel(pGame->serverThread);
-                        pthread_join(pGame->serverThread, NULL);
-                        pGame->serverIsHosted = false;
-                    }
-                }
-            }*/
             else if (getStringFromUser(text, event))
             {
                 pGame->pClient = createClient(text, 1234, 0, 100, 100);
@@ -583,29 +542,7 @@ int testSelectMenu(Game *pGame, char *mapName)
                 return 1;
                 break;
             }
-            /*else if (event.type == SDL_WINDOWEVENT && event.window.event == SDL_WINDOWEVENT_CLOSE)
-            {
-                if (SDL_GetWindowID(pGame->pWindow) == event.window.windowID)
-                {
-                    exit = true;
-                    TTF_CloseFont(listFont);
-                    for (int i = 0; i < len; i++)
-                        freeText(pText[i]);
-                    freeTextList(strArr, len);
-                    return 1;
-                    break;
-                }
-                else
-                {
-                    if (pGame->serverIsHosted)
-                    {
-                        printf("Closing server...\n");
-                        pthread_cancel(pGame->serverThread);
-                        pthread_join(pGame->serverThread, NULL);
-                        pGame->serverIsHosted = false;
-                    }
-                }
-            }*/
+
             else if (event.type == SDL_MOUSEWHEEL || event.type == SDL_KEYDOWN || event.type == SDL_MOUSEBUTTONDOWN)
             {
                 if (event.wheel.y < 0 && event.type == SDL_MOUSEWHEEL || event.key.keysym.sym == SDLK_DOWN) // scroll up
@@ -703,23 +640,6 @@ int catSelMenu(Game *pGame)
             {
                 exit = true;
             }
-            /*else if (event.type == SDL_WINDOWEVENT && event.window.event == SDL_WINDOWEVENT_CLOSE)
-            {
-                if (SDL_GetWindowID(pGame->pWindow) == event.window.windowID)
-                {
-                    exit = true;
-                }
-                else
-                {
-                    if (pGame->serverIsHosted)
-                    {
-                        printf("Closing server...\n");
-                        pthread_cancel(pGame->serverThread);
-                        pthread_join(pGame->serverThread, NULL);
-                        pGame->serverIsHosted = false;
-                    }
-                }
-            }*/
         }
         if (SDL_GetTicks() - previousTime >= 1000 / 60)
         {
@@ -786,25 +706,7 @@ int mainMenu(Game *pGame)
                 mode = QUIT;
                 quit = true;
             }
-            /*else if (event.type == SDL_WINDOWEVENT && event.window.event == SDL_WINDOWEVENT_CLOSE)
-            {
 
-                if (SDL_GetWindowID(pGame->pWindow) == event.window.windowID)
-                {
-                    mode = QUIT;
-                    quit = true;
-                }
-                else
-                {
-                    if (pGame->serverIsHosted)
-                    {
-                        printf("Closing server...\n");
-                        pthread_cancel(pGame->serverThread);
-                        pthread_join(pGame->serverThread, NULL);
-                        pGame->serverIsHosted = false;
-                    }
-                }
-            }*/
             else if (editPlayerName)
             {
                 // EDIT PLAYERNAME ADDITION
@@ -1056,7 +958,7 @@ int mainMenu(Game *pGame)
             drawText(pJoinServer, pGame->pRenderer);
             drawText(pCatSelect, pGame->pRenderer);
             drawText(pHost, pGame->pRenderer);
-            if(pName)
+            if (pName)
                 drawText(pName, pGame->pRenderer); // PLAYERNAME ADDITION TEST
             SDL_RenderPresent(pGame->pRenderer);
         }
