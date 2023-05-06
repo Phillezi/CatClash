@@ -289,6 +289,7 @@ int playerCollision(Player player, Player players[], int nrOfPlayers, char direc
         return -1;
     for (int i = 0; i < nrOfPlayers; i++)
     {
+        if (players[i].state == DEAD) continue;
         switch (direction)
         {
         case 'W': // First checks if rows overlap then if columns overlap
