@@ -12,55 +12,46 @@ void centerPlayer(Game *pGame, Player *pPlayer)
 {
     while (pGame->isDrawing)
         ; // temporary fix to screenTearing?
+
     int screenShiftAmount = pGame->movementAmount;
-    if (pPlayer->rect.x >= (4 * pGame->windowWidth) / 5 || pPlayer->rect.x <= pGame->windowWidth / 5)
-    {
-        screenShiftAmount = pGame->movementAmount * 2;
-    }
-    if (pPlayer->rect.y >= (4 * pGame->windowHeight) / 5 || pPlayer->rect.y <= pGame->windowHeight / 5)
-    {
-        screenShiftAmount = pGame->movementAmount * 2;
-    }
-    if (pPlayer->rect.x >= pGame->windowWidth || pPlayer->rect.x <= 0)
-    {
-        screenShiftAmount = pGame->movementAmount * 10;
-    }
-    if (pPlayer->rect.y >= pGame->windowHeight || pPlayer->rect.y <= 0)
-    {
-        screenShiftAmount = pGame->movementAmount * 10;
-    }
 
-    if (pPlayer->rect.x >= pGame->windowWidth + pGame->world.tileSize || pPlayer->rect.x <= -pGame->world.tileSize)
-    {
-        screenShiftAmount = pGame->movementAmount * 30;
-    }
-    if (pPlayer->rect.y >= pGame->windowHeight + pGame->world.tileSize || pPlayer->rect.y <= -pGame->world.tileSize)
-    {
-        screenShiftAmount = pGame->movementAmount * 30;
-    }
+    bool playerIsInOneFifthOfScreenBorder       = (pPlayer->rect.x >= (4 * pGame->windowWidth) / 5 || pPlayer->rect.x <= pGame->windowWidth / 5) || (pPlayer->rect.y >= (4 * pGame->windowHeight) / 5 || pPlayer->rect.y <= pGame->windowHeight / 5);
+    bool playerIsOutsideScreen                  = (pPlayer->rect.x >= pGame->windowWidth || pPlayer->rect.x <= 0) || (pPlayer->rect.y >= pGame->windowHeight || pPlayer->rect.y <= 0);
+    bool playerIsMoreThanOneTileOutsideOfScreen = (pPlayer->rect.x >= pGame->windowWidth + pGame->world.tileSize || pPlayer->rect.x <= -pGame->world.tileSize) || (pPlayer->rect.y >= pGame->windowHeight + pGame->world.tileSize || pPlayer->rect.y <= -pGame->world.tileSize);
+    bool playerIsCloseToUpperBorder             = pPlayer->rect.y < (2 * pGame->windowHeight) / 5;
+    bool playerIsCloseToLowerBorder             = pPlayer->rect.y > (3 * pGame->windowHeight) / 5;
+    bool playerIsCloseToLeftBorder              = pPlayer->rect.x < (2 * pGame->windowWidth) / 5;
+    bool playerIsCloseToRigthBorder             = pPlayer->rect.x > (3 * pGame->windowWidth) / 5;
 
-    if (pPlayer->rect.y < (2 * pGame->windowHeight) / 5)
+    if (playerIsMoreThanOneTileOutsideOfScreen)
+        screenShiftAmount = pGame->movementAmount * 30;
+    else if (playerIsOutsideScreen)
+        screenShiftAmount = pGame->movementAmount * 20;
+    else if (playerIsInOneFifthOfScreenBorder)
+        screenShiftAmount = pGame->movementAmount * 2;
+
+    if (playerIsCloseToUpperBorder)
     {
         for (int i = 0; i < MAPSIZE * MAPSIZE; i++)
         {
             pGame->map[i].wall.y += screenShiftAmount;
         }
     }
-    if (pPlayer->rect.y > (3 * pGame->windowHeight) / 5)
+    if (playerIsCloseToLowerBorder)
     {
         for (int i = 0; i < MAPSIZE * MAPSIZE; i++)
         {
             pGame->map[i].wall.y -= screenShiftAmount;
         }
     }
-    if (pPlayer->rect.x < (2 * pGame->windowWidth) / 5)
+    if (playerIsCloseToLeftBorder)
     {
         for (int i = 0; i < MAPSIZE * MAPSIZE; i++)
         {
             pGame->map[i].wall.x += screenShiftAmount;
         }
     }
-    if (pPlayer->rect.x > (3 * pGame->windowWidth) / 5)
+    if (playerIsCloseToRigthBorder)
     {
         for (int i = 0; i < MAPSIZE * MAPSIZE; i++)
         {
@@ -141,7 +132,6 @@ void *handleInput(void *pGameIn) // Game *pGame)
             if (((id = playerCollision(*pGame->pPlayer, pGame->pMultiPlayer, pGame->nrOfPlayers, pGame->pPlayer->prevKeyPressed, pGame->world.tileSize)) == -1) && (checkCollision(*pGame->pPlayer, pGame->map, pGame->pPlayer->prevKeyPressed, pGame->world.tileSize) <= 0))
             {
                 movePlayer(pGame->pPlayer, pGame->pPlayer->prevKeyPressed);
-                pGame->pPlayer->idle = 0;
             }
             else
             {
@@ -175,7 +165,6 @@ void *handleInput(void *pGameIn) // Game *pGame)
             pGame->pPlayer->idle = 1;
             if (currentKeyStates[SDL_SCANCODE_W] || currentKeyStates[SDL_SCANCODE_UP])
             {
-
                 if (checkCollision(*pGame->pPlayer, pGame->map, 'W', pGame->world.tileSize) == 1)
                 {
                     int temp = rand() % pGame->nrOfPortals;
@@ -188,18 +177,11 @@ void *handleInput(void *pGameIn) // Game *pGame)
                 }
                 if ((checkCollision(*pGame->pPlayer, pGame->map, 'W', pGame->world.tileSize) < 1) && (playerCollision(*pGame->pPlayer, pGame->pMultiPlayer, pGame->nrOfPlayers, 'W', pGame->world.tileSize) == -1))
                 {
-                    pGame->pPlayer->prevKeyPressed = 'W';
                     movePlayer(pGame->pPlayer, 'W');
-                    pGame->pPlayer->idle = 0;
-                }
-                else
-                {
-                    // printf("COLLISION W\n");
                 }
             }
             if (currentKeyStates[SDL_SCANCODE_A] || currentKeyStates[SDL_SCANCODE_LEFT])
             {
-
                 if (checkCollision(*pGame->pPlayer, pGame->map, 'A', pGame->world.tileSize) == 1)
                 {
                     int temp = rand() % pGame->nrOfPortals;
@@ -212,13 +194,7 @@ void *handleInput(void *pGameIn) // Game *pGame)
                 }
                 if ((checkCollision(*pGame->pPlayer, pGame->map, 'A', pGame->world.tileSize) < 1) && (playerCollision(*pGame->pPlayer, pGame->pMultiPlayer, pGame->nrOfPlayers, 'A', pGame->world.tileSize) == -1))
                 {
-                    pGame->pPlayer->prevKeyPressed = 'A';
                     movePlayer(pGame->pPlayer, 'A');
-                    pGame->pPlayer->idle = 0;
-                }
-                else
-                {
-                    // printf("COLLISION A\n");
                 }
             }
             if (currentKeyStates[SDL_SCANCODE_S] || currentKeyStates[SDL_SCANCODE_DOWN])
@@ -235,13 +211,7 @@ void *handleInput(void *pGameIn) // Game *pGame)
                 }
                 if ((checkCollision(*pGame->pPlayer, pGame->map, 'S', pGame->world.tileSize) < 1) && (playerCollision(*pGame->pPlayer, pGame->pMultiPlayer, pGame->nrOfPlayers, 'S', pGame->world.tileSize) == -1))
                 {
-                    pGame->pPlayer->prevKeyPressed = 'S';
                     movePlayer(pGame->pPlayer, 'S');
-                    pGame->pPlayer->idle = 0;
-                }
-                else
-                {
-                    // printf("COLLISION S\n");
                 }
             }
             if (currentKeyStates[SDL_SCANCODE_D] || currentKeyStates[SDL_SCANCODE_RIGHT])
@@ -258,13 +228,7 @@ void *handleInput(void *pGameIn) // Game *pGame)
                 }
                 if ((checkCollision(*pGame->pPlayer, pGame->map, 'D', pGame->world.tileSize) < 1) && (playerCollision(*pGame->pPlayer, pGame->pMultiPlayer, pGame->nrOfPlayers, 'D', pGame->world.tileSize) == -1))
                 {
-                    pGame->pPlayer->prevKeyPressed = 'D';
                     movePlayer(pGame->pPlayer, 'D');
-                    pGame->pPlayer->idle = 0;
-                }
-                else
-                {
-                    // printf("COLLISION D\n");
                 }
             }
         }
@@ -315,6 +279,8 @@ void movePlayer(Player *pPlayer, char direction)
             break;
         }
     }
+    pPlayer->prevKeyPressed = direction;
+    pPlayer->idle = 0;
 }
 
 int playerCollision(Player player, Player players[], int nrOfPlayers, char direction, int tileSize)
@@ -711,7 +677,8 @@ void drawPlayer(Game *pGame, Player player, int i)
     static int frame[MAX_PLAYERS] = {0};
     static int prevTime[MAX_PLAYERS] = {0};
 
-    if (player.state == ALIVE){
+    if (player.state == ALIVE)
+    {
         switch (player.prevKeyPressed)
         {
         case 'W':
