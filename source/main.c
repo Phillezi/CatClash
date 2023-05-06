@@ -497,7 +497,7 @@ void *updateScreen(void *pGameIn)
 
     // Checking if other players charge into you
     int id = 0, check = 0, collision = 0;
-    static int count = 300;
+    static int invincibilityTicks = 0, prevTime = 0;
     static char dir[4] = {'W', 'A', 'S', 'D'};
 
     for (int i = 0; i < pGame->nrOfPlayers; i++)
@@ -506,8 +506,10 @@ void *updateScreen(void *pGameIn)
             check = 1;
     }
 
-    if (count == 300)
+    if ((SDL_GetTicks() - prevTime) % 2000  >= invincibilityTicks)
     {
+        invincibilityTicks = 0;
+        prevTime = 0;
         if (check)
         {
             for (int i = 0; i < 4; i++)
@@ -525,13 +527,12 @@ void *updateScreen(void *pGameIn)
                 if (pGame->pPlayer->charge < pGame->pMultiPlayer[id].charge)
                 {
                     pGame->pPlayer->hp -= (pGame->pMultiPlayer[id].charge * 2);
-                    count = 0;
+                    prevTime = SDL_GetTicks();
+                    invincibilityTicks = 1000;
                 }
             }
         }
     }
-    else
-        count++;
 
     pGame->isDrawing = true; // temporary fix to screen-tearing?
     int darkness = 0;
