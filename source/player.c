@@ -709,7 +709,7 @@ void drawPlayer(Game *pGame, Player player, int i)
     SDL_RendererFlip flip = SDL_FLIP_HORIZONTAL;
 
     static int frame[MAX_PLAYERS] = {0};
-    static int counter[MAX_PLAYERS] = {10, 10, 10, 10, 10};
+    static int prevTime[MAX_PLAYERS] = {0};
 
     if (player.state == ALIVE){
         switch (player.prevKeyPressed)
@@ -718,7 +718,7 @@ void drawPlayer(Game *pGame, Player player, int i)
             if (player.idle)
             {
                 frame[i] = 0;
-                counter[i] = 10;
+                prevTime[i] = SDL_GetTicks();
                 SDL_RenderCopyEx(pGame->pRenderer, pGame->pPlayerTexture, &pGame->gSpriteClips[i][1], &player.rect, 0, NULL, SDL_FLIP_NONE);
             }
             else
@@ -728,7 +728,7 @@ void drawPlayer(Game *pGame, Player player, int i)
             if (player.idle)
             {
                 frame[i] = 0;
-                counter[i] = 10;
+                prevTime[i] = SDL_GetTicks();
                 SDL_RenderCopyEx(pGame->pRenderer, pGame->pPlayerTexture, &pGame->gSpriteClips[i][0], &player.rect, 0, NULL, SDL_FLIP_NONE);
             }
             else
@@ -738,7 +738,7 @@ void drawPlayer(Game *pGame, Player player, int i)
             if (player.idle)
             {
                 frame[i] = 0;
-                counter[i] = 10;
+                prevTime[i] = SDL_GetTicks();
                 SDL_RenderCopyEx(pGame->pRenderer, pGame->pPlayerTexture, &pGame->gSpriteClips[i][2], &player.rect, 0, NULL, SDL_FLIP_NONE);
             }
             else
@@ -748,22 +748,14 @@ void drawPlayer(Game *pGame, Player player, int i)
             if (player.idle)
             {
                 frame[i] = 0;
-                counter[i] = 10;
+                prevTime[i] = SDL_GetTicks();
                 SDL_RenderCopyEx(pGame->pRenderer, pGame->pPlayerTexture, &pGame->gSpriteClips[i][2], &player.rect, 0, NULL, flip);
             }
             else
                 SDL_RenderCopyEx(pGame->pRenderer, pGame->pPlayerTexture, &pGame->gSpriteClips[i][frame[i] + 3 + 8 + 8], &player.rect, 0, NULL, flip);
             break;
         }
-        if (counter[i] > 0)
-            counter[i]--;
-        else
-        {
-            frame[i]++;
-            counter[i] = 10;
-        }
-        if (frame[i] % 8 == 0)
-            frame[i] %= 8;
+        frame[i] = (((SDL_GetTicks() - prevTime[i]) % 1000) / 125);
     }
     else if (player.state == DEAD)
         SDL_RenderCopyEx(pGame->pRenderer, pGame->pPlayerTexture, &pGame->gSpriteClips[i][27], &player.rect, 0, NULL, SDL_FLIP_NONE);
