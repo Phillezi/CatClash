@@ -220,6 +220,12 @@ struct udpPlayerPackage
     Uint8 id;
     Uint8 idle;
     Uint8 charge;
+<<<<<<< Updated upstream
+=======
+    Uint8 charging;
+    Uint8 leavingFlag;
+    PlayerState state;
+>>>>>>> Stashed changes
 };
 typedef struct udpPlayerPackage PlayerUdpPkg;
 

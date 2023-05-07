@@ -111,7 +111,25 @@ void checkIncommingTCP(Server *pServer)
         {
             if (SDL_GetTicks() - pServer->clients[i].timeout > 5000)
             {
+                PlayerUdpPkg leavePkg;
+                leavePkg.state = 1;
                 printf("Player %d timed out\n Disconnection them\n", i);
+                for (int j = 0; j < pServer->nrOfClients; j++)
+                {
+                    if (j != i)
+                    {
+                        memcpy(pServer->pSent->data, &leavePkg, sizeof(PlayerUdpPkg));
+                        pServer->pSent->address.port = pServer->clients[j].address.port;
+                        pServer->pSent->address.host = pServer->clients[j].address.host;
+                        pServer->pSent->len = sizeof(PlayerUdpPkg);
+
+                        if (!SDLNet_UDP_Send(pServer->socketUDP, -1, pServer->pSent))
+                        {
+                            printf("Error: Could not send package\n");
+                        }
+                        printf("Informed client %d, of client %d disconnect\n", j, i);
+                    }
+                }
                 SDLNet_TCP_Close(pServer->clients[i].tcpSocket);
                 SDLNet_DelSocket(pServer->socketSetTCP, pServer->clients[i].tcpSocket);
                 for (i; i < pServer->nrOfClients; i++)
@@ -148,7 +166,18 @@ void checkIncommingTCP(Server *pServer)
             pServer->tcpState++;
         break;
     case SENDING_PLAYER_ID:
-        bytesSent = SDLNet_TCP_Send(pServer->clients[pServer->nrOfClients].tcpSocket, &pServer->nrOfClients, sizeof(pServer->nrOfClients));
+        int id = 0;
+        for(int i = 0; i < pServer->nrOfClients; i++)
+        {
+            printf("dbgcheck\n");
+            if(pServer->clients[i].data.id == id)
+            {
+                printf("Id:%d occupied\n", id);
+                id++;  // increment the id
+                i = 0; // set i to 0 to check all clients again
+            }
+        }
+        bytesSent = SDLNet_TCP_Send(pServer->clients[pServer->nrOfClients].tcpSocket, &id, sizeof(pServer->nrOfClients));
         if (bytesSent != sizeof(pServer->nrOfClients))
         {
             printf("Error: packet loss when sending player id\n");

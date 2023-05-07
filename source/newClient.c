@@ -69,11 +69,11 @@ int initTCPConnection(Game *pGame)
     pGame->nrOfPlayers = 0;
 
     IPaddress ip;
-    if (SDLNet_ResolveHost(&ip, pGame->pClient->serverIP, pGame->pClient->port) == -1){
+    if (SDLNet_ResolveHost(&ip, pGame->pClient->serverIP, pGame->pClient->port) == -1)
+    {
         printf("Error: could not resolve host\n");
         return 1;
     }
-        
 
     pGame->pClient->sockets = SDLNet_AllocSocketSet(1);
     pGame->pClient->socketTCP = SDLNet_TCP_Open(&ip);
@@ -125,7 +125,6 @@ PlayerNet *createClient(char *serverIP, int port, int id, int x, int y)
     return pClient;
 }
 
-
 // UDP
 
 void sendData(Game *pGame)
@@ -137,6 +136,12 @@ void sendData(Game *pGame)
     pkg.y = pGame->pPlayer->y;
     pkg.direction = pGame->pPlayer->prevKeyPressed;
     pkg.charge = pGame->pPlayer->charge;
+<<<<<<< Updated upstream
+=======
+    pkg.charging = pGame->pPlayer->charging;
+    pkg.state = pGame->pPlayer->state;
+    pkg.leavingFlag = 0;
+>>>>>>> Stashed changes
     memcpy(pGame->pPacket->data, &pkg, sizeof(PlayerUdpPkg));
 
     pGame->pPacket->len = sizeof(PlayerUdpPkg);
@@ -161,12 +166,36 @@ void getPlayerData(Game *pGame)
         {
             if (pGame->pMultiPlayer[j].id == tmp.id)
             {
+<<<<<<< Updated upstream
                 pGame->pMultiPlayer[j].x = tmp.x;
                 pGame->pMultiPlayer[j].y = tmp.y;
                 pGame->pMultiPlayer[j].idle = tmp.idle;
                 pGame->pMultiPlayer[j].prevKeyPressed = tmp.direction;
                 pGame->pMultiPlayer[j].charge = tmp.charge;
+=======
+                if (tmp.leavingFlag == 1)
+                {
+                    printf("Recived leaving information about client %d\n", j);
+                    for (int k = j; k < pGame->nrOfPlayers - 1; k++)
+                    {
+                        pGame->pMultiPlayer[k] = pGame->pMultiPlayer[k + 1];
+                    }
+                    destroyPlayer(&pGame->pMultiPlayer[pGame->nrOfPlayers - 1]);
+                    pGame->nrOfPlayers--;
+                }
+                else
+                {
+                    pGame->pMultiPlayer[j].x = tmp.x;
+                    pGame->pMultiPlayer[j].y = tmp.y;
+                    pGame->pMultiPlayer[j].idle = tmp.idle;
+                    pGame->pMultiPlayer[j].prevKeyPressed = tmp.direction;
+                    pGame->pMultiPlayer[j].charge = tmp.charge;
+                    pGame->pMultiPlayer[j].charging = tmp.charging;
+                    pGame->pMultiPlayer[j].state = tmp.state;
+                }
+>>>>>>> Stashed changes
             }
+            j = pGame->nrOfPlayers; // to end loop
         }
     }
 }
