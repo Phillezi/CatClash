@@ -496,7 +496,7 @@ void *updateScreen(void *pGameIn)
     }
 
     // Checking if other players charge into you
-    int id = 0, check = 0, collision = 0;
+    int id = 0, check = 0, collision = 0, extraLength = 0;
     static int invincibilityTicks = 0, prevTime = 0;
     static char dir[4] = {'W', 'A', 'S', 'D'};
 
@@ -514,7 +514,12 @@ void *updateScreen(void *pGameIn)
         {
             for (int i = 0; i < 4; i++)
             {
-                if ((id = playerCollision(*pGame->pPlayer, pGame->pMultiPlayer, pGame->nrOfPlayers, dir[i], pGame->world.tileSize, 1)) != -1)
+                extraLength = 0;
+                if (dir[i] == 'W' && pGame->pPlayer->prevKeyPressed == 'S') extraLength = 10;
+                if (dir[i] == 'A' && pGame->pPlayer->prevKeyPressed == 'D') extraLength = 10;
+                if (dir[i] == 'S' && pGame->pPlayer->prevKeyPressed == 'W') extraLength = 10;
+                if (dir[i] == 'D' && pGame->pPlayer->prevKeyPressed == 'A') extraLength = 10;
+                if ((id = playerCollision(*pGame->pPlayer, pGame->pMultiPlayer, pGame->nrOfPlayers, dir[i], pGame->world.tileSize, extraLength)) != -1)
                     if (pGame->pMultiPlayer[id].charging)
                     {
                         collision = 1;
