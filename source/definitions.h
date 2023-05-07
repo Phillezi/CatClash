@@ -190,6 +190,7 @@ typedef struct info Info;
 
 struct server
 {
+    Uint8 updateScreenFlag;
     int mapPos;
     TcpState tcpState;
     SDL_Window *pWindow;

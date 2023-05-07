@@ -19,6 +19,7 @@ int main(int argv, char **args)
 {
     Server server;
     bool exit = false;
+    Uint32 lastScreenUpdateTick = 0;
     server.tcpState = IDLE;
     if (!initServer(&server))
     {
@@ -26,7 +27,11 @@ int main(int argv, char **args)
         {
             checkIncommingTCP(&server);
             checkIncommingUDP(&server);
-            updateServerWindow(&server);
+//            if (SDL_GetTicks() - lastScreenUpdateTick >= 1000 / 60)
+//            {
+//                lastScreenUpdateTick = SDL_GetTicks();
+                updateServerWindow(&server);
+//            }
             SDL_Event event;
             while (SDL_PollEvent(&event))
             {
@@ -149,6 +154,8 @@ int initServer(Server *pServer)
     pServer->progressBar.h = pServer->fontSize;
     pServer->progressBar.w = 0;
 
+    pServer->updateScreenFlag = 1;
+
     return 0;
 }
 
@@ -156,7 +163,7 @@ void *sendMapToPlayer(void *pServerIn)
 {
     Server *pServer = (Server *)pServerIn;
     int bytesSent = 0;
-    for(pServer->mapPos = 0; pServer->mapPos < MAPSIZE * MAPSIZE; pServer->mapPos++)
+    for (pServer->mapPos = 0; pServer->mapPos < MAPSIZE * MAPSIZE; pServer->mapPos++)
     {
         bytesSent = SDLNet_TCP_Send(pServer->clients[pServer->nrOfClients].tcpSocket, &pServer->map[pServer->mapPos].type, sizeof(pServer->map[pServer->mapPos].type)); // send map to client
         if (bytesSent != sizeof(pServer->map[pServer->mapPos].type))
@@ -191,9 +198,9 @@ void checkIncommingTCP(Server *pServer)
             {
                 printf("Player %d timed out\n Disconnection them\n", i);
                 pServer->clients[i].data.disconnectedFlag = 1;
-                for(int j = 0; j < pServer->nrOfClients; j++)
+                for (int j = 0; j < pServer->nrOfClients; j++)
                 {
-                    if(j != i)
+                    if (j != i)
                     {
                         SDLNet_TCP_Send(pServer->clients[j].tcpSocket, &pServer->clients[i].data, sizeof(Player));
                         printf("Sent disconnect info to player %d about %d\n", j, i);
@@ -217,6 +224,7 @@ void checkIncommingTCP(Server *pServer)
                     }
                 }
                 pServer->nrOfClients--;
+                pServer->updateScreenFlag = 1;
             }
         }
     }
@@ -224,13 +232,12 @@ void checkIncommingTCP(Server *pServer)
     switch (pServer->tcpState)
     {
     case IDLE:
-        pServer->progressBar.w = 0;
         break;
     case CLIENT_JOINING:
-        pthread_create(&mapThread, NULL, sendMapToPlayer, pServer);
+        pthread_create(&mapThread, NULL, sendMapToPlayer, pServer); // start sending map
         pServer->tcpState++;
     case SENDING_MAP:
-        if (pServer->mapPos == MAPSIZE * MAPSIZE)
+        if (pServer->mapPos == MAPSIZE * MAPSIZE) // check if server is done sending map
         {
             pthread_join(mapThread, NULL);
             // Change the spawntile to occupied since the newly joined player will spawn there
@@ -248,12 +255,12 @@ void checkIncommingTCP(Server *pServer)
         break;
     case SENDING_PLAYER_ID:
         int id = 0;
-        for(int i = 0; i < pServer->nrOfClients; i++)
+        for (int i = 0; i < pServer->nrOfClients; i++)
         {
-            if(id == pServer->clients[i].id)
+            if (id == pServer->clients[i].id)
             {
-                id++;   // increment id
-                i = 0;  // restart loop to check if id already exists
+                id++;  // increment id
+                i = 0; // restart loop to check if id already exists
             }
         }
         bytesSent = SDLNet_TCP_Send(pServer->clients[pServer->nrOfClients].tcpSocket, &id, sizeof(id));
@@ -280,6 +287,7 @@ void checkIncommingTCP(Server *pServer)
                     char buffer[32];
                     sprintf(buffer, "%d %s", pServer->clients[pServer->nrOfClients].data.id, pServer->clients[pServer->nrOfClients].data.name);
                     pServer->pClientText[i] = createText(pServer->pRenderer, 0, 0, 0, pServer->pFont, buffer, pServer->windowWidth / 2, pServer->clients[pServer->nrOfClients].data.id * pServer->fontSize + 3 * pServer->fontSize);
+                    pServer->updateScreenFlag = 1;
                     pServer->nrOfClients++;
                     pServer->tcpState++;
                 }
@@ -327,6 +335,9 @@ void checkIncommingTCP(Server *pServer)
             freeText(pServer->pServerStateText);
         pServer->pServerStateText = createText(pServer->pRenderer, 0, 0, 0, pServer->pFont, buffer, pServer->windowWidth / 2, pServer->fontSize);
         pServer->progressBar.w = pServer->fontSize * pServer->tcpState;
+        if(pServer->tcpState == IDLE)
+            pServer->progressBar.w = 0;
+        pServer->updateScreenFlag = 1;
     }
 }
 
@@ -397,20 +408,24 @@ void checkUDPClient(Server *pServer, PlayerUdpPkg data)
 
 void updateServerWindow(Server *pServer)
 {
-    SDL_SetRenderDrawColor(pServer->pRenderer, 255, 255, 255, 255);
-    SDL_RenderClear(pServer->pRenderer);
+    if (pServer->updateScreenFlag)
+    {
+        pServer->updateScreenFlag = 0;
+        SDL_SetRenderDrawColor(pServer->pRenderer, 255, 255, 255, 255);
+        SDL_RenderClear(pServer->pRenderer);
 
-    for (int i = 0; i < MAX_PLAYERS; i++)
-        if (pServer->pClientText[i])
-            drawText(pServer->pClientText[i], pServer->pRenderer);
+        for (int i = 0; i < pServer->nrOfClients; i++)
+            if (pServer->pClientText[i])
+                drawText(pServer->pClientText[i], pServer->pRenderer);
 
-    if (pServer->pServerStateText)
-        drawText(pServer->pServerStateText, pServer->pRenderer);
+        if (pServer->pServerStateText)
+            drawText(pServer->pServerStateText, pServer->pRenderer);
 
-    SDL_SetRenderDrawColor(pServer->pRenderer, 0, 255, 0, 255);
-    SDL_RenderFillRect(pServer->pRenderer, &pServer->progressBar);
+        SDL_SetRenderDrawColor(pServer->pRenderer, 0, 255, 0, 255);
+        SDL_RenderFillRect(pServer->pRenderer, &pServer->progressBar);
 
-    SDL_RenderPresent(pServer->pRenderer);
+        SDL_RenderPresent(pServer->pRenderer);
+    }
 }
 
 void dbgPrint()
