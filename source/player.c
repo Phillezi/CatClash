@@ -801,3 +801,39 @@ int getDeadPlayers(Game *pGame)
     }
     return deadPlayers;
 }
+
+void checkChargingPlayers(Game *pGame) {
+    // Checking if other players charge into you
+    int id = 0, collision = 0, extraLength = 0;
+    static int invincibilityTicks = 0, prevTime = 0;
+    static char dir[4] = {'W', 'A', 'S', 'D'};
+    
+    if ((SDL_GetTicks() - prevTime) % 2000  >= invincibilityTicks)
+    {
+        invincibilityTicks = 0;
+        prevTime = 0;
+
+        for (int i = 0; i < 4; i++){
+            extraLength = 0;
+            if (dir[i] == 'W' && pGame->pPlayer->prevKeyPressed == 'S') extraLength = 10;
+            else if (dir[i] == 'A' && pGame->pPlayer->prevKeyPressed == 'D') extraLength = 10;
+            else if (dir[i] == 'S' && pGame->pPlayer->prevKeyPressed == 'W') extraLength = 10;
+            else if (dir[i] == 'D' && pGame->pPlayer->prevKeyPressed == 'A') extraLength = 10;
+
+            if ((id = playerCollision(*pGame->pPlayer, pGame->pMultiPlayer, pGame->nrOfPlayers, dir[i], pGame->world.tileSize, extraLength)) != -1)
+                if (pGame->pMultiPlayer[id].charging) { 
+                    collision = 1; 
+                    break; 
+                }
+        }
+
+        if (collision) {
+            printf("player charge: %d\tcolliding charge: %d\n", pGame->pPlayer->charge, pGame->pMultiPlayer[id].charge);
+            if (pGame->pPlayer->charge < pGame->pMultiPlayer[id].charge || pGame->pPlayer->charging == 0) {
+                pGame->pPlayer->hp -= (pGame->pMultiPlayer[id].charge * 2);
+                prevTime = SDL_GetTicks();
+                invincibilityTicks = 1000;
+            }
+        }
+    }
+}
