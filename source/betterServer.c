@@ -152,8 +152,23 @@ int initServer(Server *pServer)
     return 0;
 }
 
+void *sendMapToPlayer(void *pServerIn)
+{
+    Server *pServer = (Server *)pServerIn;
+    int bytesSent = 0;
+    for(pServer->mapPos = 0; pServer->mapPos < MAPSIZE * MAPSIZE; pServer->mapPos++)
+    {
+        bytesSent = SDLNet_TCP_Send(pServer->clients[pServer->nrOfClients].tcpSocket, &pServer->map[pServer->mapPos].type, sizeof(pServer->map[pServer->mapPos].type)); // send map to client
+        if (bytesSent != sizeof(pServer->map[pServer->mapPos].type))
+        {
+            printf("Error: packet loss when sending map nr:%d\n", pServer->mapPos);
+        }
+    }
+}
+
 void checkIncommingTCP(Server *pServer)
 {
+    pthread_t mapThread;
     int bytesSent, bytesRecv, prevState = pServer->tcpState;
     if (pServer->tcpState == IDLE)
     {
@@ -212,17 +227,12 @@ void checkIncommingTCP(Server *pServer)
         pServer->progressBar.w = 0;
         break;
     case CLIENT_JOINING:
-        pServer->mapPos = 0;
+        pthread_create(&mapThread, NULL, sendMapToPlayer, pServer);
         pServer->tcpState++;
     case SENDING_MAP:
-        bytesSent = SDLNet_TCP_Send(pServer->clients[pServer->nrOfClients].tcpSocket, &pServer->map[pServer->mapPos].type, sizeof(pServer->map[pServer->mapPos].type)); // send map to client
-        if (bytesSent != sizeof(pServer->map[pServer->mapPos].type))
-        {
-            printf("Error: packet loss when sending map nr:%d\n", pServer->mapPos);
-        }
-        pServer->mapPos++;
         if (pServer->mapPos == MAPSIZE * MAPSIZE)
         {
+            pthread_join(mapThread, NULL);
             // Change the spawntile to occupied since the newly joined player will spawn there
             for (int i = 0; i < MAPSIZE * MAPSIZE; i++)
             {
