@@ -22,6 +22,7 @@
 #define TILE_WIDTH 32
 #define TILE_HEIGHT 32
 #define MAX_PLAYERS 5
+#define HEIGHT_OF_PLAYER_SPRITE 544
 
 // ADTS
 
@@ -41,7 +42,8 @@ typedef struct tile Tile;
 enum playerState
 {
     ALIVE,
-    DEAD
+    DEAD,
+    WIN
 };
 typedef enum playerState PlayerState;
 
@@ -59,9 +61,10 @@ typedef enum selectedMode SelectedMode;
 struct player
 {
     char prevKeyPressed;
-    int idle;
+    Uint8 idle;
     int charge;
-    int id;                      // The id of the player (Multiplayer purposes)
+    Uint8 id;                      // The id of the player (Multiplayer purposes)
+    Uint8 charging;
     char name[MAX_NAME_LEN + 1]; // The name of the player (Multiplayer purposes)
     int hp;                      // Health-points
     PlayerState state;           // State of the player (alive or dead)
@@ -98,8 +101,8 @@ struct uiElements
     SDL_Rect chargebar;
     SDL_Rect healthbar;
     SDL_Rect fpsFrame;
-    Text *pMenuText, *pOverText, *pFpsText, *pPlayerName;
-    TTF_Font *pGameFont, *pFpsFont;
+    Text *pMenuText, *pOverText, *pFpsText, *pPlayerName, *pWinText;
+    TTF_Font *pGameFont, *pFpsFont, *pNameTagFont;
 };
 typedef struct uiElements UiE;
 
@@ -124,8 +127,11 @@ typedef struct playerNet
 
 struct game
 {
+    bool isConnected;
+    bool isDrawing;
     int tempID;
     int nrOfPlayers;
+    int nrOfPlayersAlive;
     bool serverIsHosted;
     pthread_t serverThread;
     Player *pMultiPlayer;
@@ -135,7 +141,7 @@ struct game
 
     SDL_Texture *pTileTextures[TILES];
     SDL_Texture *pPlayerTexture;
-    SDL_Rect gSpriteClips[27];
+    SDL_Rect gSpriteClips[MAX_PLAYERS][29];
 
     SDL_Rect portalList[MAPSIZE * MAPSIZE];
     int nrOfPortals;
@@ -190,6 +196,8 @@ struct server
     SDL_Renderer *pRenderer;
     TTF_Font *pFont;
     Text *pSpace, *pClosed, *pJoining, *pRunning, *pIP;
+    Text *pServerStateText;
+    SDL_Rect progressBar;
 
     Text *pClientText[MAX_PLAYERS];
 
@@ -226,6 +234,8 @@ struct udpPlayerPackage
     Uint8 leavingFlag;
     PlayerState state;
 >>>>>>> Stashed changes
+    Uint8 charging;
+    PlayerState state;
 };
 typedef struct udpPlayerPackage PlayerUdpPkg;
 

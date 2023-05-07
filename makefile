@@ -14,10 +14,9 @@ all:
 	$(CC) $(CFLAGS) $(SRCDIR)/levelEditor.c
 	$(CC) $(CFLAGS) $(SRCDIR)/ioHandler.c
 	$(CC) $(CFLAGS) $(SRCDIR)/newClient.c
-	$(CC) $(CFLAGS) $(SRCDIR)/multiThreadedServer.c 
-	$(CC) main.o init.o text.o player.o menu.o levelEditor.o ioHandler.o newClient.o multiThreadedServer.o -o main.exe $(LDFLAGS)
+	$(CC) main.o init.o text.o player.o menu.o levelEditor.o ioHandler.o newClient.o -o main.exe $(LDFLAGS)
 	$(CC) $(CFLAGS) $(SRCDIR)/betterServer.c 
-	$(CC) betterServer.o init.o -o betterServer.exe $(LDFLAGS)
+	$(CC) betterServer.o init.o text.o -o betterServer.exe $(LDFLAGS)
 
 demo:
 	@echo "Building demo"

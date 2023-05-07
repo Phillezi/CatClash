@@ -9,7 +9,7 @@
 #include <SDL2/SDL_image.h>
 #include <SDL2/SDL_ttf.h>
 #include "ioHandler.h"
-//#include "TCPclient.h"
+// #include "TCPclient.h"
 #include "newClient.h"
 
 int menu(Game *pGame)
@@ -361,29 +361,6 @@ int mapSelection(Game *pGame)
                 freeText(pPrompt2);
                 return 1;
             }
-            else
-            {
-                if (getStringFromUser(text, event))
-                {
-                    if (initMap(pGame->map, text, pGame->world.tileSize))
-                    {
-                        printf("No file found\n");
-                    }
-                    else
-                    {
-                        getPlayerSpawnPos(pGame);
-                        exit = true;
-                    }
-                }
-                else
-                {
-                    if (text[0])
-                    {
-                        freeText(pMap);
-                        pMap = createText(pGame->pRenderer, 0, 0, 0, pGame->ui.pFpsFont, text, pGame->windowWidth / 2, pGame->windowHeight / 2);
-                    }
-                }
-            }
         }
         if (SDL_GetTicks() - previousTime >= 1000 / 60)
         {
@@ -433,25 +410,7 @@ int joinServerMenu(Game *pGame)
                 freeText(pPrompt2);
                 return 1;
             }
-            else if (event.type == SDL_WINDOWEVENT && event.window.event == SDL_WINDOWEVENT_CLOSE)
-            {
 
-                if (SDL_GetWindowID(pGame->pWindow) == event.window.windowID)
-                {
-                    exit = true;
-                    break;
-                }
-                else
-                {
-                    if (pGame->serverIsHosted)
-                    {
-                        printf("Closing server...\n");
-                        pthread_cancel(pGame->serverThread);
-                        pthread_join(pGame->serverThread, NULL);
-                        pGame->serverIsHosted = false;
-                    }
-                }
-            }
             else if (getStringFromUser(text, event))
             {
                 pGame->pClient = createClient(text, 1234, 0, 100, 100);
@@ -465,9 +424,11 @@ int joinServerMenu(Game *pGame)
                     freeText(pPrompt2);
                     return 1;
                 }
+                printf("Connected to Server\n");
                 initMapFromTCP(pGame->map, pGame->world.tileSize);
                 getPlayerSpawnPos(pGame);
                 SDLNet_ResolveHost(&pGame->serverAddress, text, 1234);
+                printf("Resolved UDP host\n");
                 exit = true;
             }
             else
@@ -581,29 +542,7 @@ int testSelectMenu(Game *pGame, char *mapName)
                 return 1;
                 break;
             }
-            else if (event.type == SDL_WINDOWEVENT && event.window.event == SDL_WINDOWEVENT_CLOSE)
-            {
-                if (SDL_GetWindowID(pGame->pWindow) == event.window.windowID)
-                {
-                    exit = true;
-                    TTF_CloseFont(listFont);
-                    for (int i = 0; i < len; i++)
-                        freeText(pText[i]);
-                    freeTextList(strArr, len);
-                    return 1;
-                    break;
-                }
-                else
-                {
-                    if (pGame->serverIsHosted)
-                    {
-                        printf("Closing server...\n");
-                        pthread_cancel(pGame->serverThread);
-                        pthread_join(pGame->serverThread, NULL);
-                        pGame->serverIsHosted = false;
-                    }
-                }
-            }
+
             else if (event.type == SDL_MOUSEWHEEL || event.type == SDL_KEYDOWN || event.type == SDL_MOUSEBUTTONDOWN)
             {
                 if (event.wheel.y < 0 && event.type == SDL_MOUSEWHEEL || event.key.keysym.sym == SDLK_DOWN) // scroll up
@@ -690,7 +629,7 @@ int catSelMenu(Game *pGame)
 {
     int previousTime = 0;
     bool exit = false;
-    Text *pSelPrompt = createText(pGame->pRenderer, 0, 0, 0, pGame->ui.pFpsFont, "Select your cat", pGame->windowWidth / 2, (pGame->windowHeight / 5));
+    Text *pSelPrompt = createText(pGame->pRenderer, 0, 0, 0, pGame->ui.pFpsFont, "COMING SOON!", pGame->windowWidth / 2, (pGame->windowHeight / 2));
 
     while (!exit)
     {
@@ -700,23 +639,6 @@ int catSelMenu(Game *pGame)
             if (event.type == SDL_QUIT)
             {
                 exit = true;
-            }
-            else if (event.type == SDL_WINDOWEVENT && event.window.event == SDL_WINDOWEVENT_CLOSE)
-            {
-                if (SDL_GetWindowID(pGame->pWindow) == event.window.windowID)
-                {
-                    exit = true;
-                }
-                else
-                {
-                    if (pGame->serverIsHosted)
-                    {
-                        printf("Closing server...\n");
-                        pthread_cancel(pGame->serverThread);
-                        pthread_join(pGame->serverThread, NULL);
-                        pGame->serverIsHosted = false;
-                    }
-                }
             }
         }
         if (SDL_GetTicks() - previousTime >= 1000 / 60)
@@ -766,6 +688,13 @@ int mainMenu(Game *pGame)
     TTF_SizeText(pGame->ui.pFpsFont, "Cat Selection", &catSelectW, NULL);
     TTF_SizeText(pGame->ui.pFpsFont, "Host Server", &hostW, NULL);
 
+    // PLAYERNAME TEST ADDITION---------------------------------------------------------------------------------------------------------------------------
+    int playerNameW, playerNameH, previousSecond = 0;
+    TTF_SizeText(pGame->ui.pFpsFont, pGame->pPlayer->name, &playerNameW, &playerNameH);
+    Text *pName = createText(pGame->pRenderer, 200, 200, 200, pGame->ui.pFpsFont, pGame->pPlayer->name, playerNameW / 2, pGame->windowHeight - (playerNameH / 2));
+    bool editPlayerName = false, drawLine = false, updatePlayerNameFlag = false;
+    //----------------------------------------------------------------------------------------------------------------------------------------------------
+
     while (!quit)
     {
         int previousMode = mode;
@@ -777,24 +706,20 @@ int mainMenu(Game *pGame)
                 mode = QUIT;
                 quit = true;
             }
-            else if (event.type == SDL_WINDOWEVENT && event.window.event == SDL_WINDOWEVENT_CLOSE)
-            {
 
-                if (SDL_GetWindowID(pGame->pWindow) == event.window.windowID)
+            else if (editPlayerName)
+            {
+                // EDIT PLAYERNAME ADDITION
+                if (getStringFromUser(pGame->pPlayer->name, event))
                 {
-                    mode = QUIT;
-                    quit = true;
+                    editPlayerName = false;
+                    updatePlayerNameFlag = false;
+                    TTF_SizeText(pGame->ui.pFpsFont, pGame->pPlayer->name, &playerNameW, &playerNameH);
+                    freeText(pName);
+                    pName = createText(pGame->pRenderer, 200, 200, 200, pGame->ui.pFpsFont, pGame->pPlayer->name, playerNameW / 2, pGame->windowHeight - (playerNameH / 2));
                 }
                 else
-                {
-                    if (pGame->serverIsHosted)
-                    {
-                        printf("Closing server...\n");
-                        pthread_cancel(pGame->serverThread);
-                        pthread_join(pGame->serverThread, NULL);
-                        pGame->serverIsHosted = false;
-                    }
-                }
+                    updatePlayerNameFlag = true;
             }
             else if (event.type == SDL_KEYDOWN)
             {
@@ -871,8 +796,53 @@ int mainMenu(Game *pGame)
                         quit = true;
                     }
                 }
+                else if (0 < mouseX && mouseX < playerNameW && pGame->windowHeight - playerNameH < mouseY && mouseY < pGame->windowHeight)
+                {
+                    if (buttons & SDL_BUTTON(SDL_BUTTON_LEFT))
+                    {
+                        editPlayerName = true;
+                    }
+                }
             }
         }
+
+        // EDIT PLAYERNAME ADDITION-------------------------------------------------------------------------------------------------------------------------
+        if (updatePlayerNameFlag || (SDL_GetTicks() - previousSecond >= 1000) && editPlayerName)
+        {
+            char buffer[31];
+            if (SDL_GetTicks() - previousSecond >= 1000) // DRAW A | every other second
+            {
+                previousSecond = SDL_GetTicks();
+                if (drawLine)
+                    drawLine = false;
+                else
+                    drawLine = true;
+            }
+
+            switch (drawLine)
+            {
+            case false:
+                strcpy(buffer, pGame->pPlayer->name);
+                break;
+            case true:
+                sprintf(buffer, "%s|", pGame->pPlayer->name);
+                break;
+            }
+
+            if (!buffer[0])
+            {
+                TTF_SizeText(pGame->ui.pFpsFont, buffer, &playerNameW, &playerNameH);
+                freeText(pName);
+                pName = createText(pGame->pRenderer, 0, 0, 0, pGame->ui.pFpsFont, " ", playerNameW / 2, pGame->windowHeight - (playerNameH / 2));
+            }
+            else
+            {
+                TTF_SizeText(pGame->ui.pFpsFont, buffer, &playerNameW, &playerNameH);
+                freeText(pName);
+                pName = createText(pGame->pRenderer, 0, 0, 0, pGame->ui.pFpsFont, buffer, playerNameW / 2, pGame->windowHeight - (playerNameH / 2));
+            }
+        }
+        //--------------------------------------------------------------------------------------------------------------------------------------------------
 
         if (mode != previousMode)
         {
@@ -988,6 +958,8 @@ int mainMenu(Game *pGame)
             drawText(pJoinServer, pGame->pRenderer);
             drawText(pCatSelect, pGame->pRenderer);
             drawText(pHost, pGame->pRenderer);
+            if (pName)
+                drawText(pName, pGame->pRenderer); // PLAYERNAME ADDITION TEST
             SDL_RenderPresent(pGame->pRenderer);
         }
     }
@@ -997,6 +969,7 @@ int mainMenu(Game *pGame)
     freeText(pJoinServer);
     freeText(pCatSelect);
     freeText(pHost);
+    freeText(pName); // PLAYERNAME ADDITION TEST
 
     return mode;
 }

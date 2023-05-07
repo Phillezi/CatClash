@@ -14,6 +14,7 @@ int connectToServer(Game *pGame)
         printf("Error: Initialization of tcp connection failed\n");
         return 1;
     }
+    printf("DONE: Initialized TCP\n");
     enum TCPSTATE tcpState = FETCHING_MAP;
     bool exit = false;
     int i = 0;
@@ -21,7 +22,7 @@ int connectToServer(Game *pGame)
 
     while (!exit)
     {
-        while (SDLNet_CheckSockets(pGame->pClient->sockets, 0) > 0)
+        if (SDLNet_CheckSockets(pGame->pClient->sockets, 0) > 0)
         {
             if (SDLNet_SocketReady(pGame->pClient->socketTCP))
             {
@@ -56,12 +57,14 @@ int connectToServer(Game *pGame)
                         return 1;
                     }
                     exit = true;
+                    pGame->isConnected = true;
                     tcpState++;
                     break;
                 }
             }
         }
     }
+    return 0;
 }
 
 int initTCPConnection(Game *pGame)
@@ -98,11 +101,13 @@ void checkTCP(Game *pGame)
             if (bytesRecv != sizeof(Player))
             {
                 printf("Error: Packetloss when reciving Playerdata over TCP\n");
+                printf("Recived: x:%d, y:%d, id:%d, name:%s\n", data.x, data.y, data.id, data.name);
             }
             else
             {
                 pGame->pMultiPlayer = createNewMultiPlayer(pGame, pGame->nrOfPlayers, data);
                 pGame->nrOfPlayers++;
+                printf("Recived: x:%d, y:%d, id:%d, name:%s\n", data.x, data.y, data.id, data.name);
                 printf("A new player joined! (%d total)\n", pGame->nrOfPlayers);
             }
         }
@@ -142,6 +147,8 @@ void sendData(Game *pGame)
     pkg.state = pGame->pPlayer->state;
     pkg.leavingFlag = 0;
 >>>>>>> Stashed changes
+    pkg.charging = pGame->pPlayer->charging;
+    pkg.state = pGame->pPlayer->state;
     memcpy(pGame->pPacket->data, &pkg, sizeof(PlayerUdpPkg));
 
     pGame->pPacket->len = sizeof(PlayerUdpPkg);
@@ -151,6 +158,7 @@ void sendData(Game *pGame)
 
     if (!SDLNet_UDP_Send(pGame->socketDesc, -1, pGame->pPacket))
     {
+        pGame->isConnected = false;
         printf("Could not send package\n");
     }
 }
@@ -172,28 +180,6 @@ void getPlayerData(Game *pGame)
                 pGame->pMultiPlayer[j].idle = tmp.idle;
                 pGame->pMultiPlayer[j].prevKeyPressed = tmp.direction;
                 pGame->pMultiPlayer[j].charge = tmp.charge;
-=======
-                if (tmp.leavingFlag == 1)
-                {
-                    printf("Recived leaving information about client %d\n", j);
-                    for (int k = j; k < pGame->nrOfPlayers - 1; k++)
-                    {
-                        pGame->pMultiPlayer[k] = pGame->pMultiPlayer[k + 1];
-                    }
-                    destroyPlayer(&pGame->pMultiPlayer[pGame->nrOfPlayers - 1]);
-                    pGame->nrOfPlayers--;
-                }
-                else
-                {
-                    pGame->pMultiPlayer[j].x = tmp.x;
-                    pGame->pMultiPlayer[j].y = tmp.y;
-                    pGame->pMultiPlayer[j].idle = tmp.idle;
-                    pGame->pMultiPlayer[j].prevKeyPressed = tmp.direction;
-                    pGame->pMultiPlayer[j].charge = tmp.charge;
-                    pGame->pMultiPlayer[j].charging = tmp.charging;
-                    pGame->pMultiPlayer[j].state = tmp.state;
-                }
->>>>>>> Stashed changes
             }
             j = pGame->nrOfPlayers; // to end loop
         }
