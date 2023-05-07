@@ -765,7 +765,7 @@ Player *removePlayer(Game *pGame, int size)
 
     printf("Shrinking memory for player array\n");
     Player *pNew_arr = (Player *)realloc(pGame->pMultiPlayer, size * sizeof(Player));
-    if (pNew_arr == NULL)
+    if (pNew_arr == NULL && size > 0)
     {
         printf("ERROR when reallocating memory for player array\n");
         return NULL;
