@@ -59,7 +59,7 @@ enum selectedMode
 typedef enum selectedMode SelectedMode;
 
 struct player
-{
+{   Uint8 disconnectedFlag;
     char prevKeyPressed;
     Uint8 idle;
     int charge;

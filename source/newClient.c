@@ -72,11 +72,11 @@ int initTCPConnection(Game *pGame)
     pGame->nrOfPlayers = 0;
 
     IPaddress ip;
-    if (SDLNet_ResolveHost(&ip, pGame->pClient->serverIP, pGame->pClient->port) == -1){
+    if (SDLNet_ResolveHost(&ip, pGame->pClient->serverIP, pGame->pClient->port) == -1)
+    {
         printf("Error: could not resolve host\n");
         return 1;
     }
-        
 
     pGame->pClient->sockets = SDLNet_AllocSocketSet(1);
     pGame->pClient->socketTCP = SDLNet_TCP_Open(&ip);
@@ -105,10 +105,35 @@ void checkTCP(Game *pGame)
             }
             else
             {
-                pGame->pMultiPlayer = createNewMultiPlayer(pGame, pGame->nrOfPlayers, data);
-                pGame->nrOfPlayers++;
-                printf("Recived: x:%d, y:%d, id:%d, name:%s\n", data.x, data.y, data.id, data.name);
-                printf("A new player joined! (%d total)\n", pGame->nrOfPlayers);
+                if (data.disconnectedFlag == 1)
+                {
+                    printf("Recived Disconnect message\n");
+                    for (int i = 0; i < pGame->nrOfPlayers; i++)
+                    {
+                        if (data.id == pGame->pMultiPlayer[i].id)
+                        {
+                            printf("Disconnected player is: %d index in Player array: %d\n", pGame->pMultiPlayer[i].id, i);
+                            for (i; i < pGame->nrOfPlayers - 1; i++)
+                            {
+                                if (i + 1 < pGame->nrOfPlayers)
+                                {
+                                    pGame->pMultiPlayer[i] = pGame->pMultiPlayer[i + 1];
+                                }
+                            }
+                            printf("Removed player %d\n", data.id);
+                            pGame->nrOfPlayers--;
+                            pGame->pMultiPlayer = removePlayer(pGame, pGame->nrOfPlayers);
+                            //destroyPlayer(&pGame->pMultiPlayer[i]); // venne om de här funkar
+                        }
+                    }
+                }
+                else
+                {
+                    pGame->pMultiPlayer = createNewMultiPlayer(pGame, pGame->nrOfPlayers, data);
+                    pGame->nrOfPlayers++;
+                    printf("Recived: x:%d, y:%d, id:%d, name:%s\n", data.x, data.y, data.id, data.name);
+                    printf("A new player joined! (%d total)\n", pGame->nrOfPlayers);
+                }
             }
         }
     }
@@ -129,7 +154,6 @@ PlayerNet *createClient(char *serverIP, int port, int id, int x, int y)
     pClient->y = y;
     return pClient;
 }
-
 
 // UDP
 

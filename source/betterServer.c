@@ -175,6 +175,15 @@ void checkIncommingTCP(Server *pServer)
             if (SDL_GetTicks() - pServer->clients[i].timeout > 5000)
             {
                 printf("Player %d timed out\n Disconnection them\n", i);
+                pServer->clients[i].data.disconnectedFlag = 1;
+                for(int j = 0; j < pServer->nrOfClients; j++)
+                {
+                    if(j != i)
+                    {
+                        SDLNet_TCP_Send(pServer->clients[j].tcpSocket, &pServer->clients[i].data, sizeof(Player));
+                        printf("Sent disconnect info to player %d about %d\n", j, i);
+                    }
+                }
                 SDLNet_TCP_Close(pServer->clients[i].tcpSocket);
                 SDLNet_DelSocket(pServer->socketSetTCP, pServer->clients[i].tcpSocket);
                 for (i; i < pServer->nrOfClients; i++)
@@ -228,8 +237,17 @@ void checkIncommingTCP(Server *pServer)
 
         break;
     case SENDING_PLAYER_ID:
-        bytesSent = SDLNet_TCP_Send(pServer->clients[pServer->nrOfClients].tcpSocket, &pServer->nrOfClients, sizeof(pServer->nrOfClients));
-        if (bytesSent != sizeof(pServer->nrOfClients))
+        int id = 0;
+        for(int i = 0; i < pServer->nrOfClients; i++)
+        {
+            if(id == pServer->clients[i].id)
+            {
+                id++;   // increment id
+                i = 0;  // restart loop to check if id already exists
+            }
+        }
+        bytesSent = SDLNet_TCP_Send(pServer->clients[pServer->nrOfClients].tcpSocket, &id, sizeof(id));
+        if (bytesSent != sizeof(id))
         {
             printf("Error: packet loss when sending player id\n");
         }
@@ -249,13 +267,9 @@ void checkIncommingTCP(Server *pServer)
                         printf("Error when reciving Player struct over TCP\n");
                         dbgPrint();
                     }
-                    if (pServer->clients[pServer->nrOfClients].data.id != pServer->nrOfClients)
-                    {
-                        printf("Error: Client Recived client isnt the same as joined client");
-                    }
                     char buffer[32];
                     sprintf(buffer, "%d %s", pServer->clients[pServer->nrOfClients].data.id, pServer->clients[pServer->nrOfClients].data.name);
-                    pServer->pClientText[i] = createText(pServer->pRenderer, 0, 0, 0, pServer->pFont, buffer, pServer->windowWidth / 2, i * pServer->fontSize + 3 * pServer->fontSize);
+                    pServer->pClientText[i] = createText(pServer->pRenderer, 0, 0, 0, pServer->pFont, buffer, pServer->windowWidth / 2, pServer->clients[pServer->nrOfClients].data.id * pServer->fontSize + 3 * pServer->fontSize);
                     pServer->nrOfClients++;
                     pServer->tcpState++;
                 }

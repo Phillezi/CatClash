@@ -755,6 +755,26 @@ Player *createNewMultiPlayer(Game *pGame, int size, Player data)
     return pNew_arr;
 }
 
+Player *removePlayer(Game *pGame, int size)
+{
+    if (pGame->pMultiPlayer == NULL)
+    {
+        printf("ERROR: Player array is empty\n");
+        return NULL;
+    }
+
+    printf("Shrinking memory for player array\n");
+    Player *pNew_arr = (Player *)realloc(pGame->pMultiPlayer, size * sizeof(Player));
+    if (pNew_arr == NULL)
+    {
+        printf("ERROR when reallocating memory for player array\n");
+        return NULL;
+    }
+
+    pGame->pMultiPlayer = pNew_arr;
+    return pNew_arr;
+}
+
 int getAlivePlayers(Game *pGame)
 {
     int nrOfPlayersAlive = 0;
