@@ -514,7 +514,7 @@ void *updateScreen(void *pGameIn)
         {
             for (int i = 0; i < 4; i++)
             {
-                if ((id = playerCollision(*pGame->pPlayer, pGame->pMultiPlayer, pGame->nrOfPlayers, dir[i], pGame->world.tileSize)) != -1)
+                if ((id = playerCollision(*pGame->pPlayer, pGame->pMultiPlayer, pGame->nrOfPlayers, dir[i], pGame->world.tileSize, 1)) != -1)
                     if (pGame->pMultiPlayer[id].charging)
                     {
                         collision = 1;
