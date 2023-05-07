@@ -27,11 +27,7 @@ int main(int argv, char **args)
         {
             checkIncommingTCP(&server);
             checkIncommingUDP(&server);
-//            if (SDL_GetTicks() - lastScreenUpdateTick >= 1000 / 60)
-//            {
-//                lastScreenUpdateTick = SDL_GetTicks();
-                updateServerWindow(&server);
-//            }
+            updateServerWindow(&server);
             SDL_Event event;
             while (SDL_PollEvent(&event))
             {
