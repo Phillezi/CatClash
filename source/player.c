@@ -129,7 +129,7 @@ void *handleInput(void *pGameIn) // Game *pGame)
                 pGame->pPlayer->x = pGame->portalList[temp].x;
                 pGame->pPlayer->y = pGame->portalList[temp].y;
             }
-            if (((id = playerCollision(*pGame->pPlayer, pGame->pMultiPlayer, pGame->nrOfPlayers, pGame->pPlayer->prevKeyPressed, pGame->world.tileSize)) == -1) && (checkCollision(*pGame->pPlayer, pGame->map, pGame->pPlayer->prevKeyPressed, pGame->world.tileSize) <= 0))
+            if (((id = playerCollision(*pGame->pPlayer, pGame->pMultiPlayer, pGame->nrOfPlayers, pGame->pPlayer->prevKeyPressed, pGame->world.tileSize, 0)) == -1) && (checkCollision(*pGame->pPlayer, pGame->map, pGame->pPlayer->prevKeyPressed, pGame->world.tileSize) <= 0))
             {
                 movePlayer(pGame->pPlayer, pGame->pPlayer->prevKeyPressed);
             }
@@ -175,7 +175,7 @@ void *handleInput(void *pGameIn) // Game *pGame)
                         pGame->pPlayer->y = pGame->portalList[temp].y;
                     }
                 }
-                if ((checkCollision(*pGame->pPlayer, pGame->map, 'W', pGame->world.tileSize) < 1) && (playerCollision(*pGame->pPlayer, pGame->pMultiPlayer, pGame->nrOfPlayers, 'W', pGame->world.tileSize) == -1))
+                if ((checkCollision(*pGame->pPlayer, pGame->map, 'W', pGame->world.tileSize) < 1) && (playerCollision(*pGame->pPlayer, pGame->pMultiPlayer, pGame->nrOfPlayers, 'W', pGame->world.tileSize, 0) == -1))
                 {
                     movePlayer(pGame->pPlayer, 'W');
                 }
@@ -192,7 +192,7 @@ void *handleInput(void *pGameIn) // Game *pGame)
                         pGame->pPlayer->y = pGame->portalList[temp].y;
                     }
                 }
-                if ((checkCollision(*pGame->pPlayer, pGame->map, 'A', pGame->world.tileSize) < 1) && (playerCollision(*pGame->pPlayer, pGame->pMultiPlayer, pGame->nrOfPlayers, 'A', pGame->world.tileSize) == -1))
+                if ((checkCollision(*pGame->pPlayer, pGame->map, 'A', pGame->world.tileSize) < 1) && (playerCollision(*pGame->pPlayer, pGame->pMultiPlayer, pGame->nrOfPlayers, 'A', pGame->world.tileSize, 0) == -1))
                 {
                     movePlayer(pGame->pPlayer, 'A');
                 }
@@ -209,7 +209,7 @@ void *handleInput(void *pGameIn) // Game *pGame)
                         pGame->pPlayer->y = pGame->portalList[temp].y;
                     }
                 }
-                if ((checkCollision(*pGame->pPlayer, pGame->map, 'S', pGame->world.tileSize) < 1) && (playerCollision(*pGame->pPlayer, pGame->pMultiPlayer, pGame->nrOfPlayers, 'S', pGame->world.tileSize) == -1))
+                if ((checkCollision(*pGame->pPlayer, pGame->map, 'S', pGame->world.tileSize) < 1) && (playerCollision(*pGame->pPlayer, pGame->pMultiPlayer, pGame->nrOfPlayers, 'S', pGame->world.tileSize, 0) == -1))
                 {
                     movePlayer(pGame->pPlayer, 'S');
                 }
@@ -226,7 +226,7 @@ void *handleInput(void *pGameIn) // Game *pGame)
                         pGame->pPlayer->y = pGame->portalList[temp].y;
                     }
                 }
-                if ((checkCollision(*pGame->pPlayer, pGame->map, 'D', pGame->world.tileSize) < 1) && (playerCollision(*pGame->pPlayer, pGame->pMultiPlayer, pGame->nrOfPlayers, 'D', pGame->world.tileSize) == -1))
+                if ((checkCollision(*pGame->pPlayer, pGame->map, 'D', pGame->world.tileSize) < 1) && (playerCollision(*pGame->pPlayer, pGame->pMultiPlayer, pGame->nrOfPlayers, 'D', pGame->world.tileSize, 0) == -1))
                 {
                     movePlayer(pGame->pPlayer, 'D');
                 }
@@ -283,7 +283,7 @@ void movePlayer(Player *pPlayer, char direction)
     pPlayer->idle = 0;
 }
 
-int playerCollision(Player player, Player players[], int nrOfPlayers, char direction, int tileSize)
+int playerCollision(Player player, Player players[], int nrOfPlayers, char direction, int tileSize, int extraLength)
 {
     if (nrOfPlayers == 0)
         return -1;
@@ -293,22 +293,22 @@ int playerCollision(Player player, Player players[], int nrOfPlayers, char direc
         switch (direction)
         {
         case 'W': // First checks if rows overlap then if columns overlap
-            if ((player.y > players[i].y) && (player.y - 1 < players[i].y + tileSize - 1))
+            if ((player.y > players[i].y) && (player.y - 1 - extraLength < players[i].y + tileSize - 1))
                 if (((player.x == players[i].x) || ((players[i].x + (tileSize - 1) > player.x) && (players[i].x < player.x)) || ((players[i].x > player.x) && (players[i].x < player.x + (tileSize - 1)))))
                     return i;
             break;
         case 'A': // First checks if columns overlap then if rows overlap
-            if ((player.x > players[i].x) && (player.x - 1 < players[i].x + tileSize - 1))
+            if ((player.x > players[i].x) && (player.x - 1 - extraLength < players[i].x + tileSize - 1))
                 if (((player.y == players[i].y) || ((players[i].y + (tileSize - 1) > player.y) && (players[i].y < player.y)) || ((players[i].y > player.y) && (players[i].y < player.y + (tileSize - 1)))))
                     return i;
             break;
         case 'S': // First checks if rows overlap then if columns overlap
-            if ((player.y < players[i].y) && (player.y + tileSize > players[i].y))
+            if ((player.y < players[i].y) && (player.y + tileSize + extraLength > players[i].y))
                 if (((player.x == players[i].x) || ((players[i].x + (tileSize - 1) > player.x) && (players[i].x < player.x)) || ((players[i].x > player.x) && (players[i].x < player.x + (tileSize - 1)))))
                     return i;
             break;
         case 'D': // First checks if columns overlap then if rows overlap
-            if ((player.x < players[i].x) && (player.x + tileSize > players[i].x))
+            if ((player.x < players[i].x) && (player.x + tileSize + extraLength > players[i].x))
                 if (((player.y == players[i].y) || ((players[i].y + (tileSize - 1) > player.y) && (players[i].y < player.y)) || ((players[i].y > player.y) && (players[i].y < player.y + (tileSize - 1)))))
                     return i;
             break;
