@@ -723,7 +723,8 @@ void drawPlayer(Game *pGame, Player player, int i)
                 SDL_RenderCopyEx(pGame->pRenderer, pGame->pPlayerTexture, &pGame->gSpriteClips[i][frame[i] + 3 + 8 + 8], &player.rect, 0, NULL, flip);
             break;
         }
-        frame[i] = (((SDL_GetTicks() - prevTime[i]) % 1000) / 125);
+        if (((SDL_GetTicks() - prevTime[i]) % 1000) / 95) { frame[i]++; prevTime[i] = SDL_GetTicks(); }
+        if (frame[i] >= 8) frame[i] = 0;
     }
     else if (player.state == DEAD)
         SDL_RenderCopyEx(pGame->pRenderer, pGame->pPlayerTexture, &pGame->gSpriteClips[i][27], &player.rect, 0, NULL, SDL_FLIP_NONE);
