@@ -5,9 +5,12 @@
 #include <string.h>
 #include "init.h"
 #include "text.h"
+#include "ioHandler.h"
 #define PORT 1234
 
 int initServer(Server *pServer);
+int getMapToHost(Server *pServer);
+void *sendMapToPlayer(void *pServerIn);
 void checkIncommingTCP(Server *pServer);
 void checkIncommingUDP(Server *pServer);
 void checkUDPClient(Server *pServer, PlayerUdpPkg data);
@@ -141,9 +144,6 @@ int initServer(Server *pServer)
         pServer->clients[i].id = 8888;
     }
 
-    if (initMap(pServer->map, "map", 16))
-        return 1;
-
     pServer->pServerStateText = createText(pServer->pRenderer, 0, 0, 0, pServer->pFont, "Server is Ready", pServer->windowWidth / 2, pServer->fontSize);
     pServer->progressBar.x = (pServer->windowWidth / 2) - ((pServer->fontSize * IDLE) / 2);
     pServer->progressBar.y = 1.5 * pServer->fontSize;
@@ -151,6 +151,112 @@ int initServer(Server *pServer)
     pServer->progressBar.w = 0;
 
     pServer->updateScreenFlag = 1;
+
+    if (getMapToHost(pServer))
+        return 1;
+
+    return 0;
+}
+
+int getMapToHost(Server *pServer)
+{
+    int nrOfMaps = 0, selected = 0, previousTime = 0;
+    char **mapfiles = checkFolderAndReturnList(SAVE_MAP_PATH, &nrOfMaps);
+    bool exit = false;
+    Text *pText[nrOfMaps];
+
+    for (int i = 0; i < nrOfMaps; i++)
+    {
+        if (!(i == selected))
+            pText[i] = createText(pServer->pRenderer, 100, 100, 100, pServer->pFont, mapfiles[i], pServer->windowWidth / 2, (pServer->windowHeight / 2) + ((i - selected) * pServer->fontSize));
+        else
+        {
+            pText[i] = createText(pServer->pRenderer, 0, 0, 0, pServer->pFont, mapfiles[i], pServer->windowWidth / 2, (pServer->windowHeight / 2) + ((i - selected) * pServer->fontSize));
+        }
+    }
+
+    while (!exit)
+    {
+        SDL_Event event;
+        while (SDL_PollEvent(&event))
+        {
+            if (event.type == SDL_QUIT)
+            {
+                exit = true;
+                for (int i = 0; i < nrOfMaps; i++)
+                    freeText(pText[i]);
+                freeTextList(mapfiles, nrOfMaps);
+                return 1;
+                break;
+            }
+
+            else if (event.type == SDL_MOUSEWHEEL || event.type == SDL_KEYDOWN || event.type == SDL_MOUSEBUTTONDOWN)
+            {
+                if (event.wheel.y < 0 && event.type == SDL_MOUSEWHEEL || event.key.keysym.sym == SDLK_DOWN) // scroll up
+                {
+                    if (selected < nrOfMaps - 1)
+                    {
+                        selected++;
+                        for (int i = 0; i < nrOfMaps; i++)
+                        {
+                            freeText(pText[i]);
+                            if (!(i == selected))
+                                pText[i] = createText(pServer->pRenderer, 100, 100, 100, pServer->pFont, mapfiles[i], pServer->windowWidth / 2, (pServer->windowHeight / 2) + ((i - selected) * pServer->fontSize));
+                            else
+                            {
+                                pText[i] = createText(pServer->pRenderer, 0, 0, 0, pServer->pFont, mapfiles[i], pServer->windowWidth / 2, (pServer->windowHeight / 2) + ((i - selected) * pServer->fontSize));
+                            }
+                        }
+                        initMap(pServer->map, mapfiles[selected], pServer->fontSize / 10);
+                    }
+                }
+                else if (event.wheel.y > 0 && event.type == SDL_MOUSEWHEEL || event.key.keysym.sym == SDLK_UP) // scroll down
+                {
+                    if (selected > 0)
+                    {
+                        selected--;
+                        for (int i = 0; i < nrOfMaps; i++)
+                        {
+                            freeText(pText[i]);
+                            if (!(i == selected))
+                                pText[i] = createText(pServer->pRenderer, 100, 100, 100, pServer->pFont, mapfiles[i], pServer->windowWidth / 2, (pServer->windowHeight / 2) + ((i - selected) * pServer->fontSize));
+                            else
+                            {
+                                pText[i] = createText(pServer->pRenderer, 0, 0, 0, pServer->pFont, mapfiles[i], pServer->windowWidth / 2, (pServer->windowHeight / 2) + ((i - selected) * pServer->fontSize));
+                            }
+                        }
+                        initMap(pServer->map, mapfiles[selected], pServer->fontSize / 10);
+                    }
+                }
+                else if (event.key.keysym.sym == SDLK_RETURN || event.button.button == SDL_BUTTON_LEFT)
+                {
+                    if (initMap(pServer->map, mapfiles[selected], 16))
+                        return 1;
+                    exit = true;
+                }
+            }
+        }
+        if (SDL_GetTicks() - previousTime >= 1000 / 60)
+        {
+            previousTime = SDL_GetTicks();
+
+            SDL_SetRenderDrawColor(pServer->pRenderer, 255, 255, 255, 255);
+            SDL_RenderClear(pServer->pRenderer);
+            /*for (int i = 0; i < MAPSIZE * MAPSIZE; i++)
+            {
+                if (pServer->map[i].type > 0 && pServer->map[i].type < TILES)
+                    SDL_RenderCopy(pServer->pRenderer, pServer->pTileTextures[pServer->map[i].type], NULL, &pServer->map[i].wall);
+            }*/
+            for (int i = 0; i < nrOfMaps; i++)
+            {
+                if (i != selected)
+                    drawText(pText[i], pServer->pRenderer);
+            }
+            drawText(pText[selected], pServer->pRenderer);
+
+            SDL_RenderPresent(pServer->pRenderer);
+        }
+    }
 
     return 0;
 }
@@ -331,7 +437,7 @@ void checkIncommingTCP(Server *pServer)
             freeText(pServer->pServerStateText);
         pServer->pServerStateText = createText(pServer->pRenderer, 0, 0, 0, pServer->pFont, buffer, pServer->windowWidth / 2, pServer->fontSize);
         pServer->progressBar.w = pServer->fontSize * pServer->tcpState;
-        if(pServer->tcpState == IDLE)
+        if (pServer->tcpState == IDLE)
             pServer->progressBar.w = 0;
         pServer->updateScreenFlag = 1;
     }

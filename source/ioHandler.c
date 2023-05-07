@@ -4,19 +4,19 @@
 
 void checkFolder(char *folderPath)
 {
-    DIR *directroy;
+    DIR *directory;
     struct dirent *dir;
-    directroy = opendir(folderPath);
-    if (directroy)
+    directory = opendir(folderPath);
+    if (directory)
     {
         int i = 0;
-        while ((dir = readdir(directroy)) != NULL)
+        while ((dir = readdir(directory)) != NULL)
         {
 
             printf("%s\n", dir->d_name);
             i++;
         }
-        closedir(directroy);
+        closedir(directory);
     }
 }
 
@@ -57,6 +57,7 @@ char **checkFolderAndReturnList(char *folderPath , int *arrLen)
         return NULL;
     }
 }
+
 void freeTextList(char **strArr, int len){
     for(int i = 0; i < len; i++){
         if(strArr[i]){

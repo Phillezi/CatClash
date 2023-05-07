@@ -35,8 +35,6 @@ int initTextureTiles(SDL_Renderer *pRenderer, SDL_Window *pWindow, SDL_Texture *
     Expected in-parameters: pRenderer, pWindow, &pTexturePlayer
     Returns -1 if it fails
 */
-
-
 int initTexturePlayer(SDL_Renderer *pRenderer, SDL_Window *pWindow, SDL_Texture **pTexturePlayer)
 {
     SDL_Rect srcRect;
@@ -236,6 +234,7 @@ int readConfig(Game *pGame)
     }
     return 0;
 }
+
 void findPortal(Game *pGame)
 {
     pGame->nrOfPortals = 0;
