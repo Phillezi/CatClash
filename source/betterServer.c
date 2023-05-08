@@ -16,9 +16,20 @@ int tcpSetup(Server *pServer);
 int udpSetup(Server *pServer);
 int getMapToHost(Server *pServer);
 void *sendMapToPlayer(void *pServerIn);
+
 void checkIncommingTCP(Server *pServer);
+void addTCPClient(Server *pServer, TCPsocket client);
+void checkTCPTimeout(Server *pServer);
+void occupySpawntile(Server *pServer);
+int getFreeClientId(Server *pServer);
+void sendPlayerId(Server *pServer);
+void getPlayerData(Server *pServer, int clientIndex);
+void sendPlayerData(Server *pServer);
+void updateTCPStateText(Server *pServer);
+
 void checkIncommingUDP(Server *pServer);
 void checkUDPClient(Server *pServer, PlayerUdpPkg data);
+
 void updateServerWindow(Server *pServer);
 void dbgPrint();
 void closeS(Server *pServer);
@@ -182,19 +193,19 @@ int udpSetup(Server *pServer)
 int initServer(Server *pServer)
 {
     // INITIALIZE SDL
-    if(setupSDL(pServer))
+    if (setupSDL(pServer))
         return 1;
 
     // INITIALIZE TTF
-    if(setupText(pServer))
+    if (setupText(pServer))
         return 1;
 
     // SETUP TCP
-    if(tcpSetup(pServer))
+    if (tcpSetup(pServer))
         return 1;
 
     // SETUP UDP
-    if(udpSetup(pServer))
+    if (udpSetup(pServer))
         return 1;
 
     // SETUP MAP
@@ -321,6 +332,151 @@ void *sendMapToPlayer(void *pServerIn)
     }
 }
 
+void addTCPClient(Server *pServer, TCPsocket client)
+{
+    pServer->clients[pServer->nrOfClients].tcpSocket = client;
+    SDLNet_TCP_AddSocket(pServer->socketSetTCP, pServer->clients[pServer->nrOfClients].tcpSocket);
+    printf("User: %d joined!\n", pServer->nrOfClients);
+    pServer->tcpState = CLIENT_JOINING;
+}
+
+void checkTCPTimeout(Server *pServer)
+{
+    for (int i = 0; i < pServer->nrOfClients; i++)
+    {
+        if (SDL_GetTicks() - pServer->clients[i].timeout > 5000)
+        {
+            printf("Player %d timed out\n Disconnection them\n", i);
+            pServer->clients[i].data.disconnectedFlag = 1;
+            for (int j = 0; j < pServer->nrOfClients; j++)
+            {
+                if (j != i)
+                {
+                    SDLNet_TCP_Send(pServer->clients[j].tcpSocket, &pServer->clients[i].data, sizeof(Player));
+                    printf("Sent disconnect info to player %d about %d\n", j, i);
+                }
+            }
+            SDLNet_TCP_Close(pServer->clients[i].tcpSocket);
+            SDLNet_DelSocket(pServer->socketSetTCP, (SDLNet_GenericSocket)pServer->clients[i].tcpSocket);
+            for (i; i < pServer->nrOfClients; i++)
+            {
+                if (i + 1 < MAX_PLAYERS)
+                {
+                    pServer->clients[i] = pServer->clients[i + 1];
+                    pServer->pClientText[i] = pServer->pClientText[i + 1];
+                }
+                else
+                {
+                    pServer->clients[i].address.port = 8888;
+                    pServer->clients[i].address.host = 8888;
+                    pServer->clients[i].id = 8888;
+                    freeText(pServer->pClientText[i]);
+                }
+            }
+            pServer->nrOfClients--;
+            pServer->updateScreenFlag = 1;
+        }
+    }
+}
+
+void occupySpawntile(Server *pServer)
+{
+    for (int i = 0; i < MAPSIZE * MAPSIZE; i++)
+    {
+        if (pServer->map[i].type == -1)
+        {
+            pServer->map[i].type = 0;
+            i = MAPSIZE * MAPSIZE;
+        }
+    }
+}
+
+int getFreeClientId(Server *pServer)
+{
+    int id = 0;
+    for (int i = 0; i < pServer->nrOfClients; i++)
+    {
+        if (id == pServer->clients[i].id)
+        {
+            id++;  // increment id
+            i = 0; // restart loop to check if id already exists
+        }
+    }
+    return id;
+}
+
+void sendPlayerId(Server *pServer)
+{
+    int id = getFreeClientId(pServer);
+    int bytesSent = SDLNet_TCP_Send(pServer->clients[pServer->nrOfClients].tcpSocket, &id, sizeof(id));
+    if (bytesSent != sizeof(id))
+    {
+        printf("Error: packet loss when sending player id\n");
+    }
+    pServer->tcpState++;
+}
+
+void getPlayerData(Server *pServer, int clientIndex)
+{
+    pServer->clients[clientIndex].timeout = SDL_GetTicks();
+    int bytesRecv = SDLNet_TCP_Recv(pServer->clients[pServer->nrOfClients].tcpSocket, &pServer->clients[pServer->nrOfClients].data, sizeof(Player));
+    if (bytesRecv != sizeof(Player))
+    {
+        printf("Error when reciving Player struct over TCP\n");
+        dbgPrint();
+    }
+    char buffer[32];
+    sprintf(buffer, "%d %s", pServer->clients[pServer->nrOfClients].data.id, pServer->clients[pServer->nrOfClients].data.name);
+    pServer->pClientText[clientIndex] = createText(pServer->pRenderer, 0, 0, 0, pServer->pFont, buffer, pServer->windowWidth / 2, pServer->clients[pServer->nrOfClients].data.id * pServer->fontSize + 3 * pServer->fontSize);
+    pServer->updateScreenFlag = 1;
+    pServer->nrOfClients++;
+    pServer->tcpState++;
+}
+
+void sendPlayerData(Server *pServer)
+{
+    for (int i = 0; i < pServer->nrOfClients - 1; i++)
+    {
+        SDLNet_TCP_Send(pServer->clients[pServer->nrOfClients - 1].tcpSocket, &pServer->clients[i].data, sizeof(Player));
+        printf("Sent Playerdata of id: %d to new player\n", pServer->clients[i].data.id);
+        SDLNet_TCP_Send(pServer->clients[i].tcpSocket, &pServer->clients[pServer->nrOfClients - 1].data, sizeof(Player));
+    }
+}
+
+void updateTCPStateText(Server *pServer)
+{
+    char buffer[31];
+    switch (pServer->tcpState)
+    {
+    case IDLE:
+        strcpy(buffer, "Server is IDLE");
+        break;
+    case CLIENT_JOINING:
+        strcpy(buffer, "CLIENT IS JOINING");
+        break;
+    case SENDING_MAP:
+        strcpy(buffer, "SENDING MAP TO CLIENT");
+        break;
+    case SENDING_PLAYER_ID:
+        strcpy(buffer, "SENDING PLAYER ID");
+        break;
+    case GET_PLAYER_DATA:
+        strcpy(buffer, "WAITING FOR PLAYER DATA");
+        break;
+    case SEND_NEW_PLATER_DATA:
+        strcpy(buffer, "SENDING DATA TO NEW PLAYER");
+        break;
+    }
+    printf("Server state changed to: %s\n", buffer);
+    if (pServer->pServerStateText)
+        freeText(pServer->pServerStateText);
+    pServer->pServerStateText = createText(pServer->pRenderer, 0, 0, 0, pServer->pFont, buffer, pServer->windowWidth / 2, pServer->fontSize);
+    pServer->progressBar.w = pServer->fontSize * pServer->tcpState;
+    if (pServer->tcpState == IDLE)
+        pServer->progressBar.w = 0;
+    pServer->updateScreenFlag = 1;
+}
+
 void checkIncommingTCP(Server *pServer)
 {
     pthread_t mapThread;
@@ -333,49 +489,12 @@ void checkIncommingTCP(Server *pServer)
             printf("TCP ACCEPTED\n");
             if (pServer->nrOfClients < MAX_PLAYERS)
             {
-                pServer->clients[pServer->nrOfClients].tcpSocket = tmpClient;
-                SDLNet_TCP_AddSocket(pServer->socketSetTCP, pServer->clients[pServer->nrOfClients].tcpSocket);
-                printf("User: %d joined!\n", pServer->nrOfClients);
-                // SDLNet_TCP_Close(tmpClient);
-                pServer->tcpState = CLIENT_JOINING;
-            }
-        }
-        for (int i = 0; i < pServer->nrOfClients; i++)
-        {
-            if (SDL_GetTicks() - pServer->clients[i].timeout > 5000)
-            {
-                printf("Player %d timed out\n Disconnection them\n", i);
-                pServer->clients[i].data.disconnectedFlag = 1;
-                for (int j = 0; j < pServer->nrOfClients; j++)
-                {
-                    if (j != i)
-                    {
-                        SDLNet_TCP_Send(pServer->clients[j].tcpSocket, &pServer->clients[i].data, sizeof(Player));
-                        printf("Sent disconnect info to player %d about %d\n", j, i);
-                    }
-                }
-                SDLNet_TCP_Close(pServer->clients[i].tcpSocket);
-                SDLNet_DelSocket(pServer->socketSetTCP, (SDLNet_GenericSocket)pServer->clients[i].tcpSocket);
-                for (i; i < pServer->nrOfClients; i++)
-                {
-                    if (i + 1 < MAX_PLAYERS)
-                    {
-                        pServer->clients[i] = pServer->clients[i + 1];
-                        pServer->pClientText[i] = pServer->pClientText[i + 1];
-                    }
-                    else
-                    {
-                        pServer->clients[i].address.port = 8888;
-                        pServer->clients[i].address.host = 8888;
-                        pServer->clients[i].id = 8888;
-                        freeText(pServer->pClientText[i]);
-                    }
-                }
-                pServer->nrOfClients--;
-                pServer->updateScreenFlag = 1;
+                addTCPClient(pServer, tmpClient);
             }
         }
     }
+
+    checkTCPTimeout(pServer);
 
     switch (pServer->tcpState)
     {
@@ -388,35 +507,12 @@ void checkIncommingTCP(Server *pServer)
         if (pServer->mapPos == MAPSIZE * MAPSIZE) // check if server is done sending map
         {
             pthread_join(mapThread, NULL);
-            // Change the spawntile to occupied since the newly joined player will spawn there
-            for (int i = 0; i < MAPSIZE * MAPSIZE; i++)
-            {
-                if (pServer->map[i].type == -1)
-                {
-                    pServer->map[i].type = 0;
-                    i = MAPSIZE * MAPSIZE;
-                }
-            }
+            occupySpawntile(pServer);
             pServer->tcpState++;
         }
-
         break;
     case SENDING_PLAYER_ID:
-        int id = 0;
-        for (int i = 0; i < pServer->nrOfClients; i++)
-        {
-            if (id == pServer->clients[i].id)
-            {
-                id++;  // increment id
-                i = 0; // restart loop to check if id already exists
-            }
-        }
-        bytesSent = SDLNet_TCP_Send(pServer->clients[pServer->nrOfClients].tcpSocket, &id, sizeof(id));
-        if (bytesSent != sizeof(id))
-        {
-            printf("Error: packet loss when sending player id\n");
-        }
-        pServer->tcpState++;
+        sendPlayerId(pServer);
         break;
     case GET_PLAYER_DATA:
         while (SDLNet_CheckSockets(pServer->socketSetTCP, 0) > 0)
@@ -425,67 +521,21 @@ void checkIncommingTCP(Server *pServer)
             {
                 if (SDLNet_SocketReady(pServer->clients[i].tcpSocket))
                 {
-                    pServer->clients[i].timeout = SDL_GetTicks();
-                    bytesRecv = SDLNet_TCP_Recv(pServer->clients[pServer->nrOfClients].tcpSocket, &pServer->clients[pServer->nrOfClients].data, sizeof(Player));
-                    if (bytesRecv != sizeof(Player))
-                    {
-                        printf("Error when reciving Player struct over TCP\n");
-                        dbgPrint();
-                    }
-                    char buffer[32];
-                    sprintf(buffer, "%d %s", pServer->clients[pServer->nrOfClients].data.id, pServer->clients[pServer->nrOfClients].data.name);
-                    pServer->pClientText[i] = createText(pServer->pRenderer, 0, 0, 0, pServer->pFont, buffer, pServer->windowWidth / 2, pServer->clients[pServer->nrOfClients].data.id * pServer->fontSize + 3 * pServer->fontSize);
-                    pServer->updateScreenFlag = 1;
-                    pServer->nrOfClients++;
-                    pServer->tcpState++;
+                    getPlayerData(pServer, i);
                 }
             }
         }
         break;
 
     case SEND_NEW_PLATER_DATA:
-        for (int i = 0; i < pServer->nrOfClients - 1; i++)
-        {
-            SDLNet_TCP_Send(pServer->clients[pServer->nrOfClients - 1].tcpSocket, &pServer->clients[i].data, sizeof(Player));
-            printf("Sent Playerdata of id: %d to new player\n", pServer->clients[i].data.id);
-            SDLNet_TCP_Send(pServer->clients[i].tcpSocket, &pServer->clients[pServer->nrOfClients - 1].data, sizeof(Player));
-        }
+        sendPlayerData(pServer);
         pServer->tcpState = IDLE;
         printf("DONE: Player joining complete!\n");
         break;
     }
     if (prevState != pServer->tcpState)
     {
-        char buffer[31];
-        switch (pServer->tcpState)
-        {
-        case IDLE:
-            strcpy(buffer, "Server is IDLE");
-            break;
-        case CLIENT_JOINING:
-            strcpy(buffer, "CLIENT IS JOINING");
-            break;
-        case SENDING_MAP:
-            strcpy(buffer, "SENDING MAP TO CLIENT");
-            break;
-        case SENDING_PLAYER_ID:
-            strcpy(buffer, "SENDING PLAYER ID");
-            break;
-        case GET_PLAYER_DATA:
-            strcpy(buffer, "WAITING FOR PLAYER DATA");
-            break;
-        case SEND_NEW_PLATER_DATA:
-            strcpy(buffer, "SENDING DATA TO NEW PLAYER");
-            break;
-        }
-        printf("Server state changed to: %s\n", buffer);
-        if (pServer->pServerStateText)
-            freeText(pServer->pServerStateText);
-        pServer->pServerStateText = createText(pServer->pRenderer, 0, 0, 0, pServer->pFont, buffer, pServer->windowWidth / 2, pServer->fontSize);
-        pServer->progressBar.w = pServer->fontSize * pServer->tcpState;
-        if (pServer->tcpState == IDLE)
-            pServer->progressBar.w = 0;
-        pServer->updateScreenFlag = 1;
+        updateTCPStateText(pServer);
     }
 }
 
