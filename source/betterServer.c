@@ -9,6 +9,11 @@
 #define PORT 1234
 
 int initServer(Server *pServer);
+int setupSDL(Server *pServer);
+int setupText(Server *pServer);
+int setupText(Server *pServer);
+int tcpSetup(Server *pServer);
+int udpSetup(Server *pServer);
 int getMapToHost(Server *pServer);
 void *sendMapToPlayer(void *pServerIn);
 void checkIncommingTCP(Server *pServer);
@@ -22,7 +27,6 @@ int main(int argv, char **args)
 {
     Server server;
     bool exit = false;
-    Uint32 lastScreenUpdateTick = 0;
     server.tcpState = IDLE;
     if (!initServer(&server))
     {
@@ -46,10 +50,21 @@ int main(int argv, char **args)
     return 1;
 }
 
-int initServer(Server *pServer)
+int setupSDL(Server *pServer)
 {
-    // INITIALIZE SDL
     if (SDL_Init(SDL_INIT_VIDEO))
+    {
+        dbgPrint();
+        return 1;
+    }
+
+    if (SDLNet_Init())
+    {
+        dbgPrint();
+        return 1;
+    }
+
+    if (TTF_Init())
     {
         dbgPrint();
         return 1;
@@ -82,8 +97,11 @@ int initServer(Server *pServer)
         dbgPrint();
         return 1;
     }
+    return 0;
+}
 
-    // INITIALIZE TTF
+int setupText(Server *pServer)
+{
     if (TTF_Init())
     {
         dbgPrint();
@@ -103,9 +121,21 @@ int initServer(Server *pServer)
         return 1;
     }
 
+    pServer->pServerStateText = createText(pServer->pRenderer, 0, 0, 0, pServer->pFont, "Server is Ready", pServer->windowWidth / 2, pServer->fontSize);
+    pServer->progressBar.x = (pServer->windowWidth / 2) - ((pServer->fontSize * IDLE) / 2);
+    pServer->progressBar.y = 1.5 * pServer->fontSize;
+    pServer->progressBar.h = pServer->fontSize;
+    pServer->progressBar.w = 0;
+
+    pServer->updateScreenFlag = 1;
+
+    return 0;
+}
+
+int tcpSetup(Server *pServer)
+{
     pServer->nrOfClients = 0;
 
-    // SETUP TCP
     if (SDLNet_ResolveHost(&pServer->TCPip, NULL, PORT))
     {
         fprintf(stderr, "SDLNet_ResolveHost: %s\n", SDLNet_GetError());
@@ -123,8 +153,11 @@ int initServer(Server *pServer)
         fprintf(stderr, "SDLNet_TCP_Open: %s\n", SDLNet_GetError());
         return 1;
     }
+    return 0;
+}
 
-    // SETUP UDP
+int udpSetup(Server *pServer)
+{
     if (!(pServer->socketUDP = SDLNet_UDP_Open(PORT)))
     {
         fprintf(stderr, "SDLNet_UDP_Open: %s\n", SDLNet_GetError());
@@ -143,15 +176,28 @@ int initServer(Server *pServer)
         pServer->clients[i].address.host = 8888;
         pServer->clients[i].id = 8888;
     }
+    return 0;
+}
 
-    pServer->pServerStateText = createText(pServer->pRenderer, 0, 0, 0, pServer->pFont, "Server is Ready", pServer->windowWidth / 2, pServer->fontSize);
-    pServer->progressBar.x = (pServer->windowWidth / 2) - ((pServer->fontSize * IDLE) / 2);
-    pServer->progressBar.y = 1.5 * pServer->fontSize;
-    pServer->progressBar.h = pServer->fontSize;
-    pServer->progressBar.w = 0;
+int initServer(Server *pServer)
+{
+    // INITIALIZE SDL
+    if(setupSDL(pServer))
+        return 1;
 
-    pServer->updateScreenFlag = 1;
+    // INITIALIZE TTF
+    if(setupText(pServer))
+        return 1;
 
+    // SETUP TCP
+    if(tcpSetup(pServer))
+        return 1;
+
+    // SETUP UDP
+    if(udpSetup(pServer))
+        return 1;
+
+    // SETUP MAP
     if (getMapToHost(pServer))
         return 1;
 
