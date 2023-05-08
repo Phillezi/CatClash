@@ -5,11 +5,18 @@
 #define COMMAND(x) "start " x
 #else
 #ifdef __linux__
+#define OS_RECOGNIZED 1
+#define COMMAND(x) "./" x
+#else
+#ifdef __APPLE__
+#define OS_RECOGNIZED 1
 #define COMMAND(x) "./" x
 #else
 #define OS_RECOGNIZED 0
 #endif
 #endif
+#endif
+
 /*
     I have not tested this on linux or macos
 */
