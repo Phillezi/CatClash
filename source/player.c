@@ -830,7 +830,8 @@ void checkChargingPlayers(Game *pGame) {
         if (collision) {
             printf("player charge: %d\tcolliding charge: %d\n", pGame->pPlayer->charge, pGame->pMultiPlayer[id].charge);
             if (pGame->pPlayer->charge < pGame->pMultiPlayer[id].charge || pGame->pPlayer->charging == 0) {
-                pGame->pPlayer->hp -= (pGame->pMultiPlayer[id].charge - pGame->pPlayer->charge) * 2;
+                if (pGame->pPlayer->charging == 0) pGame->pPlayer->hp -= pGame->pMultiPlayer[id].charge * 2;
+                else pGame->pPlayer->hp -= (pGame->pMultiPlayer[id].charge - pGame->pPlayer->charge) * 2;
                 prevTime = SDL_GetTicks();
                 invincibilityTicks = 1000;
             }
