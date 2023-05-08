@@ -1,5 +1,6 @@
 #include "newClient.h"
 #include "player.h"
+#include "getDefaultGateway.h"
 
 enum TCPSTATE
 {
@@ -87,6 +88,17 @@ int initTCPConnection(Game *pGame)
         return 1;
     }
     SDLNet_TCP_AddSocket(pGame->pClient->sockets, pGame->pClient->socketTCP);
+
+    Uint8 joinFlag = 1;
+    int bytesSend = SDLNet_TCP_Send(pGame->pClient->socketTCP, &joinFlag, sizeof(joinFlag));
+    if (bytesSend != sizeof(joinFlag))
+    {
+        printf("Error: could not join server :(\n");
+        SDLNet_FreeSocketSet(pGame->pClient->sockets);
+        SDLNet_TCP_DelSocket(pGame->pClient->sockets, pGame->pClient->socketTCP);
+        return 1;
+    }
+
     return 0;
 }
 
@@ -123,7 +135,7 @@ void checkTCP(Game *pGame)
                             printf("Removed player %d\n", data.id);
                             pGame->nrOfPlayers--;
                             pGame->pMultiPlayer = removePlayer(pGame, pGame->nrOfPlayers);
-                            //destroyPlayer(&pGame->pMultiPlayer[i]); // venne om de här funkar
+                            // destroyPlayer(&pGame->pMultiPlayer[i]); // venne om de här funkar
                         }
                     }
                 }
@@ -203,4 +215,74 @@ void getPlayerData(Game *pGame)
             }
         }
     }
+}
+
+void *tryOpenIp(void *pIpIn)
+{
+    IPaddress *pIp = (IPaddress *)pIpIn;
+    pthread_setcanceltype(PTHREAD_CANCEL_ASYNCHRONOUS, NULL);
+    TCPsocket socket = SDLNet_TCP_Open(pIp);
+    pthread_setcanceltype(PTHREAD_CANCEL_DEFERRED, NULL);
+    if (socket != NULL)
+    {
+        Uint8 joinFlag = 0;
+        int bytesSend = SDLNet_TCP_Send(socket, &joinFlag, sizeof(joinFlag));
+        printf("Server found at %d:%d\n", pIp->host, pIp->port);
+        SDLNet_TCP_Close(socket);
+        pthread_exit((void *)1);
+    }
+    pthread_exit((void *)0);
+}
+
+void *timeoutIpThread(void *threadID)
+{
+    SDL_Delay(1);
+    pthread_cancel(*(pthread_t *)threadID);
+    pthread_exit(NULL);
+}
+
+void *scanForGamesOnLocalNetwork(void *arg)
+{
+    bool *pDoneFlag = (bool *)arg, found_ip = false;
+    pthread_t tryOpenThread[255], timeoutThread[255];
+    IPaddress ip;
+    char ipStr[16], defaultGateway[16];
+    void *pThread_Result, *pFound_Ip;
+
+    getDefaultGateway(defaultGateway);
+    Uint8 startval = defaultGateway[strlen(defaultGateway) - 1] - (int)'0' + 1;
+    printf("Default Gateway: %s\n", defaultGateway);
+    defaultGateway[strlen(defaultGateway) - 1] = 0;
+
+    for (int i = startval; i < 255; i++)
+    {
+        sprintf(ipStr, "%s%d", defaultGateway, i);
+        printf("Trying: %s\n", ipStr);
+        SDLNet_ResolveHost(&ip, ipStr, 1234);
+        pthread_create(&tryOpenThread[i], NULL, tryOpenIp, &ip);
+        pthread_create(&timeoutThread[i], NULL, timeoutIpThread, &tryOpenThread);
+    }
+    int found_ip_index = -1;
+    for (int i = startval; i < 255; i++)
+    {
+        pthread_join(tryOpenThread[i], &pThread_Result);
+        if (*(int *)pThread_Result)
+        {
+            found_ip_index = i;
+        }
+        pthread_join(timeoutThread[i], NULL);
+        printf("Done: Thread:%d\n", i);
+    }
+    if (found_ip_index != -1)
+    {
+        printf("Server found at: %s%d\n", defaultGateway, found_ip_index);
+    }
+    else
+    {
+        printf("Server not found on local network.\n");
+    }
+
+    printf("Done with scan\n");
+    *pDoneFlag = true; // set done with scan flag to true
+    pthread_exit(NULL);
 }

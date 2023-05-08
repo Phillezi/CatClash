@@ -390,10 +390,14 @@ int mapSelection(Game *pGame)
 int joinServerMenu(Game *pGame)
 {
     int previousTime = 0;
-    bool exit = false;
+    bool exit = false, doneWithScanFlag = false;
     Text *pPrompt = createText(pGame->pRenderer, 0, 0, 0, pGame->ui.pFpsFont, "Type the IP", pGame->windowWidth / 2, (pGame->windowHeight / 2) - (2 * pGame->world.tileSize));
     Text *pPrompt2 = createText(pGame->pRenderer, 0, 0, 0, pGame->ui.pFpsFont, "of the Server:", pGame->windowWidth / 2, (pGame->windowHeight / 2) - pGame->world.tileSize);
     Text *pIpText = createText(pGame->pRenderer, 200, 200, 200, pGame->ui.pFpsFont, "192.168.0.1:1234", pGame->windowWidth / 2, (pGame->windowHeight / 2));
+
+    pthread_t scanNetThread;
+    IPaddress ip;
+    pthread_create(&scanNetThread, NULL, scanForGamesOnLocalNetwork, &doneWithScanFlag);
 
     int counter = 0;
     char text[31] = {0};
@@ -440,6 +444,23 @@ int joinServerMenu(Game *pGame)
                 }
             }
         }
+        if(doneWithScanFlag)
+        {
+            doneWithScanFlag = false;
+            void *pThread_Result;
+            pthread_join(scanNetThread, pThread_Result);
+            int id = *(int *)pThread_Result;
+            if(id)
+            {
+                printf("Recived ip: 192.168.1.%d\n", id);
+            }
+            else
+            {
+                printf("Didnt find any servers on local network");
+            }
+                
+        }
+            
         if (SDL_GetTicks() - previousTime >= 1000 / 60)
         {
             previousTime = SDL_GetTicks();
