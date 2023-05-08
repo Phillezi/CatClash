@@ -18,6 +18,7 @@ int getMapToHost(Server *pServer);
 void *sendMapToPlayer(void *pServerIn);
 
 void checkIncommingTCP(Server *pServer);
+void checkTCPForNewConnections(Server *pServer);
 void addTCPClient(Server *pServer, TCPsocket client);
 void checkTCPTimeout(Server *pServer);
 void occupySpawntile(Server *pServer);
@@ -332,6 +333,19 @@ void *sendMapToPlayer(void *pServerIn)
     }
 }
 
+void checkTCPForNewConnections(Server *pServer)
+{
+    TCPsocket tmpClient = SDLNet_TCP_Accept(pServer->socketTCP);
+    if (tmpClient)
+    {
+        printf("TCP ACCEPTED\n");
+        if (pServer->nrOfClients < MAX_PLAYERS)
+        {
+            addTCPClient(pServer, tmpClient);
+        }
+    }
+}
+
 void addTCPClient(Server *pServer, TCPsocket client)
 {
     pServer->clients[pServer->nrOfClients].tcpSocket = client;
@@ -481,24 +495,13 @@ void checkIncommingTCP(Server *pServer)
 {
     pthread_t mapThread;
     int bytesSent, bytesRecv, prevState = pServer->tcpState;
-    if (pServer->tcpState == IDLE)
-    {
-        TCPsocket tmpClient = SDLNet_TCP_Accept(pServer->socketTCP);
-        if (tmpClient)
-        {
-            printf("TCP ACCEPTED\n");
-            if (pServer->nrOfClients < MAX_PLAYERS)
-            {
-                addTCPClient(pServer, tmpClient);
-            }
-        }
-    }
 
     checkTCPTimeout(pServer);
 
     switch (pServer->tcpState)
     {
     case IDLE:
+        checkTCPForNewConnections(pServer);
         break;
     case CLIENT_JOINING:
         pthread_create(&mapThread, NULL, sendMapToPlayer, pServer); // start sending map
