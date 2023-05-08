@@ -15,8 +15,16 @@ all:
 	$(CC) $(CFLAGS) $(SRCDIR)/ioHandler.c
 	$(CC) $(CFLAGS) $(SRCDIR)/newClient.c
 	$(CC) main.o init.o text.o player.o menu.o levelEditor.o ioHandler.o newClient.o -o main.exe $(LDFLAGS)
+	@echo "Building Server"
 	$(CC) $(CFLAGS) $(SRCDIR)/betterServer.c 
 	$(CC) betterServer.o init.o text.o ioHandler.o -o betterServer.exe $(LDFLAGS)
+
+launcher:
+	@echo "Building GameLauncher"
+	$(CC) $(CFLAGS) $(SRCDIR)/gameLauncher.c
+	$(CC) gameLauncher.o -o launcher.exe
+
+
 
 demo:
 	@echo "Building demo"
