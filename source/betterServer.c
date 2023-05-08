@@ -537,13 +537,16 @@ void dbgPrint()
 
 void closeS(Server *pServer)
 {
+    printf("Closing server...\n");
     if (pServer->pServerStateText)
         freeText(pServer->pServerStateText);
+    printf("Closing clients...\n");
     for (int i = 0; i < pServer->nrOfClients; i++)
     {
         SDLNet_TCP_Close(pServer->clients[i].tcpSocket);
         SDLNet_DelSocket(pServer->socketSetTCP, (SDLNet_GenericSocket)pServer->clients[i].tcpSocket);
     }
+    printf("DONE: Closing clients\n");
 
     // CLOSE NET
     if (pServer->socketSetTCP)
@@ -578,4 +581,5 @@ void closeS(Server *pServer)
     SDLNet_Quit();
 
     SDL_Quit();
+    printf("DONE: Closing server\n");
 }
