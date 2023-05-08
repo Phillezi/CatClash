@@ -234,17 +234,25 @@ void *tryOpenIp(void *pIpIn)
     pthread_exit((void *)0);
 }
 
-void *timeoutIpThread(void *threadID)
+void *timeoutIpThread(void *threadIDIn)
 {
-    SDL_Delay(1);
-    pthread_cancel(*(pthread_t *)threadID);
+    pthread_t threadID = *(pthread_t *)threadIDIn;
+    SDL_Delay(2000);
+    printf("Thread %d timed out\nAttempting to cancel...\n", threadID);
+    if(_pthread_tryjoin(threadID, NULL) != 0)
+    {
+        pthread_cancel(threadID);
+        printf("Thread cancelled!\n");
+    }  
+    else
+        printf("Thread was done\n");
+    
     pthread_exit(NULL);
 }
 
 void *scanForGamesOnLocalNetwork(void *arg)
 {
     bool *pDoneFlag = (bool *)arg, found_ip = false;
-    pthread_t tryOpenThread[255], timeoutThread[255];
     IPaddress ip;
     char ipStr[16], defaultGateway[16];
     void *pThread_Result, *pFound_Ip;
@@ -254,23 +262,24 @@ void *scanForGamesOnLocalNetwork(void *arg)
     printf("Default Gateway: %s\n", defaultGateway);
     defaultGateway[strlen(defaultGateway) - 1] = 0;
 
+    pthread_t tryOpenThread[255-startval], timeoutThread[255-startval];
     for (int i = startval; i < 255; i++)
     {
         sprintf(ipStr, "%s%d", defaultGateway, i);
         printf("Trying: %s\n", ipStr);
         SDLNet_ResolveHost(&ip, ipStr, 1234);
-        pthread_create(&tryOpenThread[i], NULL, tryOpenIp, &ip);
-        pthread_create(&timeoutThread[i], NULL, timeoutIpThread, &tryOpenThread);
+        pthread_create(&tryOpenThread[i-startval], NULL, tryOpenIp, &ip);
+        pthread_create(&timeoutThread[i-startval], NULL, timeoutIpThread, &tryOpenThread[i-startval]);
     }
     int found_ip_index = -1;
     for (int i = startval; i < 255; i++)
     {
-        pthread_join(tryOpenThread[i], &pThread_Result);
+        pthread_join(tryOpenThread[i-startval], &pThread_Result);
         if (*(int *)pThread_Result)
         {
             found_ip_index = i;
         }
-        pthread_join(timeoutThread[i], NULL);
+        pthread_join(timeoutThread[i-startval], NULL);
         printf("Done: Thread:%d\n", i);
     }
     if (found_ip_index != -1)
