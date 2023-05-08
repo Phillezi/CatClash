@@ -309,7 +309,7 @@ void checkIncommingTCP(Server *pServer)
                     }
                 }
                 SDLNet_TCP_Close(pServer->clients[i].tcpSocket);
-                SDLNet_DelSocket(pServer->socketSetTCP, pServer->clients[i].tcpSocket);
+                SDLNet_DelSocket(pServer->socketSetTCP, (SDLNet_GenericSocket)pServer->clients[i].tcpSocket);
                 for (i; i < pServer->nrOfClients; i++)
                 {
                     if (i + 1 < MAX_PLAYERS)
@@ -542,7 +542,7 @@ void closeS(Server *pServer)
     for (int i = 0; i < pServer->nrOfClients; i++)
     {
         SDLNet_TCP_Close(pServer->clients[i].tcpSocket);
-        SDLNet_DelSocket(pServer->socketSetTCP, pServer->clients[i].tcpSocket);
+        SDLNet_DelSocket(pServer->socketSetTCP, (SDLNet_GenericSocket)pServer->clients[i].tcpSocket);
     }
 
     // CLOSE NET
