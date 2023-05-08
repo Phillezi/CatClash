@@ -180,8 +180,8 @@ typedef enum STCPSTATE TcpState;
 
 struct info
 {
-    IPaddress address;
     int id;
+    IPaddress address;
     TCPsocket tcpSocket;
     Player data;
     Uint32 timeout;
@@ -208,8 +208,8 @@ struct server
     int fontSize;
 
     int nrOfClients;
-    Info clients[MAX_PLAYERS];
-    Player playerData[MAX_PLAYERS];
+    //Info clients[MAX_PLAYERS];
+    Info *pClients;
 
     TCPsocket socketTCP;
     IPaddress TCPip;

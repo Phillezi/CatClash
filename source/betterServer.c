@@ -62,6 +62,53 @@ int main(int argv, char **args)
     return 1;
 }
 
+Info *createNewClient(Info *pClients, int size, TCPsocket socket)
+{
+    Info *pNew_arr;
+    if (pClients)
+    {
+        printf("Expanding memory for client array\n");
+        pNew_arr = (Info *)realloc(pClients, (size + 1) * sizeof(Info));
+    }
+    else
+    {
+        printf("Allocating memory for client array\n");
+        pNew_arr = (Info *)malloc(sizeof(Info));
+    }
+
+    if (pNew_arr == NULL)
+    {
+        printf("ERROR when allocating new memory for joined client\n");
+        return NULL;
+    }
+
+    if (&socket)
+        pNew_arr[size].tcpSocket = socket;
+
+    pNew_arr[size].timeout = SDL_GetTicks();
+
+    return pNew_arr;
+}
+
+void removeClient(Info *pClients, int size)
+{
+    if (pClients == NULL)
+    {
+        printf("ERROR: Client array is empty\n");
+        return;
+    }
+
+    printf("Shrinking memory for client array\n");
+    Info *pNew_arr = (Info *)realloc(pClients, size * sizeof(Info));
+    if (pNew_arr == NULL && size > 0)
+    {
+        printf("ERROR when reallocating memory for client array\n");
+        return;
+    }
+
+    pClients = pNew_arr;
+}
+
 int setupSDL(Server *pServer)
 {
     if (SDL_Init(SDL_INIT_VIDEO))
@@ -181,13 +228,14 @@ int udpSetup(Server *pServer)
         fprintf(stderr, "SDLNet_AllocPacket: %s\n", SDLNet_GetError());
         return 1;
     }
-
+    /*
     for (int i = 0; i < MAX_PLAYERS; i++)
     {
         pServer->clients[i].address.port = 8888;
         pServer->clients[i].address.host = 8888;
         pServer->clients[i].id = 8888;
     }
+    */
     return 0;
 }
 
@@ -325,7 +373,7 @@ void *sendMapToPlayer(void *pServerIn)
     int bytesSent = 0;
     for (pServer->mapPos = 0; pServer->mapPos < MAPSIZE * MAPSIZE; pServer->mapPos++)
     {
-        bytesSent = SDLNet_TCP_Send(pServer->clients[pServer->nrOfClients].tcpSocket, &pServer->map[pServer->mapPos].type, sizeof(pServer->map[pServer->mapPos].type)); // send map to client
+        bytesSent = SDLNet_TCP_Send(pServer->pClients[pServer->nrOfClients].tcpSocket, &pServer->map[pServer->mapPos].type, sizeof(pServer->map[pServer->mapPos].type)); // send map to client
         if (bytesSent != sizeof(pServer->map[pServer->mapPos].type))
         {
             printf("Error: packet loss when sending map nr:%d\n", pServer->mapPos);
@@ -335,6 +383,12 @@ void *sendMapToPlayer(void *pServerIn)
 
 void checkTCPForNewConnections(Server *pServer)
 {
+    // Sleep for 5sec and wait for client
+    if (SDLNet_TCP_Wait(pServer->socketTCP, SDL_TICKS_PASSED(SDL_GetTicks(), 5000)) == 0)
+    {
+        return;
+    }
+
     TCPsocket tmpClient = SDLNet_TCP_Accept(pServer->socketTCP);
     if (tmpClient)
     {
@@ -348,8 +402,9 @@ void checkTCPForNewConnections(Server *pServer)
 
 void addTCPClient(Server *pServer, TCPsocket client)
 {
-    pServer->clients[pServer->nrOfClients].tcpSocket = client;
-    SDLNet_TCP_AddSocket(pServer->socketSetTCP, pServer->clients[pServer->nrOfClients].tcpSocket);
+    // pServer->clients[pServer->nrOfClients].tcpSocket = client;
+    pServer->pClients = createNewClient(pServer->pClients, pServer->nrOfClients, client);
+    SDLNet_TCP_AddSocket(pServer->socketSetTCP, pServer->pClients[pServer->nrOfClients].tcpSocket);
     printf("User: %d joined!\n", pServer->nrOfClients);
     pServer->tcpState = CLIENT_JOINING;
 }
@@ -358,32 +413,33 @@ void checkTCPTimeout(Server *pServer)
 {
     for (int i = 0; i < pServer->nrOfClients; i++)
     {
-        if (SDL_GetTicks() - pServer->clients[i].timeout > 5000)
+        if (SDL_GetTicks() - pServer->pClients[i].timeout > 5000)
         {
             printf("Player %d timed out\n Disconnection them\n", i);
-            pServer->clients[i].data.disconnectedFlag = 1;
+            pServer->pClients[i].data.disconnectedFlag = 1;
             for (int j = 0; j < pServer->nrOfClients; j++)
             {
                 if (j != i)
                 {
-                    SDLNet_TCP_Send(pServer->clients[j].tcpSocket, &pServer->clients[i].data, sizeof(Player));
+                    SDLNet_TCP_Send(pServer->pClients[j].tcpSocket, &pServer->pClients[i].data, sizeof(Player));
                     printf("Sent disconnect info to player %d about %d\n", j, i);
                 }
             }
-            SDLNet_TCP_Close(pServer->clients[i].tcpSocket);
-            SDLNet_DelSocket(pServer->socketSetTCP, (SDLNet_GenericSocket)pServer->clients[i].tcpSocket);
+            SDLNet_TCP_Close(pServer->pClients[i].tcpSocket);
+            SDLNet_DelSocket(pServer->socketSetTCP, (SDLNet_GenericSocket)pServer->pClients[i].tcpSocket);
             for (i; i < pServer->nrOfClients; i++)
             {
-                if (i + 1 < MAX_PLAYERS)
+                if (i + 1 < pServer->nrOfClients)
                 {
-                    pServer->clients[i] = pServer->clients[i + 1];
+                    pServer->pClients[i] = pServer->pClients[i + 1];
                     pServer->pClientText[i] = pServer->pClientText[i + 1];
                 }
                 else
                 {
-                    pServer->clients[i].address.port = 8888;
-                    pServer->clients[i].address.host = 8888;
-                    pServer->clients[i].id = 8888;
+                    removeClient(pServer->pClients, pServer->nrOfClients);
+                    // pServer->pClients[i].address.port = 8888;
+                    // pServer->pClients[i].address.host = 8888;
+                    // pServer->pClients[i].id = 8888;
                     freeText(pServer->pClientText[i]);
                 }
             }
@@ -410,7 +466,7 @@ int getFreeClientId(Server *pServer)
     int id = 0;
     for (int i = 0; i < pServer->nrOfClients; i++)
     {
-        if (id == pServer->clients[i].id)
+        if (id == pServer->pClients[i].id)
         {
             id++;  // increment id
             i = 0; // restart loop to check if id already exists
@@ -422,7 +478,7 @@ int getFreeClientId(Server *pServer)
 void sendPlayerId(Server *pServer)
 {
     int id = getFreeClientId(pServer);
-    int bytesSent = SDLNet_TCP_Send(pServer->clients[pServer->nrOfClients].tcpSocket, &id, sizeof(id));
+    int bytesSent = SDLNet_TCP_Send(pServer->pClients[pServer->nrOfClients].tcpSocket, &id, sizeof(id));
     if (bytesSent != sizeof(id))
     {
         printf("Error: packet loss when sending player id\n");
@@ -432,16 +488,16 @@ void sendPlayerId(Server *pServer)
 
 void getPlayerData(Server *pServer, int clientIndex)
 {
-    pServer->clients[clientIndex].timeout = SDL_GetTicks();
-    int bytesRecv = SDLNet_TCP_Recv(pServer->clients[pServer->nrOfClients].tcpSocket, &pServer->clients[pServer->nrOfClients].data, sizeof(Player));
+    pServer->pClients[clientIndex].timeout = SDL_GetTicks();
+    int bytesRecv = SDLNet_TCP_Recv(pServer->pClients[pServer->nrOfClients].tcpSocket, &pServer->pClients[pServer->nrOfClients].data, sizeof(Player));
     if (bytesRecv != sizeof(Player))
     {
         printf("Error when reciving Player struct over TCP\n");
         dbgPrint();
     }
     char buffer[32];
-    sprintf(buffer, "%d %s", pServer->clients[pServer->nrOfClients].data.id, pServer->clients[pServer->nrOfClients].data.name);
-    pServer->pClientText[clientIndex] = createText(pServer->pRenderer, 0, 0, 0, pServer->pFont, buffer, pServer->windowWidth / 2, pServer->clients[pServer->nrOfClients].data.id * pServer->fontSize + 3 * pServer->fontSize);
+    sprintf(buffer, "%d %s", pServer->pClients[pServer->nrOfClients].data.id, pServer->pClients[pServer->nrOfClients].data.name);
+    pServer->pClientText[clientIndex] = createText(pServer->pRenderer, 0, 0, 0, pServer->pFont, buffer, pServer->windowWidth / 2, pServer->pClients[pServer->nrOfClients].data.id * pServer->fontSize + 3 * pServer->fontSize);
     pServer->updateScreenFlag = 1;
     pServer->nrOfClients++;
     pServer->tcpState++;
@@ -451,9 +507,9 @@ void sendPlayerData(Server *pServer)
 {
     for (int i = 0; i < pServer->nrOfClients - 1; i++)
     {
-        SDLNet_TCP_Send(pServer->clients[pServer->nrOfClients - 1].tcpSocket, &pServer->clients[i].data, sizeof(Player));
-        printf("Sent Playerdata of id: %d to new player\n", pServer->clients[i].data.id);
-        SDLNet_TCP_Send(pServer->clients[i].tcpSocket, &pServer->clients[pServer->nrOfClients - 1].data, sizeof(Player));
+        SDLNet_TCP_Send(pServer->pClients[pServer->nrOfClients - 1].tcpSocket, &pServer->pClients[i].data, sizeof(Player));
+        printf("Sent Playerdata of id: %d to new player\n", pServer->pClients[i].data.id);
+        SDLNet_TCP_Send(pServer->pClients[i].tcpSocket, &pServer->pClients[pServer->nrOfClients - 1].data, sizeof(Player));
     }
 }
 
@@ -522,7 +578,7 @@ void checkIncommingTCP(Server *pServer)
         {
             for (int i = 0; i < pServer->nrOfClients + 1; i++)
             {
-                if (SDLNet_SocketReady(pServer->clients[i].tcpSocket))
+                if (SDLNet_SocketReady(pServer->pClients[i].tcpSocket))
                 {
                     getPlayerData(pServer, i);
                 }
@@ -554,14 +610,14 @@ void checkIncommingUDP(Server *pServer)
         checkUDPClient(pServer, data);
         for (int i = 0; i < pServer->nrOfClients; i++)
         {
-            if (pServer->clients[i].id != data.id && pServer->clients[i].address.port != 8888)
+            if (pServer->pClients[i].id != data.id && pServer->pClients[i].address.port != 8888)
             {
                 /*
                 Skicka mindre(i bytes) structar som innehåller bara x y riktning och id
                 */
                 memcpy(pServer->pSent->data, &data, sizeof(PlayerUdpPkg));
-                pServer->pSent->address.port = pServer->clients[i].address.port;
-                pServer->pSent->address.host = pServer->clients[i].address.host;
+                pServer->pSent->address.port = pServer->pClients[i].address.port;
+                pServer->pSent->address.host = pServer->pClients[i].address.host;
                 pServer->pSent->len = sizeof(PlayerUdpPkg);
 
                 if (!SDLNet_UDP_Send(pServer->socketUDP, -1, pServer->pSent))
@@ -569,16 +625,16 @@ void checkIncommingUDP(Server *pServer)
                     printf("Error: Could not send package\n");
                 }
             }
-            else if (pServer->clients[i].data.id == data.id)
+            else if (pServer->pClients[i].data.id == data.id)
             {
-                pServer->clients[i].timeout = SDL_GetTicks();
-                pServer->clients[i].data.x = data.x;
-                pServer->clients[i].data.y = data.y;
-                pServer->clients[i].data.prevKeyPressed = data.direction;
-                pServer->clients[i].data.idle = data.idle;
-                pServer->clients[i].data.charging = data.charging;
-                pServer->clients[i].data.charge = data.charge;
-                pServer->clients[i].data.state = data.state;
+                pServer->pClients[i].timeout = SDL_GetTicks();
+                pServer->pClients[i].data.x = data.x;
+                pServer->pClients[i].data.y = data.y;
+                pServer->pClients[i].data.prevKeyPressed = data.direction;
+                pServer->pClients[i].data.idle = data.idle;
+                pServer->pClients[i].data.charging = data.charging;
+                pServer->pClients[i].data.charge = data.charge;
+                pServer->pClients[i].data.state = data.state;
             }
         }
     }
@@ -586,20 +642,20 @@ void checkIncommingUDP(Server *pServer)
 
 void checkUDPClient(Server *pServer, PlayerUdpPkg data)
 {
-    for (int i = 0; i < MAX_PLAYERS; i++)
+    for (int i = 0; i < pServer->nrOfClients; i++)
     {
-        if (pServer->clients[i].address.port == pServer->pRecieve->address.port && pServer->clients[i].address.host == pServer->pRecieve->address.host) // is this the sender?
+        if (pServer->pClients[i].address.port == pServer->pRecieve->address.port && pServer->pClients[i].address.host == pServer->pRecieve->address.host) // is this the sender?
         {
             // sender is known
             return;
         }
         else // no
         {
-            if ((pServer->clients[i].address.port == 8888) && (pServer->clients[i].address.host == 8888)) // is it a empty slot?
+            if ((pServer->pClients[i].address.port == 8888) && (pServer->pClients[i].address.host == 8888)) // is it a empty slot?
             {
-                pServer->clients[i].address.port = pServer->pRecieve->address.port; // Save client in slot
-                pServer->clients[i].address.host = pServer->pRecieve->address.host;
-                pServer->clients[i].id = data.id;
+                pServer->pClients[i].address.port = pServer->pRecieve->address.port; // Save client in slot
+                pServer->pClients[i].address.host = pServer->pRecieve->address.host;
+                pServer->pClients[i].id = data.id;
                 printf("New udp client joined!\n");
                 return;
             }
@@ -642,9 +698,10 @@ void closeS(Server *pServer)
     printf("Closing clients...\n");
     for (int i = 0; i < pServer->nrOfClients; i++)
     {
-        SDLNet_TCP_Close(pServer->clients[i].tcpSocket);
-        SDLNet_DelSocket(pServer->socketSetTCP, (SDLNet_GenericSocket)pServer->clients[i].tcpSocket);
+        SDLNet_TCP_Close(pServer->pClients[i].tcpSocket);
+        SDLNet_DelSocket(pServer->socketSetTCP, (SDLNet_GenericSocket)pServer->pClients[i].tcpSocket);
     }
+    free(pServer->pClients);
     printf("DONE: Closing clients\n");
 
     // CLOSE NET
