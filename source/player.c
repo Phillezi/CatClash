@@ -829,7 +829,10 @@ void checkChargingPlayers(Game *pGame) {
 
         if (collision) {
             printf("player charge: %d\tcolliding charge: %d\n", pGame->pPlayer->charge, pGame->pMultiPlayer[id].charge);
-            if (pGame->pPlayer->charge < pGame->pMultiPlayer[id].charge || pGame->pPlayer->charging == 0) {
+            if ((id = checkDirectionsOtherThanFront(pGame)) != -1) {
+                pGame->pPlayer->hp -= pGame->pMultiPlayer[id].charge * 2;
+            }
+            else if (pGame->pPlayer->charge < pGame->pMultiPlayer[id].charge || pGame->pPlayer->charging == 0) {
                 if (pGame->pPlayer->charging == 0) pGame->pPlayer->hp -= pGame->pMultiPlayer[id].charge * 2;
                 else pGame->pPlayer->hp -= (pGame->pMultiPlayer[id].charge - pGame->pPlayer->charge) * 2;
                 prevTime = SDL_GetTicks();
@@ -837,4 +840,37 @@ void checkChargingPlayers(Game *pGame) {
             }
         }
     }
+}
+
+int checkDirectionsOtherThanFront(Game *pGame) {
+    char dir[4] = {'W', 'A', 'S', 'D'};
+    int id;
+    switch (pGame->pPlayer->prevKeyPressed)
+    {
+    case 'W':
+        for (int i = 1; i < 4; i++) 
+            if (id = playerCollision(*pGame->pPlayer, pGame->pMultiPlayer, pGame->nrOfPlayers, dir[i], pGame->world.tileSize, 10) != -1)
+                return id;
+        break;
+    case 'A':
+        for (int i = 0; i < 4 && i != 1; i++) {
+            if (i == 1) continue;
+            if (id = playerCollision(*pGame->pPlayer, pGame->pMultiPlayer, pGame->nrOfPlayers, dir[i], pGame->world.tileSize, 10) != -1)
+                return id;
+        }
+        break;
+    case 'S':
+        for (int i = 0; i < 4; i++) {
+            if (i == 2) continue;
+            if ((id = playerCollision(*pGame->pPlayer, pGame->pMultiPlayer, pGame->nrOfPlayers, dir[i], pGame->world.tileSize, 10)) != -1)
+                return id;
+        }
+        break;
+    case 'D':
+        for (int i = 0; i < 3; i++) 
+            if (id = playerCollision(*pGame->pPlayer, pGame->pMultiPlayer, pGame->nrOfPlayers, dir[i], pGame->world.tileSize, 10) != -1)
+                return id;
+        break;
+    }
+    return -1;
 }
