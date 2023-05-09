@@ -136,11 +136,11 @@ void *handleInput(void *pGameIn) // Game *pGame)
             else
             {
                 if (id != -1) {
-                    if (flag == 2) {
+                    if (flag == 1) {
                         pGame->pPlayer->charge = 1;
                         flag = 0;
                     } else
-                        flag++;
+                        flag = 1;
                 }
                 else {
                     damage = pGame->pPlayer->charge * 2;
@@ -823,6 +823,9 @@ void checkChargingPlayers(Game *pGame) {
                     if (oldHealth > pGame->pPlayer->hp) {
                         prevTime = SDL_GetTicks();
                         invincibilityTicks = 1000;
+                    } else {
+                        prevTime = SDL_GetTicks();
+                        invincibilityTicks = 100;
                     }
                     break; 
                 }
@@ -835,15 +838,15 @@ void damagePlayer(Game *pGame, int id, char direction) {
     printf("player charge: %d\tcolliding charge: %d\n", pGame->pPlayer->charge, pGame->pMultiPlayer[id].charge);
 
     if (pGame->pPlayer->prevKeyPressed != direction) {
-        printf("You take damage in func 1\n");
+        printf("You take damage in func 1, player charge: %d, colliding charge: %d\n", pGame->pPlayer->charge, pGame->pMultiPlayer[id].charge);
         pGame->pPlayer->hp -= pGame->pMultiPlayer[id].charge * 2;
     }
     else if (pGame->pPlayer->charge < pGame->pMultiPlayer[id].charge && headOnCollision(pGame, id) != -1) {
-        printf("You take damage in func 2\n");
+        printf("You take damage in func 2, player charge: %d, colliding charge: %d\n", pGame->pPlayer->charge, pGame->pMultiPlayer[id].charge);
         pGame->pPlayer->hp -= (pGame->pMultiPlayer[id].charge - pGame->pPlayer->charge) * 2;
     }
     else if (pGame->pPlayer->charging == 0 && chargingIntoMe(pGame, id, direction)){
-        printf("You take damage in func 3\n");
+        printf("You take damage in func 3, player charge: %d, colliding charge: %d\n", pGame->pPlayer->charge, pGame->pMultiPlayer[id].charge);
         pGame->pPlayer->hp -= pGame->pMultiPlayer[id].charge * 2;
     }
 }
