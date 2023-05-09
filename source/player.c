@@ -135,19 +135,14 @@ void *handleInput(void *pGameIn) // Game *pGame)
             }
             else
             {
-                // damage = pGame->pPlayer->charge * 2;    // Collided with wall
-                if (id != -1)
-                {
-                    if (flag)
-                    {
+                if (id != -1) {
+                    if (flag == 2) {
                         pGame->pPlayer->charge = 1;
                         flag = 0;
-                    }
-                    else
-                        flag = 1;
+                    } else
+                        flag++;
                 }
-                else
-                {
+                else {
                     damage = pGame->pPlayer->charge * 2;
                     pGame->pPlayer->charge = 1;
                 }
@@ -827,7 +822,7 @@ void checkChargingPlayers(Game *pGame) {
 
                     if (oldHealth > pGame->pPlayer->hp) {
                         prevTime = SDL_GetTicks();
-                        invincibilityTicks = 500;
+                        invincibilityTicks = 1000;
                     }
                     break; 
                 }
@@ -843,7 +838,7 @@ void damagePlayer(Game *pGame, int id, char direction) {
         printf("You take damage in func 1\n");
         pGame->pPlayer->hp -= pGame->pMultiPlayer[id].charge * 2;
     }
-    else if (pGame->pPlayer->charge < pGame->pMultiPlayer[id].charge && headOnCollision(pGame, id) == -1) {
+    else if (pGame->pPlayer->charge < pGame->pMultiPlayer[id].charge && headOnCollision(pGame, id) != -1) {
         printf("You take damage in func 2\n");
         pGame->pPlayer->hp -= (pGame->pMultiPlayer[id].charge - pGame->pPlayer->charge) * 2;
     }
@@ -853,13 +848,13 @@ void damagePlayer(Game *pGame, int id, char direction) {
     }
 }
 
-/* \returns 1 if players are not in a head on collision, -1 if they are */
+/* \returns 1 if players are in a head on collision, -1 if they are not */
 int headOnCollision(Game *pGame, int id) {
     switch (pGame->pPlayer->prevKeyPressed) {
-    case 'W': if (pGame->pMultiPlayer[id].prevKeyPressed != 'S') return 1; break;
-    case 'A': if (pGame->pMultiPlayer[id].prevKeyPressed != 'D') return 1; break;
-    case 'S': if (pGame->pMultiPlayer[id].prevKeyPressed != 'W') return 1; break;
-    case 'D': if (pGame->pMultiPlayer[id].prevKeyPressed != 'A') return 1; break;
+    case 'W': if (pGame->pMultiPlayer[id].prevKeyPressed == 'S') return 1; break;
+    case 'A': if (pGame->pMultiPlayer[id].prevKeyPressed == 'D') return 1; break;
+    case 'S': if (pGame->pMultiPlayer[id].prevKeyPressed == 'W') return 1; break;
+    case 'D': if (pGame->pMultiPlayer[id].prevKeyPressed == 'A') return 1; break;
     }
     return -1;
 }
