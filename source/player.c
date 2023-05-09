@@ -825,9 +825,9 @@ void checkChargingPlayers(Game *pGame) {
                     int oldHealth = pGame->pPlayer->hp;
                     damagePlayer(pGame, id);
 
-                    if (oldHealth < pGame->pPlayer->hp) {
+                    if (oldHealth > pGame->pPlayer->hp) {
                         prevTime = SDL_GetTicks();
-                        invincibilityTicks = 1000;
+                        invincibilityTicks = 500;
                     }
                     break; 
                 }
@@ -847,7 +847,7 @@ void damagePlayer(Game *pGame, int id) {
         printf("You take damage in func 2\n");
         pGame->pPlayer->hp -= (pGame->pMultiPlayer[id].charge - pGame->pPlayer->charge) * 2;
     }
-    else if (pGame->pPlayer->charging == 0){
+    else if (pGame->pPlayer->charging == 0 && pGame->pPlayer->charge > 0){
         printf("You take damage in func 3\n");
         pGame->pPlayer->hp -= pGame->pMultiPlayer[id].charge * 2;
     }
