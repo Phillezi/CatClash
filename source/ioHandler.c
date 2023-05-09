@@ -1,6 +1,6 @@
-#include "ioHandler.h"
 #include <stdlib.h>
 #include <string.h>
+#include "../include/ioHandler.h"
 
 void checkFolder(char *folderPath)
 {

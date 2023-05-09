@@ -1,5 +1,5 @@
-#include "levelEditor.h"
-#include "text.h"
+#include "../include/levelEditor.h"
+#include "../include/text.h"
 
 int levelEditor(Game *pGame)
 {

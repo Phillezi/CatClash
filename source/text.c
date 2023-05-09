@@ -1,10 +1,10 @@
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_ttf.h>
-#include "text.h"
-#include "definitions.h"
 #include <stdio.h>
 #include <stdbool.h>
 #include <stdlib.h>
+#include "../include/text.h"
+#include "../include/definitions.h"
 
 Text *createText(SDL_Renderer *pRenderer, int r, int g, int b, TTF_Font *pFont, char *pString, int x, int y)
 {

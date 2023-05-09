@@ -1,11 +1,12 @@
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_net.h>
 #include <SDL2/SDL_ttf.h>
-#include "definitions.h"
 #include <string.h>
-#include "init.h"
-#include "text.h"
-#include "ioHandler.h"
+#include "../include/definitions.h"
+#include "../include/init.h"
+#include "../include/text.h"
+#include "../include/ioHandler.h"
+
 #define PORT 1234
 
 int initServer(Server *pServer);

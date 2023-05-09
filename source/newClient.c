@@ -1,5 +1,5 @@
-#include "newClient.h"
-#include "player.h"
+#include "../include/newClient.h"
+#include "../include/player.h"
 
 enum TCPSTATE
 {

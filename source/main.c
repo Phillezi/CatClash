@@ -1,16 +1,16 @@
-#include "definitions.h"
 #include <stdbool.h>
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_image.h>
 #include <SDL2/SDL_ttf.h>
-#include "init.h"
-#include "text.h"
-#include "menu.h"
-#include "player.h"
-#include "levelEditor.h"
-#include "pthread.h"
-#include "newClient.h"
 #include <time.h>
+#include "pthread.h"
+#include "../include/definitions.h"
+#include "../include/init.h"
+#include "../include/text.h"
+#include "../include/menu.h"
+#include "../include/player.h"
+#include "../include/levelEditor.h"
+#include "../include/newClient.h"
 
 int init(Game *pGame);
 void run(Game *pGame);

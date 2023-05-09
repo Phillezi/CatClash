@@ -1,12 +1,12 @@
-#include "definitions.h"
-#include "player.h"
-#include "levelEditor.h"
-#include "text.h"
 #include <stdbool.h>
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_image.h>
 #include <SDL2/SDL_ttf.h>
 #include <time.h>
+#include "../include/definitions.h"
+#include "../include/player.h"
+#include "../include/levelEditor.h"
+#include "../include/text.h"
 
 void centerPlayer(Game *pGame, Player *pPlayer)
 {

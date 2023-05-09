@@ -1,5 +1,5 @@
-#include "init.h"
 #include <string.h>
+#include "../include/init.h"
 
 /*
     initTextureTiles:

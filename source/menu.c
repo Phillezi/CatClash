@@ -1,16 +1,15 @@
-#include "definitions.h"
-#include "text.h"
-#include "menu.h"
-#include "player.h"
-#include "init.h"
 #include <stdbool.h>
 #include <string.h>
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_image.h>
 #include <SDL2/SDL_ttf.h>
-#include "ioHandler.h"
-// #include "TCPclient.h"
-#include "newClient.h"
+#include "../include/ioHandler.h"
+#include "../include/newClient.h"
+#include "../include/definitions.h"
+#include "../include/text.h"
+#include "../include/menu.h"
+#include "../include/player.h"
+#include "../include/init.h"
 
 int menu(Game *pGame)
 {
