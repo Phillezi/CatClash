@@ -288,7 +288,7 @@ void *scanForGamesOnLocalNetwork(void *arg)
     for (int i = startval; i < 255; i++)
     {
         sprintf(ipStr, "%s%d", defaultGateway, i);
-        printf("Trying: %s\n", ipStr);
+        //printf("Trying: %s\n", ipStr);
         SDLNet_ResolveHost(&net[i - startval].ip, ipStr, 1234);
         pthread_create(&tryOpenThread[i - startval], NULL, tryOpenIp, &net[i - startval]);
         pthread_create(&timeoutThread[i - startval], NULL, timeoutIpThread, &tryOpenThread[i - startval]);
@@ -299,6 +299,7 @@ void *scanForGamesOnLocalNetwork(void *arg)
     int found_ip_index = -1;
     for (int i = startval; i < 255; i++)
     {
+        SDL_Delay(10);
         _pthread_tryjoin(tryOpenThread[i - startval], NULL);
 
         if (net[i - startval].connected)
@@ -312,8 +313,8 @@ void *scanForGamesOnLocalNetwork(void *arg)
             pLocalServer->nrOfServersFound++;
             pLocalServer->foundServer = true;
         }
-
         _pthread_tryjoin(timeoutThread[i - startval], NULL);
+        
     }
     /*if (found_ip_index != -1)
     {
