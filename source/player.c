@@ -822,15 +822,20 @@ void checkChargingPlayers(Game *pGame) {
 
             if ((id = playerCollision(*pGame->pPlayer, pGame->pMultiPlayer, pGame->nrOfPlayers, dir[i], pGame->world.tileSize, extraLength)) != -1)
                 if (pGame->pMultiPlayer[id].charging) { 
-                    damagePlayer(pGame, id, &prevTime, &invincibilityTicks);
+                    int oldHealth = pGame->pPlayer->hp;
+                    damagePlayer(pGame, id);
+
+                    if (oldHealth < pGame->pPlayer->hp) {
+                        prevTime = SDL_GetTicks();
+                        invincibilityTicks = 1000;
+                    }
                     break; 
                 }
         }
     }
 }
 
-void damagePlayer(Game *pGame, int id, int *prevTime, int *ticks) {
-    int oldHealth = pGame->pPlayer->hp;
+void damagePlayer(Game *pGame, int id) {
     int tmp;
     printf("player charge: %d\tcolliding charge: %d\n", pGame->pPlayer->charge, pGame->pMultiPlayer[id].charge);
 
@@ -838,7 +843,7 @@ void damagePlayer(Game *pGame, int id, int *prevTime, int *ticks) {
         printf("You take damage in func 1\n");
         pGame->pPlayer->hp -= pGame->pMultiPlayer[tmp].charge * 2;
     }
-    else if (pGame->pPlayer->charge < pGame->pMultiPlayer[id].charge) {
+    else if (pGame->pPlayer->charge < pGame->pMultiPlayer[id].charge && checkOppositeDirection(*pGame->pPlayer, pGame->pMultiPlayer[id])) {
         printf("You take damage in func 2\n");
         pGame->pPlayer->hp -= (pGame->pMultiPlayer[id].charge - pGame->pPlayer->charge) * 2;
     }
@@ -846,10 +851,14 @@ void damagePlayer(Game *pGame, int id, int *prevTime, int *ticks) {
         printf("You take damage in func 3\n");
         pGame->pPlayer->hp -= pGame->pMultiPlayer[id].charge * 2;
     }
-    if (oldHealth < pGame->pPlayer->hp) {
-        *prevTime = SDL_GetTicks();
-        *ticks = 1000;
-    }
+}
+
+int checkOppositeDirection(Player player, Player opponent) {
+    if (player.prevKeyPressed == 'W' && opponent.prevKeyPressed == 'S') return 1;
+    if (player.prevKeyPressed == 'A' && opponent.prevKeyPressed == 'D') return 1;
+    if (player.prevKeyPressed == 'S' && opponent.prevKeyPressed == 'W') return 1;
+    if (player.prevKeyPressed == 'D' && opponent.prevKeyPressed == 'A') return 1;
+    return 0;
 }
 
 int checkDirectionsOtherThanFront(Game *pGame) {
@@ -859,13 +868,13 @@ int checkDirectionsOtherThanFront(Game *pGame) {
     {
     case 'W':
         for (int i = 1; i < 4; i++) 
-            if (id = playerCollision(*pGame->pPlayer, pGame->pMultiPlayer, pGame->nrOfPlayers, dir[i], pGame->world.tileSize, 10) != -1)
+            if ((id = playerCollision(*pGame->pPlayer, pGame->pMultiPlayer, pGame->nrOfPlayers, dir[i], pGame->world.tileSize, 10)) != -1)
                 return id;
         break;
     case 'A':
         for (int i = 0; i < 4 && i != 1; i++) {
             if (i == 1) continue;
-            if (id = playerCollision(*pGame->pPlayer, pGame->pMultiPlayer, pGame->nrOfPlayers, dir[i], pGame->world.tileSize, 10) != -1)
+            if ((id = playerCollision(*pGame->pPlayer, pGame->pMultiPlayer, pGame->nrOfPlayers, dir[i], pGame->world.tileSize, 10)) != -1)
                 return id;
         }
         break;
@@ -878,7 +887,7 @@ int checkDirectionsOtherThanFront(Game *pGame) {
         break;
     case 'D':
         for (int i = 0; i < 3; i++) 
-            if (id = playerCollision(*pGame->pPlayer, pGame->pMultiPlayer, pGame->nrOfPlayers, dir[i], pGame->world.tileSize, 10) != -1)
+            if ((id = playerCollision(*pGame->pPlayer, pGame->pMultiPlayer, pGame->nrOfPlayers, dir[i], pGame->world.tileSize, 10)) != -1)
                 return id;
         break;
     }
