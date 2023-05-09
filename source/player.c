@@ -823,7 +823,7 @@ void checkChargingPlayers(Game *pGame) {
             if ((id = playerCollision(*pGame->pPlayer, pGame->pMultiPlayer, pGame->nrOfPlayers, dir[i], pGame->world.tileSize, extraLength)) != -1)
                 if (pGame->pMultiPlayer[id].charging) { 
                     int oldHealth = pGame->pPlayer->hp;
-                    damagePlayer(pGame, id);
+                    damagePlayer(pGame, id, dir[i]);
 
                     if (oldHealth > pGame->pPlayer->hp) {
                         prevTime = SDL_GetTicks();
@@ -835,61 +835,42 @@ void checkChargingPlayers(Game *pGame) {
     }
 }
 
-void damagePlayer(Game *pGame, int id) {
+void damagePlayer(Game *pGame, int id, char direction) {
     int tmp;
     printf("player charge: %d\tcolliding charge: %d\n", pGame->pPlayer->charge, pGame->pMultiPlayer[id].charge);
 
-    if ((tmp = checkDirectionsOtherThanFront(pGame)) != -1) {
+    if ((headOnCollision(pGame, id)) != -1) {
         printf("You take damage in func 1\n");
-        pGame->pPlayer->hp -= pGame->pMultiPlayer[tmp].charge * 2;
+        pGame->pPlayer->hp -= pGame->pMultiPlayer[id].charge * 2;
     }
-    else if (pGame->pPlayer->charge < pGame->pMultiPlayer[id].charge && checkOppositeDirection(*pGame->pPlayer, pGame->pMultiPlayer[id])) {
+    else if (pGame->pPlayer->charge < pGame->pMultiPlayer[id].charge && headOnCollision(pGame, id) == -1) {
         printf("You take damage in func 2\n");
         pGame->pPlayer->hp -= (pGame->pMultiPlayer[id].charge - pGame->pPlayer->charge) * 2;
     }
-    else if (pGame->pPlayer->charging == 0 && pGame->pPlayer->charge > 0){
+    else if (pGame->pPlayer->charging == 0 && chargingIntoMe(pGame, id, direction)){
         printf("You take damage in func 3\n");
         pGame->pPlayer->hp -= pGame->pMultiPlayer[id].charge * 2;
     }
 }
 
-int checkOppositeDirection(Player player, Player opponent) {
-    if (player.prevKeyPressed == 'W' && opponent.prevKeyPressed == 'S') return 1;
-    if (player.prevKeyPressed == 'A' && opponent.prevKeyPressed == 'D') return 1;
-    if (player.prevKeyPressed == 'S' && opponent.prevKeyPressed == 'W') return 1;
-    if (player.prevKeyPressed == 'D' && opponent.prevKeyPressed == 'A') return 1;
-    return 0;
-}
-
-int checkDirectionsOtherThanFront(Game *pGame) {
-    char dir[4] = {'W', 'A', 'S', 'D'};
-    int id;
-    switch (pGame->pPlayer->prevKeyPressed)
-    {
-    case 'W':
-        for (int i = 1; i < 4; i++) 
-            if ((id = playerCollision(*pGame->pPlayer, pGame->pMultiPlayer, pGame->nrOfPlayers, dir[i], pGame->world.tileSize, 10)) != -1)
-                return id;
-        break;
-    case 'A':
-        for (int i = 0; i < 4 && i != 1; i++) {
-            if (i == 1) continue;
-            if ((id = playerCollision(*pGame->pPlayer, pGame->pMultiPlayer, pGame->nrOfPlayers, dir[i], pGame->world.tileSize, 10)) != -1)
-                return id;
-        }
-        break;
-    case 'S':
-        for (int i = 0; i < 4; i++) {
-            if (i == 2) continue;
-            if ((id = playerCollision(*pGame->pPlayer, pGame->pMultiPlayer, pGame->nrOfPlayers, dir[i], pGame->world.tileSize, 10)) != -1)
-                return id;
-        }
-        break;
-    case 'D':
-        for (int i = 0; i < 3; i++) 
-            if ((id = playerCollision(*pGame->pPlayer, pGame->pMultiPlayer, pGame->nrOfPlayers, dir[i], pGame->world.tileSize, 10)) != -1)
-                return id;
-        break;
+/* \returns 1 if players are not in a head on collision, -1 if they are */
+int headOnCollision(Game *pGame, int id) {
+    switch (pGame->pPlayer->prevKeyPressed) {
+    case 'W': if (pGame->pMultiPlayer[id].prevKeyPressed != 'W') return 1;
+    case 'A': if (pGame->pMultiPlayer[id].prevKeyPressed != 'A') return 1;
+    case 'S': if (pGame->pMultiPlayer[id].prevKeyPressed != 'S') return 1;
+    case 'D': if (pGame->pMultiPlayer[id].prevKeyPressed != 'D') return 1;
     }
     return -1;
+}
+
+/* \returns 1 if opposing player is charging into you, otherwise 0 */
+int chargingIntoMe(Game *pGame, int id, char direction) {
+    switch (direction) {
+    case 'W': if (pGame->pMultiPlayer[id].prevKeyPressed == 'S') return 1;
+    case 'A': if (pGame->pMultiPlayer[id].prevKeyPressed == 'D') return 1;
+    case 'S': if (pGame->pMultiPlayer[id].prevKeyPressed == 'W') return 1;
+    case 'D': if (pGame->pMultiPlayer[id].prevKeyPressed == 'A') return 1;
+    }
+    return 0;
 }

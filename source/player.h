@@ -21,8 +21,8 @@ Player *removePlayer(Game *pGame, int size);
 int getAlivePlayers(Game *pGame);
 int getDeadPlayers(Game *pGame);
 void checkChargingPlayers(Game *pGame);
-void damagePlayer(Game *pGame, int id);
-int checkOppositeDirection(Player player, Player opponent);
-int checkDirectionsOtherThanFront(Game *pGame);
+void damagePlayer(Game *pGame, int id, char direction);
+int headOnCollision(Game *pGame, int id);
+int chargingIntoMe(Game *pGame, int id, char direction);
 
 #endif
