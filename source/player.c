@@ -839,7 +839,7 @@ void damagePlayer(Game *pGame, int id, char direction) {
     int tmp;
     printf("player charge: %d\tcolliding charge: %d\n", pGame->pPlayer->charge, pGame->pMultiPlayer[id].charge);
 
-    if ((headOnCollision(pGame, id)) != -1) {
+    if (pGame->pPlayer->prevKeyPressed != direction) {
         printf("You take damage in func 1\n");
         pGame->pPlayer->hp -= pGame->pMultiPlayer[id].charge * 2;
     }
@@ -856,10 +856,10 @@ void damagePlayer(Game *pGame, int id, char direction) {
 /* \returns 1 if players are not in a head on collision, -1 if they are */
 int headOnCollision(Game *pGame, int id) {
     switch (pGame->pPlayer->prevKeyPressed) {
-    case 'W': if (pGame->pMultiPlayer[id].prevKeyPressed != 'W') return 1;
-    case 'A': if (pGame->pMultiPlayer[id].prevKeyPressed != 'A') return 1;
-    case 'S': if (pGame->pMultiPlayer[id].prevKeyPressed != 'S') return 1;
-    case 'D': if (pGame->pMultiPlayer[id].prevKeyPressed != 'D') return 1;
+    case 'W': if (pGame->pMultiPlayer[id].prevKeyPressed != 'S') return 1; break;
+    case 'A': if (pGame->pMultiPlayer[id].prevKeyPressed != 'D') return 1; break;
+    case 'S': if (pGame->pMultiPlayer[id].prevKeyPressed != 'W') return 1; break;
+    case 'D': if (pGame->pMultiPlayer[id].prevKeyPressed != 'A') return 1; break;
     }
     return -1;
 }
@@ -867,10 +867,10 @@ int headOnCollision(Game *pGame, int id) {
 /* \returns 1 if opposing player is charging into you, otherwise 0 */
 int chargingIntoMe(Game *pGame, int id, char direction) {
     switch (direction) {
-    case 'W': if (pGame->pMultiPlayer[id].prevKeyPressed == 'S') return 1;
-    case 'A': if (pGame->pMultiPlayer[id].prevKeyPressed == 'D') return 1;
-    case 'S': if (pGame->pMultiPlayer[id].prevKeyPressed == 'W') return 1;
-    case 'D': if (pGame->pMultiPlayer[id].prevKeyPressed == 'A') return 1;
+    case 'W': if (pGame->pMultiPlayer[id].prevKeyPressed == 'S') return 1; break;
+    case 'A': if (pGame->pMultiPlayer[id].prevKeyPressed == 'D') return 1; break;
+    case 'S': if (pGame->pMultiPlayer[id].prevKeyPressed == 'W') return 1; break;
+    case 'D': if (pGame->pMultiPlayer[id].prevKeyPressed == 'A') return 1; break;
     }
     return 0;
 }
