@@ -217,81 +217,94 @@ void getPlayerData(Game *pGame)
     }
 }
 
-void *tryOpenIp(void *pIpIn)
+struct netscantcp
 {
-    IPaddress *pIp = (IPaddress *)pIpIn;
+    IPaddress ip;
+    Uint8 connected;
+};
+typedef struct netscantcp NetScanTcp;
+
+void *tryOpenIp(void *pNetScanIn)
+{
+    NetScanTcp *pNet = (NetScanTcp *)pNetScanIn;
+    pNet->connected = 0;
     pthread_setcanceltype(PTHREAD_CANCEL_ASYNCHRONOUS, NULL);
-    TCPsocket socket = SDLNet_TCP_Open(pIp);
+    TCPsocket socket = SDLNet_TCP_Open(&pNet->ip);
     pthread_setcanceltype(PTHREAD_CANCEL_DEFERRED, NULL);
     if (socket != NULL)
     {
         Uint8 joinFlag = 0;
         int bytesSend = SDLNet_TCP_Send(socket, &joinFlag, sizeof(joinFlag));
-        printf("Server found at %d:%d\n", pIp->host, pIp->port);
+        printf("___Server found at %d:%d____\n", pNet->ip.host, pNet->ip.port);
         SDLNet_TCP_Close(socket);
-        pthread_exit((void *)1);
+        pNet->connected = 1;
     }
-    pthread_exit((void *)0);
+    return (NULL);
 }
 
 void *timeoutIpThread(void *threadIDIn)
 {
     pthread_t threadID = *(pthread_t *)threadIDIn;
-    SDL_Delay(2000);
-    printf("Thread %d timed out\nAttempting to cancel...\n", threadID);
-    if(_pthread_tryjoin(threadID, NULL) != 0)
+    SDL_Delay(10);
+    if (_pthread_tryjoin(threadID, NULL) != 0)
     {
-        pthread_cancel(threadID);
-        printf("Thread cancelled!\n");
-    }  
+        if (pthread_cancel(threadID) == 0)
+            ;
+    }
     else
         printf("Thread was done\n");
-    
+
     pthread_exit(NULL);
 }
 
 void *scanForGamesOnLocalNetwork(void *arg)
 {
-    bool *pDoneFlag = (bool *)arg, found_ip = false;
-    IPaddress ip;
+    LocalServer *pLocalServer = (LocalServer *)arg;
+    bool found_ip = false;
+
     char ipStr[16], defaultGateway[16];
     void *pThread_Result, *pFound_Ip;
 
     getDefaultGateway(defaultGateway);
     Uint8 startval = defaultGateway[strlen(defaultGateway) - 1] - (int)'0' + 1;
-    printf("Default Gateway: %s\n", defaultGateway);
+    //printf("Default Gateway: %s\n", defaultGateway);
     defaultGateway[strlen(defaultGateway) - 1] = 0;
 
-    pthread_t tryOpenThread[255-startval], timeoutThread[255-startval];
+    NetScanTcp net[255 - startval];
+    pthread_t tryOpenThread[255 - startval], timeoutThread[255 - startval];
     for (int i = startval; i < 255; i++)
     {
         sprintf(ipStr, "%s%d", defaultGateway, i);
-        printf("Trying: %s\n", ipStr);
-        SDLNet_ResolveHost(&ip, ipStr, 1234);
-        pthread_create(&tryOpenThread[i-startval], NULL, tryOpenIp, &ip);
-        pthread_create(&timeoutThread[i-startval], NULL, timeoutIpThread, &tryOpenThread[i-startval]);
+        // printf("Trying: %s\n", ipStr);
+        SDLNet_ResolveHost(&net[i - startval].ip, ipStr, 1234);
+        pthread_create(&tryOpenThread[i - startval], NULL, tryOpenIp, &net[i - startval]);
+        pthread_create(&timeoutThread[i - startval], NULL, timeoutIpThread, &tryOpenThread[i - startval]);
     }
+
+    SDL_Delay(2000); // sleep a little and let the threads work
+
     int found_ip_index = -1;
     for (int i = startval; i < 255; i++)
     {
-        pthread_join(tryOpenThread[i-startval], &pThread_Result);
-        if (*(int *)pThread_Result)
+        _pthread_tryjoin(tryOpenThread[i - startval], NULL);
+
+        if (net[i - startval].connected)
         {
             found_ip_index = i;
         }
-        pthread_join(timeoutThread[i-startval], NULL);
-        printf("Done: Thread:%d\n", i);
+
+        _pthread_tryjoin(timeoutThread[i - startval], NULL);
     }
     if (found_ip_index != -1)
     {
-        printf("Server found at: %s%d\n", defaultGateway, found_ip_index);
+        sprintf(pLocalServer->ipString, "%s%d", defaultGateway, found_ip_index);
+        pLocalServer->foundServer = true;
     }
     else
     {
-        printf("Server not found on local network.\n");
+        pLocalServer->foundServer = false;
     }
 
-    printf("Done with scan\n");
-    *pDoneFlag = true; // set done with scan flag to true
-    pthread_exit(NULL);
+    pLocalServer->searchDone = true; // set done with scan flag to true
+    return NULL;
 }
