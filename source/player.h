@@ -21,6 +21,7 @@ Player *removePlayer(Game *pGame, int size);
 int getAlivePlayers(Game *pGame);
 int getDeadPlayers(Game *pGame);
 void checkChargingPlayers(Game *pGame);
+void damagePlayer(Game *pGame, int id, int *prevTime, int *ticks);
 int checkDirectionsOtherThanFront(Game *pGame);
 
 #endif

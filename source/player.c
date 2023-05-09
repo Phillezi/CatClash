@@ -815,30 +815,40 @@ void checkChargingPlayers(Game *pGame) {
 
         for (int i = 0; i < 4; i++){
             extraLength = 0;
-            if (dir[i] == 'W' && pGame->pPlayer->prevKeyPressed == 'S') extraLength = 10;
+            if      (dir[i] == 'W' && pGame->pPlayer->prevKeyPressed == 'S') extraLength = 10;
             else if (dir[i] == 'A' && pGame->pPlayer->prevKeyPressed == 'D') extraLength = 10;
             else if (dir[i] == 'S' && pGame->pPlayer->prevKeyPressed == 'W') extraLength = 10;
             else if (dir[i] == 'D' && pGame->pPlayer->prevKeyPressed == 'A') extraLength = 10;
 
             if ((id = playerCollision(*pGame->pPlayer, pGame->pMultiPlayer, pGame->nrOfPlayers, dir[i], pGame->world.tileSize, extraLength)) != -1)
                 if (pGame->pMultiPlayer[id].charging) { 
-                    collision = 1; 
+                    damagePlayer(pGame, id, &prevTime, &invincibilityTicks);
                     break; 
                 }
         }
+    }
+}
 
-        if (collision) {
-            printf("player charge: %d\tcolliding charge: %d\n", pGame->pPlayer->charge, pGame->pMultiPlayer[id].charge);
-            if ((id = checkDirectionsOtherThanFront(pGame)) != -1) {
-                pGame->pPlayer->hp -= pGame->pMultiPlayer[id].charge * 2;
-            }
-            else if (pGame->pPlayer->charge < pGame->pMultiPlayer[id].charge || pGame->pPlayer->charging == 0) {
-                if (pGame->pPlayer->charging == 0) pGame->pPlayer->hp -= pGame->pMultiPlayer[id].charge * 2;
-                else pGame->pPlayer->hp -= (pGame->pMultiPlayer[id].charge - pGame->pPlayer->charge) * 2;
-                prevTime = SDL_GetTicks();
-                invincibilityTicks = 1000;
-            }
-        }
+void damagePlayer(Game *pGame, int id, int *prevTime, int *ticks) {
+    int oldHealth = pGame->pPlayer->hp;
+    int tmp;
+    printf("player charge: %d\tcolliding charge: %d\n", pGame->pPlayer->charge, pGame->pMultiPlayer[id].charge);
+
+    if ((tmp = checkDirectionsOtherThanFront(pGame)) != -1) {
+        printf("You take damage in func 1\n");
+        pGame->pPlayer->hp -= pGame->pMultiPlayer[tmp].charge * 2;
+    }
+    else if (pGame->pPlayer->charge < pGame->pMultiPlayer[id].charge) {
+        printf("You take damage in func 2\n");
+        pGame->pPlayer->hp -= (pGame->pMultiPlayer[id].charge - pGame->pPlayer->charge) * 2;
+    }
+    else if (pGame->pPlayer->charging == 0){
+        printf("You take damage in func 3\n");
+        pGame->pPlayer->hp -= pGame->pMultiPlayer[id].charge * 2;
+    }
+    if (oldHealth < pGame->pPlayer->hp) {
+        *prevTime = SDL_GetTicks();
+        *ticks = 1000;
     }
 }
 
