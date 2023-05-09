@@ -266,16 +266,30 @@ void *scanForGamesOnLocalNetwork(void *arg)
     void *pThread_Result, *pFound_Ip;
 
     getDefaultGateway(defaultGateway);
-    Uint8 startval = defaultGateway[strlen(defaultGateway) - 1] - (int)'0' + 1;
+    int pos = 0;
+    for(int i = strlen(defaultGateway) - 1; i > strlen(defaultGateway) - 1 -3; i--)
+        if(defaultGateway[i] == '.')
+        {
+            pos = i+1;
+            break;
+        }
+            
+    Uint8 startval = 0;
+    for(pos; pos < strlen(defaultGateway); pos++)
+    {
+        startval = startval*10 + defaultGateway[pos] - (int)'0' + 1;
+        defaultGateway[pos] = 0;
+    }
+        
     //printf("Default Gateway: %s\n", defaultGateway);
-    defaultGateway[strlen(defaultGateway) - 1] = 0;
+    
 
     NetScanTcp net[255 - startval];
     pthread_t tryOpenThread[255 - startval], timeoutThread[255 - startval];
     for (int i = startval; i < 255; i++)
     {
         sprintf(ipStr, "%s%d", defaultGateway, i);
-        // printf("Trying: %s\n", ipStr);
+        printf("Trying: %s\n", ipStr);
         SDLNet_ResolveHost(&net[i - startval].ip, ipStr, 1234);
         pthread_create(&tryOpenThread[i - startval], NULL, tryOpenIp, &net[i - startval]);
         pthread_create(&timeoutThread[i - startval], NULL, timeoutIpThread, &tryOpenThread[i - startval]);
