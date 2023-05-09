@@ -402,7 +402,8 @@ int joinServerMenu(Game *pGame)
     localServerInfo.nrOfServersFound = 0;
     
     pthread_create(&scanNetThread, NULL, scanForGamesOnLocalNetwork, &localServerInfo);
-    Text *pCheckLocal = createText(pGame->pRenderer, 0, 0, 0, pGame->ui.pFpsFont, "Checking Local network...", pGame->windowWidth / 2, (pGame->windowHeight / 2) + (2 * pGame->world.tileSize));
+    TTF_Font *pLocalFont = TTF_OpenFont("resources/fonts/RetroGaming.ttf", pGame->world.tileSize/4);
+    Text *pCheckLocal = createText(pGame->pRenderer, 0, 0, 0, pLocalFont, "Checking Local network...", pGame->windowWidth / 2, (pGame->windowHeight) - (pGame->world.tileSize));
 
     int counter = 0;
     char text[31] = {0};
@@ -418,6 +419,7 @@ int joinServerMenu(Game *pGame)
                 freeText(pPrompt);
                 freeText(pPrompt2);
                 freeText(pCheckLocal);
+                TTF_CloseFont(pLocalFont);
                 return 1;
             }
 
@@ -433,6 +435,7 @@ int joinServerMenu(Game *pGame)
                     freeText(pPrompt);
                     freeText(pPrompt2);
                     freeText(pCheckLocal);
+                    TTF_CloseFont(pLocalFont);
                     return 1;
                 }
                 printf("Connected to Server\n");
@@ -468,12 +471,12 @@ int joinServerMenu(Game *pGame)
                 free(localServerInfo.ppIpStringList);
 
                 sprintf(buffer,"Found %d servers!", localServerInfo.nrOfServersFound);
-                pCheckLocal = createText(pGame->pRenderer, 0, 255, 0, pGame->ui.pFpsFont, buffer, pGame->windowWidth / 2, (pGame->windowHeight / 2) + (2 * pGame->world.tileSize));
+                pCheckLocal = createText(pGame->pRenderer, 0, 255, 0, pLocalFont, buffer, pGame->windowWidth / 2, (pGame->windowHeight) - (pGame->world.tileSize));
             }
             else
             {
                 strcpy(buffer, "No servers found :(");
-                pCheckLocal = createText(pGame->pRenderer, 255, 0, 0, pGame->ui.pFpsFont, buffer, pGame->windowWidth / 2, (pGame->windowHeight / 2) + (2 * pGame->world.tileSize));
+                pCheckLocal = createText(pGame->pRenderer, 255, 0, 0, pLocalFont, buffer, pGame->windowWidth / 2, (pGame->windowHeight) - (pGame->world.tileSize));
             }
         }
         if (SDL_GetTicks() - previousTime >= 1000 / 60)
@@ -497,6 +500,7 @@ int joinServerMenu(Game *pGame)
     freeText(pPrompt);
     freeText(pPrompt2);
     freeText(pCheckLocal);
+    TTF_CloseFont(pLocalFont);
     return 0;
 }
 
