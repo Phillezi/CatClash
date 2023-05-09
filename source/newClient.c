@@ -267,54 +267,61 @@ void *scanForGamesOnLocalNetwork(void *arg)
 
     getDefaultGateway(defaultGateway);
     int pos = 0;
-    for(int i = strlen(defaultGateway) - 1; i > strlen(defaultGateway) - 1 -3; i--)
-        if(defaultGateway[i] == '.')
+    for (int i = strlen(defaultGateway) - 1; i > strlen(defaultGateway) - 1 - 3; i--)
+        if (defaultGateway[i] == '.')
         {
-            pos = i+1;
+            pos = i + 1;
             break;
         }
-            
+
     Uint8 startval = 0;
-    for(pos; pos < strlen(defaultGateway); pos++)
+    for (pos; pos < strlen(defaultGateway); pos++)
     {
-        startval = startval*10 + defaultGateway[pos] - (int)'0' + 1;
+        startval = startval * 10 + defaultGateway[pos] - (int)'0' + 1;
         defaultGateway[pos] = 0;
     }
-        
-    //printf("Default Gateway: %s\n", defaultGateway);
-    
+
+    // printf("Default Gateway: %s\n", defaultGateway);
+
     NetScanTcp net[255 - startval];
     pthread_t tryOpenThread[255 - startval], timeoutThread[255 - startval];
     for (int i = startval; i < 255; i++)
     {
         sprintf(ipStr, "%s%d", defaultGateway, i);
-        //printf("Trying: %s\n", ipStr);
-        SDLNet_ResolveHost(&net[i - startval].ip, ipStr, 1234);
-        pthread_create(&tryOpenThread[i - startval], NULL, tryOpenIp, &net[i - startval]);
-        pthread_create(&timeoutThread[i - startval], NULL, timeoutIpThread, &tryOpenThread[i - startval]);
+        // printf("Trying: %s\n", ipStr);
+        if (SDLNet_ResolveHost(&net[i - startval].ip, ipStr, 1234) != 0)
+            printf("Could not resolve host\n");
+        else
+        {
+            if (pthread_create(&tryOpenThread[i - startval], NULL, tryOpenIp, &net[i - startval]) != 0)
+                printf("Error creating tryOpen thread\n");
+            else if (pthread_create(&timeoutThread[i - startval], NULL, timeoutIpThread, &tryOpenThread[i - startval]) != 0)
+                printf("Error creating TimeOut thread\n");
+        }
     }
 
-    //SDL_Delay(2000); // sleep a little and let the threads work
+    // SDL_Delay(2000); // sleep a little and let the threads work
 
     int found_ip_index = -1;
     for (int i = startval; i < 255; i++)
     {
         SDL_Delay(10);
-        _pthread_tryjoin(tryOpenThread[i - startval], NULL);
+        if (_pthread_tryjoin(tryOpenThread[i - startval], NULL) != 0)
+            pthread_cancel(tryOpenThread[i - startval]);
 
         if (net[i - startval].connected)
         {
-            if(!pLocalServer->ppIpStringList)
-                pLocalServer->ppIpStringList = (char **) malloc(1 * sizeof(char *));
+            if (!pLocalServer->ppIpStringList)
+                pLocalServer->ppIpStringList = (char **)malloc(1 * sizeof(char *));
             else
-                pLocalServer->ppIpStringList = (char **) realloc(pLocalServer->ppIpStringList, pLocalServer->nrOfServersFound+1 * sizeof(char *));
-            pLocalServer->ppIpStringList[pLocalServer->nrOfServersFound] = (char *) calloc(16, sizeof(char));
+                pLocalServer->ppIpStringList = (char **)realloc(pLocalServer->ppIpStringList, pLocalServer->nrOfServersFound + 1 * sizeof(char *));
+            pLocalServer->ppIpStringList[pLocalServer->nrOfServersFound] = (char *)calloc(16, sizeof(char));
             sprintf(pLocalServer->ppIpStringList[pLocalServer->nrOfServersFound], "%s%d", defaultGateway, i);
             pLocalServer->nrOfServersFound++;
             pLocalServer->foundServer = true;
         }
-        _pthread_tryjoin(timeoutThread[i - startval], NULL);
-        
+        if (_pthread_tryjoin(timeoutThread[i - startval], NULL) != 0)
+            pthread_cancel(timeoutThread[i - startval]);
     }
     /*if (found_ip_index != -1)
     {
