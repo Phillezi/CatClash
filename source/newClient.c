@@ -283,7 +283,6 @@ void *scanForGamesOnLocalNetwork(void *arg)
         
     //printf("Default Gateway: %s\n", defaultGateway);
     
-
     NetScanTcp net[255 - startval];
     pthread_t tryOpenThread[255 - startval], timeoutThread[255 - startval];
     for (int i = startval; i < 255; i++)
@@ -295,7 +294,7 @@ void *scanForGamesOnLocalNetwork(void *arg)
         pthread_create(&timeoutThread[i - startval], NULL, timeoutIpThread, &tryOpenThread[i - startval]);
     }
 
-    SDL_Delay(2000); // sleep a little and let the threads work
+    //SDL_Delay(2000); // sleep a little and let the threads work
 
     int found_ip_index = -1;
     for (int i = startval; i < 255; i++)
@@ -304,12 +303,19 @@ void *scanForGamesOnLocalNetwork(void *arg)
 
         if (net[i - startval].connected)
         {
-            found_ip_index = i;
+            if(!pLocalServer->ppIpStringList)
+                pLocalServer->ppIpStringList = (char **) malloc(1 * sizeof(char *));
+            else
+                pLocalServer->ppIpStringList = (char **) realloc(pLocalServer->ppIpStringList, pLocalServer->nrOfServersFound+1 * sizeof(char *));
+            pLocalServer->ppIpStringList[pLocalServer->nrOfServersFound] = (char *) calloc(16, sizeof(char));
+            sprintf(pLocalServer->ppIpStringList[pLocalServer->nrOfServersFound], "%s%d", defaultGateway, i);
+            pLocalServer->nrOfServersFound++;
+            pLocalServer->foundServer = true;
         }
 
         _pthread_tryjoin(timeoutThread[i - startval], NULL);
     }
-    if (found_ip_index != -1)
+    /*if (found_ip_index != -1)
     {
         sprintf(pLocalServer->ipString, "%s%d", defaultGateway, found_ip_index);
         pLocalServer->foundServer = true;
@@ -317,7 +323,7 @@ void *scanForGamesOnLocalNetwork(void *arg)
     else
     {
         pLocalServer->foundServer = false;
-    }
+    }*/
 
     pLocalServer->searchDone = true; // set done with scan flag to true
     return NULL;

@@ -396,7 +396,11 @@ int joinServerMenu(Game *pGame)
     Text *pIpText = createText(pGame->pRenderer, 200, 200, 200, pGame->ui.pFpsFont, "192.168.0.1:1234", pGame->windowWidth / 2, (pGame->windowHeight / 2));
 
     pthread_t scanNetThread;
-    LocalServer localServerInfo = {"", false, false};
+    LocalServer localServerInfo;
+    localServerInfo.foundServer = false;
+    localServerInfo.searchDone = false;
+    localServerInfo.nrOfServersFound = 0;
+    
     pthread_create(&scanNetThread, NULL, scanForGamesOnLocalNetwork, &localServerInfo);
     Text *pCheckLocal = createText(pGame->pRenderer, 0, 0, 0, pGame->ui.pFpsFont, "Checking Local network...", pGame->windowWidth / 2, (pGame->windowHeight / 2) + (2 * pGame->world.tileSize));
 
@@ -455,7 +459,15 @@ int joinServerMenu(Game *pGame)
             pthread_join(scanNetThread, NULL);
             if (localServerInfo.foundServer)
             {
-                sprintf(buffer,"Found IP: %s", localServerInfo.ipString);
+
+                for (int i = 0; i < localServerInfo.nrOfServersFound; i++)
+                {
+                    printf("IP: %s\n", localServerInfo.ppIpStringList[i]);
+                    free(localServerInfo.ppIpStringList[i]);
+                }
+                free(localServerInfo.ppIpStringList);
+
+                sprintf(buffer,"Found %d servers!", localServerInfo.nrOfServersFound);
                 pCheckLocal = createText(pGame->pRenderer, 0, 255, 0, pGame->ui.pFpsFont, buffer, pGame->windowWidth / 2, (pGame->windowHeight / 2) + (2 * pGame->world.tileSize));
             }
             else
@@ -463,8 +475,6 @@ int joinServerMenu(Game *pGame)
                 strcpy(buffer, "No servers found :(");
                 pCheckLocal = createText(pGame->pRenderer, 255, 0, 0, pGame->ui.pFpsFont, buffer, pGame->windowWidth / 2, (pGame->windowHeight / 2) + (2 * pGame->world.tileSize));
             }
-            
-
         }
         if (SDL_GetTicks() - previousTime >= 1000 / 60)
         {
