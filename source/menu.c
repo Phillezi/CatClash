@@ -1007,6 +1007,8 @@ int serverSelectMenu(Game *pGame)
     Text *pSearchText = createText(pGame->pRenderer, 0, 0, 0, pLocalFont, "Search", buttons[24].x + (buttons[24].w / 2), buttons[24].y + (buttons[24].h / 2));
     Text *pStartScanText = createText(pGame->pRenderer, 0, 0, 0, pLocalFont, "Scan network", buttons[19].x + (buttons[19].w / 2), buttons[19].y + (buttons[19].h / 2));
 
+    Text *pIpText[5];
+
     //
     // Setup Net search
     pthread_t scanNetThread;
@@ -1054,7 +1056,7 @@ int serverSelectMenu(Game *pGame)
                                 {
                                 case 0:
                                     break;
-                                    case 19:
+                                case 19:
                                     startScan = true;
                                     break;
                                 case 20:
@@ -1075,6 +1077,12 @@ int serverSelectMenu(Game *pGame)
         }
         if (startScan && localServerInfo.searchDone)
         {
+            for (int i = 0; i < localServerInfo.nrOfServersFound; i++)
+            {
+                if (i < 5)
+                    freeText(pIpText[i]);
+            }
+
             startScan = false;
             localServerInfo.foundServer = false;
             localServerInfo.searchDone = false;
@@ -1083,7 +1091,7 @@ int serverSelectMenu(Game *pGame)
 
             pthread_create(&scanNetThread, NULL, scanForGamesOnLocalNetwork, &localServerInfo);
             freeText(pCheckLocal);
-            pCheckLocal = createText(pGame->pRenderer, 0, 0, 0, pLocalFont, "Checking Local network...", areaCenterX, areaCenterY);
+            pCheckLocal = createText(pGame->pRenderer, 0, 0, 0, pLocalFont, "Checking Local network...", areaCenterX, areaY + marginH);
         }
         Uint32 deltaTime = SDL_GetTicks() - prevUpdateTick;
         if (deltaTime >= 1000 / 60)
@@ -1102,18 +1110,20 @@ int serverSelectMenu(Game *pGame)
                     for (int i = 0; i < localServerInfo.nrOfServersFound; i++)
                     {
                         printf("IP: %s\n", localServerInfo.ppIpStringList[i]);
+                        if (i < 5)
+                            pIpText[i] = createText(pGame->pRenderer, 0, 0, 0, pLocalFont, localServerInfo.ppIpStringList[i], buttons[5 + i].x + (buttons[5 + i].w / 2), buttons[5 + i].y + (buttons[5 + i].h / 2));
                         free(localServerInfo.ppIpStringList[i]);
                     }
                     free(localServerInfo.ppIpStringList);
                     localServerInfo.ppIpStringList = NULL;
 
                     sprintf(buffer, "Found %d servers!", localServerInfo.nrOfServersFound);
-                    pCheckLocal = createText(pGame->pRenderer, 0, 255, 0, pLocalFont, buffer, areaCenterX, areaCenterY);
+                    pCheckLocal = createText(pGame->pRenderer, 0, 255, 0, pLocalFont, buffer, areaCenterX, areaY + marginH);
                 }
                 else
                 {
                     strcpy(buffer, "No servers found :(");
-                    pCheckLocal = createText(pGame->pRenderer, 255, 0, 0, pLocalFont, buffer, areaCenterX, areaCenterY);
+                    pCheckLocal = createText(pGame->pRenderer, 255, 0, 0, pLocalFont, buffer, areaCenterX, areaY + marginH);
                 }
             }
 
@@ -1128,7 +1138,11 @@ int serverSelectMenu(Game *pGame)
                 else
                     SDL_RenderFillRect(pGame->pRenderer, &buttons[i]);
             }
-
+            for (int i = 0; i < localServerInfo.nrOfServersFound; i++)
+            {
+                if (i < 5)
+                    drawText(pIpText[i], pGame->pRenderer);
+            }
             drawText(pCheckLocal, pGame->pRenderer);
             drawText(pExitText, pGame->pRenderer);
             drawText(pSearchText, pGame->pRenderer);
@@ -1139,6 +1153,11 @@ int serverSelectMenu(Game *pGame)
         }
     }
     printf("Exiting server select menu...\n");
+    for (int i = 0; i < localServerInfo.nrOfServersFound; i++)
+    {
+        if (i < 5)
+            freeText(pIpText[i]);
+    }
     freeText(pStartScanText);
     freeText(pExitText);
     freeText(pSearchText);
