@@ -231,6 +231,7 @@ struct udpPlayerPackage
     Uint8 charge;
     Uint8 charging;
     PlayerState state;
+    Uint8 hp;
 };
 typedef struct udpPlayerPackage PlayerUdpPkg;
 

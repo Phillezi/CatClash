@@ -20,9 +20,9 @@ Player *createNewMultiPlayer(Game *pGame, int size, Player data);
 Player *removePlayer(Game *pGame, int size);
 int getAlivePlayers(Game *pGame);
 int getDeadPlayers(Game *pGame);
-void checkChargingPlayers(Game *pGame);
-void damagePlayer(Game *pGame, int id, char direction);
-int headOnCollision(Game *pGame, int id);
-int chargingIntoMe(Game *pGame, int id, char direction);
+void chargingCollisions(Server *pServer, int originID);
+void damagePlayer(Player players[], int personalID, int id, char direction);
+int headOnCollision(Player players[], int personalID, int id);
+int chargingIntoMe(Player players[], int id, char direction);
 
 #endif

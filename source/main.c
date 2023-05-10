@@ -110,8 +110,8 @@ int init(Game *pGame)
     pGame->windowWidth = (float)displayMode.w * 0.3; // 70% of avaliable space
     pGame->windowHeight = (float)displayMode.h * 0.3;
 
-    pGame->windowWidth = 1920; // 70% of avaliable space
-    pGame->windowHeight = 1080;
+    // pGame->windowWidth = 1920; // 70% of avaliable space
+    // pGame->windowHeight = 1080;
 
     pGame->world.tileSize = (pGame->windowHeight / MAPSIZE) * 4;
 
@@ -269,6 +269,7 @@ void run(Game *pGame)
     int oldY = 0;
     int oldCharge = 0;
     int prevUDPTransfer = 0;
+    int oldHealth = 0;
     pthread_t movementThread;
     bool exit = false;
     pGame->config.fps = 60;
@@ -313,18 +314,17 @@ void run(Game *pGame)
                 if (pGame->config.multiThreading)
                 {
                     static int idle = 0;
-                    if (pGame->isConnected)
-                        getPlayerData(pGame);
                     pthread_join(movementThread, NULL);
                     int keepAliveDelta = SDL_GetTicks() - prevUDPTransfer;
                     if (pGame->isConnected)
                     {
-                        if (oldX != pGame->pPlayer->x || oldY != pGame->pPlayer->y || oldCharge != pGame->pPlayer->charge || keepAliveDelta > 4500)
+                        if (oldX != pGame->pPlayer->x || oldY != pGame->pPlayer->y || oldCharge != pGame->pPlayer->charge || oldHealth != pGame->pPlayer->hp || keepAliveDelta > 4500)
                         {
                             prevUDPTransfer = SDL_GetTicks();
                             oldX = pGame->pPlayer->x;
                             oldY = pGame->pPlayer->y;
                             oldCharge = pGame->pPlayer->charge;
+                            oldHealth = pGame->pPlayer->hp;
                             // printf("Trying to send data\n");
                             sendData(pGame);
                             idle = 1;
@@ -335,13 +335,15 @@ void run(Game *pGame)
                             idle = 0;
                         } // Send one last data packet så other players know you are idle
                     }
+                    if (pGame->isConnected)
+                        getPlayerData(pGame, oldHealth);
 
                     pthread_create(&movementThread, NULL, handleInput, (void *)pGame);
                 }
                 else
                 {
                     if (pGame->isConnected)
-                        getPlayerData(pGame);
+                        getPlayerData(pGame, oldHealth);
                     handleInput(pGame);
                     int keepAliveDelta = SDL_GetTicks() - prevUDPTransfer;
                     if (pGame->isConnected)
@@ -552,14 +554,6 @@ void *updateScreen(void *pGameIn)
                 k++;
             }
     }
-
-    // Check if any player is currently charging
-    for (int i = 0; i < pGame->nrOfPlayers; i++)
-        if (pGame->pMultiPlayer[i].charging == 1)
-        {
-            checkChargingPlayers(pGame);
-            break;
-        }
 
     pGame->isDrawing = true; // temporary fix to screen-tearing?
     int darkness = 0;
