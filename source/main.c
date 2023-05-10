@@ -56,11 +56,11 @@ int main(int argv, char **args)
             switch (serverSelectMenu(&game))
             {
             case 0:
+                break;
+            case 1:
                 if (joinServerMenu(&game))
                     break;
                 run(&game);
-                break;
-            case 1:
                 break;
             }
             break;

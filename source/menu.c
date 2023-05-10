@@ -1003,7 +1003,8 @@ int serverSelectMenu(Game *pGame)
 
     TTF_Font *pLocalFont = TTF_OpenFont("resources/fonts/RetroGaming.ttf", pGame->world.tileSize / 4);
     Text *pCheckLocal = createText(pGame->pRenderer, 0, 0, 0, pLocalFont, "Press \"Scan network\" to start a scan", areaCenterX, areaCenterY);
-    Text *pExitText = createText(pGame->pRenderer, 0, 0, 0, pLocalFont, "Search", buttons[24].x + (buttons[24].w / 2), buttons[24].y + (buttons[24].h / 2));
+    Text *pExitText = createText(pGame->pRenderer, 0, 0, 0, pLocalFont, "Back", buttons[20].x + (buttons[20].w / 2), buttons[20].y + (buttons[20].h / 2));
+    Text *pSearchText = createText(pGame->pRenderer, 0, 0, 0, pLocalFont, "Search", buttons[24].x + (buttons[24].w / 2), buttons[24].y + (buttons[24].h / 2));
     Text *pStartScanText = createText(pGame->pRenderer, 0, 0, 0, pLocalFont, "Scan network", buttons[19].x + (buttons[19].w / 2), buttons[19].y + (buttons[19].h / 2));
 
     //
@@ -1020,6 +1021,7 @@ int serverSelectMenu(Game *pGame)
     //
 
     int mouseX, mouseY, selected = -1;
+    int returnValue = 0;
 
     Uint32 prevUpdateTick = 0;
     bool exit = false;
@@ -1052,11 +1054,16 @@ int serverSelectMenu(Game *pGame)
                                 {
                                 case 0:
                                     break;
+                                    case 19:
+                                    startScan = true;
+                                    break;
+                                case 20:
+                                    exit = true;
+                                    returnValue = 0;
+                                    break;
                                 case 24:
                                     exit = true;
-                                    break;
-                                case 19:
-                                    startScan = true;
+                                    returnValue = 1;
                                     break;
                                 }
                                 break;
@@ -1124,6 +1131,7 @@ int serverSelectMenu(Game *pGame)
 
             drawText(pCheckLocal, pGame->pRenderer);
             drawText(pExitText, pGame->pRenderer);
+            drawText(pSearchText, pGame->pRenderer);
             if (localServerInfo.searchDone)
                 drawText(pStartScanText, pGame->pRenderer);
 
@@ -1133,8 +1141,9 @@ int serverSelectMenu(Game *pGame)
     printf("Exiting server select menu...\n");
     freeText(pStartScanText);
     freeText(pExitText);
+    freeText(pSearchText);
     freeText(pCheckLocal);
     TTF_CloseFont(pLocalFont);
 
-    return 0;
+    return returnValue;
 }
