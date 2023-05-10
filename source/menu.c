@@ -1179,15 +1179,18 @@ int serverSelectMenu(Game *pGame)
                 else
                     SDL_RenderFillRect(pGame->pRenderer, &buttons[i]);
             }
-            for (int i = 0; i < localServerInfo.nrOfServersFound; i++)
+            if (localServerInfo.searchDone)
             {
-                if (i < firstInButtonRow)
+                for (int i = 0; i < localServerInfo.nrOfServersFound; i++)
                 {
-                    drawText(pIpText[i], pGame->pRenderer);
-                    drawText(pAmountOfPlayersText[i], pGame->pRenderer);
+                    if (i < firstInButtonRow)
+                    {
+                        drawText(pIpText[i], pGame->pRenderer);
+                        drawText(pAmountOfPlayersText[i], pGame->pRenderer);
+                    }
                 }
-                    
             }
+
             drawText(pCheckLocal, pGame->pRenderer);
             drawText(pExitText, pGame->pRenderer);
             drawText(pSearchText, pGame->pRenderer);
