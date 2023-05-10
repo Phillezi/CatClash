@@ -502,35 +502,35 @@ void loadMedia(SDL_Renderer *pRenderer, SDL_Texture **pPlayerTexture, SDL_Rect g
         textureLoaded = true;
     }
 
-    int w = 24, h = 24;
+    int w = 26, h = 26;
     // playerID--;   //for testing
 
     // IDLE
     gSpriteClips[playerID][0].x = 36;
-    gSpriteClips[playerID][0].y = 34 + (playerID * HEIGHT_OF_PLAYER_SPRITE);
-    gSpriteClips[playerID][0].w = 24;
-    gSpriteClips[playerID][0].h = 24;
+    gSpriteClips[playerID][0].y = 32 + (playerID * HEIGHT_OF_PLAYER_SPRITE);
+    gSpriteClips[playerID][0].w = w;
+    gSpriteClips[playerID][0].h = h;
 
     gSpriteClips[playerID][1].x = 36;
-    gSpriteClips[playerID][1].y = 290 + (playerID * HEIGHT_OF_PLAYER_SPRITE);
-    gSpriteClips[playerID][1].w = 24;
-    gSpriteClips[playerID][1].h = 24;
+    gSpriteClips[playerID][1].y = 288 + (playerID * HEIGHT_OF_PLAYER_SPRITE);
+    gSpriteClips[playerID][1].w = w;
+    gSpriteClips[playerID][1].h = h;
 
     gSpriteClips[playerID][2].x = 5;
-    gSpriteClips[playerID][2].y = 482 + (playerID * HEIGHT_OF_PLAYER_SPRITE);
-    gSpriteClips[playerID][2].w = 24;
-    gSpriteClips[playerID][2].h = 24;
+    gSpriteClips[playerID][2].y = 480 + (playerID * HEIGHT_OF_PLAYER_SPRITE);
+    gSpriteClips[playerID][2].w = w;
+    gSpriteClips[playerID][2].h = h;
 
     // DEAD | WIN
     gSpriteClips[playerID][27].x = 195;
-    gSpriteClips[playerID][27].y = 71 + (playerID * HEIGHT_OF_PLAYER_SPRITE);
-    gSpriteClips[playerID][27].w = 24;
-    gSpriteClips[playerID][27].h = 24;
+    gSpriteClips[playerID][27].y = 69 + (playerID * HEIGHT_OF_PLAYER_SPRITE);
+    gSpriteClips[playerID][27].w = w;
+    gSpriteClips[playerID][27].h = h;
 
     gSpriteClips[playerID][28].x = 228;
-    gSpriteClips[playerID][28].y = 71 + (playerID * HEIGHT_OF_PLAYER_SPRITE);
-    gSpriteClips[playerID][28].w = 24;
-    gSpriteClips[playerID][28].h = 24;
+    gSpriteClips[playerID][28].y = 69 + (playerID * HEIGHT_OF_PLAYER_SPRITE);
+    gSpriteClips[playerID][28].w = w;
+    gSpriteClips[playerID][28].h = h;
 
     // RUNNING DOWN
     int x[4] = {644, 676, 708, 740};
@@ -577,7 +577,7 @@ void loadMedia(SDL_Renderer *pRenderer, SDL_Texture **pPlayerTexture, SDL_Rect g
     gSpriteClips[playerID][10].h = h;
 
     // RUNNING UP
-    y[0] = 289 + (playerID * HEIGHT_OF_PLAYER_SPRITE), y[1] = 321 + (playerID * HEIGHT_OF_PLAYER_SPRITE);
+    y[0] = 287 + (playerID * HEIGHT_OF_PLAYER_SPRITE), y[1] = 319 + (playerID * HEIGHT_OF_PLAYER_SPRITE);
 
     gSpriteClips[playerID][11].x = x[0];
     gSpriteClips[playerID][11].y = y[1];
@@ -620,8 +620,8 @@ void loadMedia(SDL_Renderer *pRenderer, SDL_Texture **pPlayerTexture, SDL_Rect g
     gSpriteClips[playerID][18].h = h;
 
     // RUNNING LEFT/RIGHT
-    x[0] = 642, x[1] = 674, x[2] = 706, x[3] = 738;
-    y[0] = 482 + (playerID * HEIGHT_OF_PLAYER_SPRITE), y[1] = 512 + (playerID * HEIGHT_OF_PLAYER_SPRITE);
+    x[0] = 640, x[1] = 672, x[2] = 704, x[3] = 736;
+    y[0] = 480 + (playerID * HEIGHT_OF_PLAYER_SPRITE), y[1] = 510 + (playerID * HEIGHT_OF_PLAYER_SPRITE);
 
     gSpriteClips[playerID][19].x = x[0];
     gSpriteClips[playerID][19].y = y[1];
