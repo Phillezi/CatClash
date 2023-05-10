@@ -11,6 +11,7 @@ int connectToServer(Game *pGame);
 int initTCPConnection(Game *pGame);
 void checkTCP(Game *pGame);
 PlayerNet *createClient(char *serverIP, int port, int id, int x, int y);
+void *scanForGamesOnLocalNetwork(void *arg);
 
 //UDP
 

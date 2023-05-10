@@ -53,9 +53,16 @@ int main(int argv, char **args)
             return 0;
             break;
         case JOIN:
-            if (joinServerMenu(&game))
+            switch (serverSelectMenu(&game))
+            {
+            case 0:
+                if (joinServerMenu(&game))
+                    break;
+                run(&game);
                 break;
-            run(&game);
+            case 1:
+                break;
+            }
             break;
         case CATSEL:
             if (catSelMenu(&game))
@@ -416,50 +423,101 @@ void run(Game *pGame)
 
 void close(Game *pGame)
 {
+
     if (pGame->pMultiPlayer)
+    {
+        printf("Freeing memory of: pMultiplayer\n");
         free(pGame->pMultiPlayer);
+    }
+
     if (pGame->pPacket)
     {
+        printf("Freeing memory of: pPacket\n");
         SDLNet_FreePacket(pGame->pPacket);
     }
     if (pGame->socketDesc)
     {
+        printf("Freeing memory of: SocketDesct\n");
         SDLNet_UDP_Close(pGame->socketDesc);
     }
     if (pGame->pPlayer)
     {
+        printf("Freeing memory of: pPlayer\n");
         destroyPlayer(pGame->pPlayer);
     }
     for (int i = 0; i < TILES; i++)
     {
         if (pGame->pTileTextures[i])
+        {
+            printf("Freeing memory of: pTileTexture[%d]\n", i);
             SDL_DestroyTexture(pGame->pTileTextures[i]);
+        }
     }
 
     if (pGame->pPlayerTexture)
+    {
+        printf("Freeing memory of: pPlayerTexture\n");
         SDL_DestroyTexture(pGame->pPlayerTexture);
+    }
+
     if (pGame->ui.pNameTagFont)
+    {
+        printf("Freeing memory of: pNameTagFont\n");
         TTF_CloseFont(pGame->ui.pNameTagFont);
+    }
+
     if (pGame->ui.pGameFont)
+    {
+        printf("Freeing memory of: pGameFont\n");
         TTF_CloseFont(pGame->ui.pGameFont);
+    }
+
     if (pGame->ui.pFpsFont)
+    {
+        printf("Freeing memory of: pFpsFont\n");
         TTF_CloseFont(pGame->ui.pFpsFont);
+    }
+
     if (pGame->ui.pMenuText)
+    {
+        printf("Freeing memory of: pMenuText\n");
         freeText(pGame->ui.pMenuText);
+    }
+
     if (pGame->ui.pOverText)
+    {
+        printf("Freeing memory of: pOverText\n");
         freeText(pGame->ui.pOverText);
+    }
+
     if (pGame->ui.pWinText)
+    {
+        printf("Freeing memory of: pWinText\n");
         freeText(pGame->ui.pWinText);
+    }
+
     if (pGame->ui.pFpsText)
+    {
+        printf("Freeing memory of: pFpsText\n");
         freeText(pGame->ui.pFpsText);
+    }
+
     TTF_Quit();
 
     SDLNet_Quit();
 
     if (pGame->pRenderer)
+    {
+        printf("Freeing memory of: pRenderer\n");
         SDL_DestroyRenderer(pGame->pRenderer);
+    }
+
     if (pGame->pWindow)
+    {
+        printf("Freeing memory of: pWindow\n");
         SDL_DestroyWindow(pGame->pWindow);
+    }
+
     SDL_Quit();
 }
 
@@ -497,7 +555,11 @@ void *updateScreen(void *pGameIn)
 
     // Check if any player is currently charging
     for (int i = 0; i < pGame->nrOfPlayers; i++)
-        if (pGame->pMultiPlayer[i].charging == 1) { checkChargingPlayers(pGame); break; }
+        if (pGame->pMultiPlayer[i].charging == 1)
+        {
+            checkChargingPlayers(pGame);
+            break;
+        }
 
     pGame->isDrawing = true; // temporary fix to screen-tearing?
     int darkness = 0;

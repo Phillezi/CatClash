@@ -2,7 +2,7 @@
 SRCDIR=./source
 CC=gcc
 CFLAGS = -g -c 
-LDFLAGS = -Wall -lmingw32 -lSDL2main -lSDL2_image -lSDL2 -lSDL2_net -lSDL2_ttf -pthread #-mwindows -lm
+LDFLAGS = -Wall -lmingw32 -lSDL2main -lSDL2_image -lSDL2 -lSDL2_net -lSDL2_ttf -pthread -liphlpapi -lws2_32 #-mwindows -lm
 
 all:
 	@echo "Building main"
@@ -14,7 +14,8 @@ all:
 	$(CC) $(CFLAGS) $(SRCDIR)/levelEditor.c
 	$(CC) $(CFLAGS) $(SRCDIR)/ioHandler.c
 	$(CC) $(CFLAGS) $(SRCDIR)/newClient.c
-	$(CC) main.o init.o text.o player.o menu.o levelEditor.o ioHandler.o newClient.o -o main.exe $(LDFLAGS)
+	$(CC) $(CFLAGS) $(SRCDIR)/getDefaultGateway.c
+	$(CC) main.o init.o text.o player.o menu.o levelEditor.o ioHandler.o newClient.o getDefaultGateway.o -o main.exe $(LDFLAGS)
 	@echo "Building Server"
 	$(CC) $(CFLAGS) $(SRCDIR)/betterServer.c 
 	$(CC) betterServer.o init.o text.o ioHandler.o -o betterServer.exe $(LDFLAGS)
@@ -22,9 +23,7 @@ all:
 launcher:
 	@echo "Building GameLauncher"
 	$(CC) $(CFLAGS) $(SRCDIR)/gameLauncher.c
-	$(CC) gameLauncher.o -o launcher.exe
-
-
+	$(CC) gameLauncher.o -o launcher.exe 
 
 demo:
 	@echo "Building demo"

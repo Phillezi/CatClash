@@ -234,4 +234,12 @@ struct udpPlayerPackage
 };
 typedef struct udpPlayerPackage PlayerUdpPkg;
 
+struct localServer{
+    char **ppIpStringList;
+    Uint8 nrOfServersFound;
+    bool searchDone;
+    bool foundServer;
+};
+typedef struct localServer LocalServer;
+
 #endif

@@ -1,5 +1,6 @@
 #include "../include/newClient.h"
 #include "../include/player.h"
+#include "getDefaultGateway.h"
 
 enum TCPSTATE
 {
@@ -87,6 +88,17 @@ int initTCPConnection(Game *pGame)
         return 1;
     }
     SDLNet_TCP_AddSocket(pGame->pClient->sockets, pGame->pClient->socketTCP);
+
+    Uint8 joinFlag = 1;
+    int bytesSend = SDLNet_TCP_Send(pGame->pClient->socketTCP, &joinFlag, sizeof(joinFlag));
+    if (bytesSend != sizeof(joinFlag))
+    {
+        printf("Error: could not join server :(\n");
+        SDLNet_FreeSocketSet(pGame->pClient->sockets);
+        SDLNet_TCP_DelSocket(pGame->pClient->sockets, pGame->pClient->socketTCP);
+        return 1;
+    }
+
     return 0;
 }
 
@@ -123,7 +135,7 @@ void checkTCP(Game *pGame)
                             printf("Removed player %d\n", data.id);
                             pGame->nrOfPlayers--;
                             pGame->pMultiPlayer = removePlayer(pGame, pGame->nrOfPlayers);
-                            //destroyPlayer(&pGame->pMultiPlayer[i]); // venne om de här funkar
+                            // destroyPlayer(&pGame->pMultiPlayer[i]); // venne om de här funkar
                         }
                     }
                 }
@@ -203,4 +215,124 @@ void getPlayerData(Game *pGame)
             }
         }
     }
+}
+
+struct netscantcp
+{
+    IPaddress ip;
+    Uint8 connected;
+};
+typedef struct netscantcp NetScanTcp;
+
+void *tryOpenIp(void *pNetScanIn)
+{
+    NetScanTcp *pNet = (NetScanTcp *)pNetScanIn;
+    pNet->connected = 0;
+    pthread_setcanceltype(PTHREAD_CANCEL_ASYNCHRONOUS, NULL);
+    TCPsocket socket = SDLNet_TCP_Open(&pNet->ip);
+    pthread_setcanceltype(PTHREAD_CANCEL_DEFERRED, NULL);
+    if (socket != NULL)
+    {
+        Uint8 joinFlag = 0;
+        int bytesSend = SDLNet_TCP_Send(socket, &joinFlag, sizeof(joinFlag));
+        printf("___Server found at %d:%d____\n", pNet->ip.host, pNet->ip.port);
+        SDLNet_TCP_Close(socket);
+        pNet->connected = 1;
+    }
+    return (NULL);
+}
+
+void *timeoutIpThread(void *threadIDIn)
+{
+    pthread_t threadID = *(pthread_t *)threadIDIn;
+    SDL_Delay(10);
+    if (_pthread_tryjoin(threadID, NULL) != 0)
+    {
+        if (pthread_cancel(threadID) == 0)
+            ;
+    }
+    else
+        printf("Thread was done\n");
+
+    pthread_exit(NULL);
+}
+
+void *scanForGamesOnLocalNetwork(void *arg)
+{
+    LocalServer *pLocalServer = (LocalServer *)arg;
+    bool found_ip = false;
+
+    char ipStr[16], defaultGateway[16];
+    void *pThread_Result, *pFound_Ip;
+
+    getDefaultGateway(defaultGateway);
+    int pos = 0;
+    for (int i = strlen(defaultGateway) - 1; i > strlen(defaultGateway) - 1 - 3; i--)
+        if (defaultGateway[i] == '.')
+        {
+            pos = i + 1;
+            break;
+        }
+
+    Uint8 startval = 0;
+    for (pos; pos < strlen(defaultGateway); pos++)
+    {
+        startval = startval * 10 + defaultGateway[pos] - (int)'0' + 1;
+        defaultGateway[pos] = 0;
+    }
+
+    // printf("Default Gateway: %s\n", defaultGateway);
+
+    NetScanTcp net[255 - startval];
+    pthread_t tryOpenThread[255 - startval], timeoutThread[255 - startval];
+    for (int i = startval; i < 255; i++)
+    {
+        sprintf(ipStr, "%s%d", defaultGateway, i);
+        // printf("Trying: %s\n", ipStr);
+        if (SDLNet_ResolveHost(&net[i - startval].ip, ipStr, 1234) != 0)
+            printf("Could not resolve host\n");
+        else
+        {
+            if (pthread_create(&tryOpenThread[i - startval], NULL, tryOpenIp, &net[i - startval]) != 0)
+                printf("Error creating tryOpen thread\n");
+            else if (pthread_create(&timeoutThread[i - startval], NULL, timeoutIpThread, &tryOpenThread[i - startval]) != 0)
+                printf("Error creating TimeOut thread\n");
+        }
+    }
+
+    // SDL_Delay(2000); // sleep a little and let the threads work
+
+    int found_ip_index = -1;
+    for (int i = startval; i < 255; i++)
+    {
+        SDL_Delay(10);
+        if (_pthread_tryjoin(tryOpenThread[i - startval], NULL) != 0)
+            pthread_cancel(tryOpenThread[i - startval]);
+
+        if (net[i - startval].connected)
+        {
+            if (!pLocalServer->ppIpStringList)
+                pLocalServer->ppIpStringList = (char **)malloc(1 * sizeof(char *));
+            else
+                pLocalServer->ppIpStringList = (char **)realloc(pLocalServer->ppIpStringList, pLocalServer->nrOfServersFound + 1 * sizeof(char *));
+            pLocalServer->ppIpStringList[pLocalServer->nrOfServersFound] = (char *)calloc(16, sizeof(char));
+            sprintf(pLocalServer->ppIpStringList[pLocalServer->nrOfServersFound], "%s%d", defaultGateway, i);
+            pLocalServer->nrOfServersFound++;
+            pLocalServer->foundServer = true;
+        }
+        if (_pthread_tryjoin(timeoutThread[i - startval], NULL) != 0)
+            pthread_cancel(timeoutThread[i - startval]);
+    }
+    /*if (found_ip_index != -1)
+    {
+        sprintf(pLocalServer->ipString, "%s%d", defaultGateway, found_ip_index);
+        pLocalServer->foundServer = true;
+    }
+    else
+    {
+        pLocalServer->foundServer = false;
+    }*/
+
+    pLocalServer->searchDone = true; // set done with scan flag to true
+    return NULL;
 }

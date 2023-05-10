@@ -340,10 +340,14 @@ void checkTCPForNewConnections(Server *pServer)
     if (tmpClient)
     {
         printf("TCP ACCEPTED\n");
-        if (pServer->nrOfClients < MAX_PLAYERS)
+        Uint8 packet = 0;
+        int bytesRecv = SDLNet_TCP_Recv(tmpClient, &packet, sizeof(packet));
+        if (pServer->nrOfClients < MAX_PLAYERS && bytesRecv == sizeof(packet) && packet)
         {
             addTCPClient(pServer, tmpClient);
         }
+        else
+            printf("Connection was just ping\n");
     }
 }
 
