@@ -800,8 +800,8 @@ int getDeadPlayers(Game *pGame)
 
 void chargingCollisions(Server *pServer, int originID) {
     static int invincibilityTicks[MAX_PLAYERS] = {0}, prevTime[MAX_PLAYERS] = {0};
-    static int id, damage[MAX_PLAYERS] = {0};
     static char dir;
+    int id;
     static Player players[MAX_PLAYERS];
     PlayerUdpPkg pkg;
 
@@ -810,40 +810,42 @@ void chargingCollisions(Server *pServer, int originID) {
 
     if (players[originID].charging) {
         if ((id = playerCollision(players[originID], players, pServer->nrOfClients, players[originID].prevKeyPressed, players[originID].rect.w, 0)) != -1) {
-            int oldHealthOpp = players[id].hp;
-            int oldHealthMe = players[originID].hp;
+                if ((SDL_GetTicks() - prevTime[id]) % 2000 >= invincibilityTicks[id]) {
+                int oldHealthOpp = players[id].hp;
+                int oldHealthMe = players[originID].hp;
 
-            if (players[originID].prevKeyPressed == 'W') dir = 'S';
-            if (players[originID].prevKeyPressed == 'A') dir = 'D';
-            if (players[originID].prevKeyPressed == 'S') dir = 'W';
-            if (players[originID].prevKeyPressed == 'D') dir = 'A';
-            
-            if ((SDL_GetTicks() - prevTime[id]) % 2000 >= invincibilityTicks[id])
+                if (players[originID].prevKeyPressed == 'W') dir = 'S';
+                if (players[originID].prevKeyPressed == 'A') dir = 'D';
+                if (players[originID].prevKeyPressed == 'S') dir = 'W';
+                if (players[originID].prevKeyPressed == 'D') dir = 'A';
+                
+                
                 damagePlayer(players, id, originID, dir);
 
-            if (oldHealthOpp > players[id].hp) {
-                prevTime[id] = SDL_GetTicks();
-                invincibilityTicks[id] = 1000;
-                pkg.id = id;
-                pkg.hp = players[id].hp < 0 ? 0 : players[id].hp;
+                if (oldHealthOpp > players[id].hp) {
+                    prevTime[id] = SDL_GetTicks();
+                    invincibilityTicks[id] = 1000;
+                    pkg.id = id;
+                    pkg.hp = players[id].hp < 0 ? 0 : players[id].hp;
 
-                memcpy(pServer->pSent->data, &pkg, sizeof(PlayerUdpPkg));
-                pServer->pSent->address.port = pServer->clients[id].address.port;
-                pServer->pSent->address.host = pServer->clients[id].address.host;
-                pServer->pSent->len = sizeof(PlayerUdpPkg);
+                    memcpy(pServer->pSent->data, &pkg, sizeof(PlayerUdpPkg));
+                    pServer->pSent->address.port = pServer->clients[id].address.port;
+                    pServer->pSent->address.host = pServer->clients[id].address.host;
+                    pServer->pSent->len = sizeof(PlayerUdpPkg);
 
-                if (!SDLNet_UDP_Send(pServer->socketUDP, -1, pServer->pSent))
-                    printf("Error: Could not send package\n");
+                    if (!SDLNet_UDP_Send(pServer->socketUDP, -1, pServer->pSent))
+                        printf("Error: Could not send package\n");
 
-            } else if (oldHealthMe > players[originID].hp) {
-                prevTime[originID] = SDL_GetTicks();
-                invincibilityTicks[originID] = 1000;
-            } else {
-                prevTime[id] = SDL_GetTicks();
-                invincibilityTicks[id] = 50;
-                prevTime[originID] = SDL_GetTicks();
-                invincibilityTicks[originID] = 50;
-            }            
+                } else if (oldHealthMe > players[originID].hp) {
+                    prevTime[originID] = SDL_GetTicks();
+                    invincibilityTicks[originID] = 1000;
+                } else {
+                    prevTime[id] = SDL_GetTicks();
+                    invincibilityTicks[id] = 50;
+                    prevTime[originID] = SDL_GetTicks();
+                    invincibilityTicks[originID] = 50;
+                }    
+            }        
         }
     }
 

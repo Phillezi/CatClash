@@ -196,7 +196,7 @@ void sendData(Game *pGame)
     }
 }
 
-void getPlayerData(Game *pGame)
+void getPlayerData(Game *pGame, int oldHealth)
 {
     while (SDLNet_UDP_Recv(pGame->socketDesc, pGame->pPacket))
     {
@@ -216,7 +216,8 @@ void getPlayerData(Game *pGame)
                 pGame->pMultiPlayer[j].state = tmp.state;
             }
             else if (pGame->pPlayer->id == tmp.id) {
-                pGame->pPlayer->hp = tmp.hp;
+                if (tmp.hp <= pGame->pPlayer->hp)
+                    pGame->pPlayer->hp = tmp.hp;
             }
         }
     }
