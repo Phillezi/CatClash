@@ -1187,7 +1187,7 @@ int serverSelectMenu(Game *pGame)
         free(localServerInfo.ppIpStringList[i]);
     }
     free(localServerInfo.ppIpStringList);
-    //localServerInfo.ppIpStringList = NULL;
+    localServerInfo.ppIpStringList = NULL;
     freeText(pStartScanText);
     freeText(pExitText);
     freeText(pSearchText);
