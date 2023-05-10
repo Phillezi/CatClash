@@ -975,6 +975,7 @@ int mainMenu(Game *pGame)
 
 int serverSelectMenu(Game *pGame)
 {
+    Uint8 nrOfButtons = 25;
     // Setup UI
     unsigned int marginW = pGame->windowWidth / 32;
     unsigned int marginH = pGame->windowHeight / 32;
@@ -984,30 +985,35 @@ int serverSelectMenu(Game *pGame)
     unsigned int areaY = marginH;
     unsigned int areaCenterX = areaX + areaW / 2;
     unsigned int areaCenterY = areaY + areaH / 2;
-    unsigned int buttonW = areaW / 5;
-    unsigned int buttonH = areaH / 5;
-    unsigned int buttonX = areaX;
-    unsigned int buttonY = areaY;
+    unsigned int buttonMarginW = marginW / (int)sqrt(nrOfButtons);
+    unsigned int buttonMarginH = marginH / (int)sqrt(nrOfButtons);
+    unsigned int buttonW = areaW / (int)sqrt(nrOfButtons) - (2 * buttonMarginW);
+    unsigned int buttonH = areaH / (int)sqrt(nrOfButtons) - (2 * buttonMarginH);
+    unsigned int buttonX = areaX + (buttonMarginW * ((int)sqrt(nrOfButtons)+1)) / 2;
+    unsigned int buttonY = areaY + (buttonMarginH * ((int)sqrt(nrOfButtons)+1)) / 2;
+
+    unsigned int firstInButtonRow = (unsigned int)sqrt(nrOfButtons);
+    unsigned int lastInButtonRow = ((unsigned int)sqrt(nrOfButtons)-1);
+    unsigned int lastButton = nrOfButtons-1;
 
     SDL_Rect area = {areaX, areaY, areaW, areaH};
 
-    SDL_Rect buttons[25];
-    int nrOfButtons = 25;
+    SDL_Rect buttons[nrOfButtons];
     for (int i = 0; i < nrOfButtons; i++)
     {
-        buttons[i].x = buttonX + (buttonW * (i % 5));
-        buttons[i].y = buttonY + (buttonH * (i / 5));
+        buttons[i].x = buttonX + (buttonW * (i % firstInButtonRow)) + (buttonMarginW * (i % firstInButtonRow));
+        buttons[i].y = buttonY + (buttonH * (i / firstInButtonRow)) + (buttonMarginH * (i / firstInButtonRow));
         buttons[i].w = buttonW;
         buttons[i].h = buttonH;
     }
 
     TTF_Font *pLocalFont = TTF_OpenFont("resources/fonts/RetroGaming.ttf", pGame->world.tileSize / 4);
     Text *pCheckLocal = createText(pGame->pRenderer, 0, 0, 0, pLocalFont, "Press \"Scan network\" to start a scan", areaCenterX, areaCenterY);
-    Text *pExitText = createText(pGame->pRenderer, 0, 0, 0, pLocalFont, "Back", buttons[20].x + (buttons[20].w / 2), buttons[20].y + (buttons[20].h / 2));
-    Text *pSearchText = createText(pGame->pRenderer, 0, 0, 0, pLocalFont, "Search", buttons[24].x + (buttons[24].w / 2), buttons[24].y + (buttons[24].h / 2));
-    Text *pStartScanText = createText(pGame->pRenderer, 0, 0, 0, pLocalFont, "Scan network", buttons[19].x + (buttons[19].w / 2), buttons[19].y + (buttons[19].h / 2));
+    Text *pExitText = createText(pGame->pRenderer, 0, 0, 0, pLocalFont, "Back", buttons[firstInButtonRow*4].x + (buttons[firstInButtonRow*4].w / 2), buttons[firstInButtonRow*4].y + (buttons[firstInButtonRow*4].h / 2));
+    Text *pSearchText = createText(pGame->pRenderer, 0, 0, 0, pLocalFont, "Search", buttons[lastButton].x + (buttons[lastButton].w / 2), buttons[lastButton].y + (buttons[lastButton].h / 2));
+    Text *pStartScanText = createText(pGame->pRenderer, 0, 0, 0, pLocalFont, "Scan network", buttons[firstInButtonRow*3 + lastInButtonRow].x + (buttons[firstInButtonRow*3 + lastInButtonRow].w / 2), buttons[firstInButtonRow*3 + lastInButtonRow].y + (buttons[firstInButtonRow*3 + lastInButtonRow].h / 2));
 
-    Text *pIpText[5];
+    Text *pIpText[firstInButtonRow];
 
     //
     // Setup Net search
@@ -1068,11 +1074,11 @@ int serverSelectMenu(Game *pGame)
                                     returnValue = 1;
                                     break;
                                 }
-                                if (selected >= 5 && selected < 10)
+                                if (selected >= firstInButtonRow && selected < firstInButtonRow*2)
                                 {
-                                    if (localServerInfo.nrOfServersFound > selected - 5)
+                                    if (localServerInfo.nrOfServersFound > selected - firstInButtonRow)
                                     {
-                                        pGame->pClient = createClient(localServerInfo.ppIpStringList[selected - 5], 1234, 0, 100, 100);
+                                        pGame->pClient = createClient(localServerInfo.ppIpStringList[selected - firstInButtonRow], 1234, 0, 100, 100);
                                         if (connectToServer(pGame))
                                         {
                                             printf("Error: Could not join server\n");
@@ -1100,7 +1106,7 @@ int serverSelectMenu(Game *pGame)
         {
             for (int i = 0; i < localServerInfo.nrOfServersFound; i++)
             {
-                if (i < 5)
+                if (i < firstInButtonRow)
                     freeText(pIpText[i]);
                 free(localServerInfo.ppIpStringList[i]);
             }
@@ -1161,7 +1167,7 @@ int serverSelectMenu(Game *pGame)
             }
             for (int i = 0; i < localServerInfo.nrOfServersFound; i++)
             {
-                if (i < 5)
+                if (i < firstInButtonRow)
                     drawText(pIpText[i], pGame->pRenderer);
             }
             drawText(pCheckLocal, pGame->pRenderer);
@@ -1176,12 +1182,12 @@ int serverSelectMenu(Game *pGame)
     printf("Exiting server select menu...\n");
     for (int i = 0; i < localServerInfo.nrOfServersFound; i++)
     {
-        if (i < 5)
+        if (i < firstInButtonRow)
             freeText(pIpText[i]);
         free(localServerInfo.ppIpStringList[i]);
     }
     free(localServerInfo.ppIpStringList);
-    localServerInfo.ppIpStringList = NULL;
+    //localServerInfo.ppIpStringList = NULL;
     freeText(pStartScanText);
     freeText(pExitText);
     freeText(pSearchText);
@@ -1189,4 +1195,38 @@ int serverSelectMenu(Game *pGame)
     TTF_CloseFont(pLocalFont);
 
     return returnValue;
+}
+
+void render_rounded_rect(SDL_Renderer *pRenderer, SDL_Rect rect, int radius)
+{
+    // Make sure the radius is not too large
+    radius = (radius > rect.w / 2) ? rect.w / 2 : radius;
+    radius = (radius > rect.h / 2) ? rect.h / 2 : radius;
+
+    // Draw the rounded corners
+    for (int i = 0; i < radius; i++)
+    {
+        // Calculate the positions of the corner circles
+        int x = rect.x + radius - i;
+        int y = rect.y + radius - i;
+        int w = i * 2;
+        int h = i * 2;
+
+        // Draw the corner arcs
+        SDL_RenderDrawLine(pRenderer, x + radius, y, x + rect.w - radius, y);                   // top
+        SDL_RenderDrawLine(pRenderer, x + rect.w, y + radius, x + rect.w, y + rect.h - radius); // right
+        SDL_RenderDrawLine(pRenderer, x + rect.w - radius, y + rect.h, x + radius, y + rect.h); // bottom
+        SDL_RenderDrawLine(pRenderer, x, y + rect.h - radius, x, y + radius);                   // left
+
+        SDL_RenderDrawLine(pRenderer, x + w - radius, y, x + w - radius, y + radius);                   // top-right
+        SDL_RenderDrawLine(pRenderer, x + rect.w - radius, y + h - radius, x + rect.w - radius, y + h); // bottom-right
+        SDL_RenderDrawLine(pRenderer, x + radius, y + h - radius, x + radius, y + h);                   // bottom-left
+        SDL_RenderDrawLine(pRenderer, x, y + radius, x + radius, y + radius);                           // top-left
+    }
+
+    // Draw the straight edges
+    SDL_RenderDrawLine(pRenderer, rect.x + radius, rect.y, rect.x + rect.w - radius, rect.y);
+    SDL_RenderDrawLine(pRenderer, rect.x + radius, rect.y + rect.h, rect.x + rect.w - radius, rect.y + rect.h);
+    SDL_RenderDrawLine(pRenderer, rect.x, rect.y + radius, rect.x, rect.y + rect.h - radius);
+    SDL_RenderDrawLine(pRenderer, rect.x + rect.w, rect.y + radius, rect.x + rect.w, rect.y + rect.h - radius);
 }
