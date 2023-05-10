@@ -990,7 +990,6 @@ int serverSelectMenu(Game *pGame)
     unsigned int buttonY = areaY;
 
     SDL_Rect area = {areaX, areaY, areaW, areaH};
-    SDL_Rect scanButton = {buttonX, buttonY, buttonW, buttonH};
 
     SDL_Rect buttons[25];
     int nrOfButtons = 25;
@@ -1111,9 +1110,8 @@ int serverSelectMenu(Game *pGame)
 
             SDL_SetRenderDrawColor(pGame->pRenderer, 255, 255, 255, 255);
             SDL_RenderClear(pGame->pRenderer);
-            SDL_SetRenderDrawColor(pGame->pRenderer, 255, 0, 0, 255);
+            SDL_SetRenderDrawColor(pGame->pRenderer, 200, 200, 200, 255);
             SDL_RenderDrawRect(pGame->pRenderer, &area);
-            // SDL_RenderDrawRect(pGame->pRenderer, &scanButton);
             for (int i = 0; i < nrOfButtons; i++)
             {
                 if (selected != i)
@@ -1124,7 +1122,7 @@ int serverSelectMenu(Game *pGame)
 
             drawText(pCheckLocal, pGame->pRenderer);
             drawText(pExitText, pGame->pRenderer);
-            if (!startScan)
+            if (localServerInfo.searchDone)
                 drawText(pStartScanText, pGame->pRenderer);
 
             SDL_RenderPresent(pGame->pRenderer);
