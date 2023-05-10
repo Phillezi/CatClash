@@ -1,6 +1,6 @@
 #include "../include/newClient.h"
 #include "../include/player.h"
-#include "getDefaultGateway.h"
+#include "../include/getDefaultGateway.h"
 
 enum TCPSTATE
 {

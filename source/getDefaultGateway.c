@@ -2,7 +2,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdbool.h>
-#include "getDefaultGateway.h"
+#include "../include/getDefaultGateway.h"
 
 #ifdef _WIN32
 #define INET_ADDRSTRLEN 16
