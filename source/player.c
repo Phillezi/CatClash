@@ -825,7 +825,7 @@ void chargingCollisions(Server *pServer, int originID) {
                 prevTime[id] = SDL_GetTicks();
                 invincibilityTicks[id] = 1000;
                 pkg.id = id;
-                pkg.hp = players[id].hp;
+                pkg.hp = players[id].hp < 0 ? 0 : players[id].hp;
 
                 memcpy(pServer->pSent->data, &pkg, sizeof(PlayerUdpPkg));
                 pServer->pSent->address.port = pServer->clients[id].address.port;
@@ -834,7 +834,7 @@ void chargingCollisions(Server *pServer, int originID) {
 
                 if (!SDLNet_UDP_Send(pServer->socketUDP, -1, pServer->pSent))
                     printf("Error: Could not send package\n");
-                    
+
             } else if (oldHealthMe > players[originID].hp) {
                 prevTime[originID] = SDL_GetTicks();
                 invincibilityTicks[originID] = 1000;

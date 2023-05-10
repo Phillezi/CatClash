@@ -181,7 +181,7 @@ void sendData(Game *pGame)
     pkg.charge = pGame->pPlayer->charge;
     pkg.charging = pGame->pPlayer->charging;
     pkg.state = pGame->pPlayer->state;
-    pkg.hp = pGame->pPlayer->hp;
+    pkg.hp = pGame->pPlayer->hp < 0 ? 0 : pGame->pPlayer->hp;
     memcpy(pGame->pPacket->data, &pkg, sizeof(PlayerUdpPkg));
 
     pGame->pPacket->len = sizeof(PlayerUdpPkg);
