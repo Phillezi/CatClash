@@ -251,7 +251,7 @@ void *timeoutIpThread(void *pNetScanIn)
 {
     NetScanTcp *pNet = (NetScanTcp *)pNetScanIn;
     sem_wait(&pNet->started);
-    //SDL_Delay(100);
+    // SDL_Delay(100);
     if (_pthread_tryjoin(pNet->threadId, NULL) != 0)
     {
         if (pthread_cancel(pNet->threadId) == 0)
@@ -268,9 +268,13 @@ void *scanForGamesOnLocalNetwork(void *arg)
     LocalServer *pLocalServer = (LocalServer *)arg;
     bool found_ip = false;
 
-    char ipStr[16], defaultGateway[16];
+    char ipStr[16], defaultGateway[16], subnetmask[16];
 
-    getDefaultGateway(defaultGateway);
+    getDefaultGateway(defaultGateway, subnetmask);
+
+    printf("Default Gateway: %s\n", defaultGateway);
+    printf("Subnet-mask: %s\n", subnetmask);
+
     int pos = 0;
     for (int i = strlen(defaultGateway) - 1; i > strlen(defaultGateway) - 1 - 3; i--)
         if (defaultGateway[i] == '.')
@@ -279,81 +283,78 @@ void *scanForGamesOnLocalNetwork(void *arg)
             break;
         }
 
-    Uint8 startval = 0;
+    // Uint8 startval = 0;
     for (pos; pos < strlen(defaultGateway); pos++)
     {
-        startval = startval * 10 + defaultGateway[pos] - (int)'0' + 1;
+        // startval = startval * 10 + defaultGateway[pos] - (int)'0' + 1;
         defaultGateway[pos] = 0;
     }
+    
+    
+    NetScanTcp net[255];
+    pthread_t tryOpenThread[255], timeoutThread[255];
+    //char tmpIp[16];
+    //defaultGateway[8] = 0;
+    //for (int k = 1; k < 255; k++)
+    //{
 
-    // printf("Default Gateway: %s\n", defaultGateway);
+    //    sprintf(tmpIp, "%s%d.", defaultGateway, k);
 
-    NetScanTcp net[255 - startval];
-    pthread_t tryOpenThread[255 - startval], timeoutThread[255 - startval];
-    for (int i = startval; i < 255; i++)
-    {
-        sprintf(ipStr, "%s%d", defaultGateway, i);
-        printf("Trying: %s\n", ipStr);
-        if (SDLNet_ResolveHost(&net[i - startval].ip, ipStr, 1234) != 0)
-            printf("Could not resolve host\n");
-        else
+        for (int i = 0; i < 255; i++)
         {
-            net[i - startval].threadId = tryOpenThread[i - startval];
-            sem_init(&net[i - startval].started, 0, 0);
-            sem_init(&net[i - startval].done, 0, 0);
-
-            if (pthread_create(&tryOpenThread[i - startval], NULL, tryOpenIp, &net[i - startval]) != 0)
-                printf("Error creating tryOpen thread\n");
-            else if (pthread_create(&timeoutThread[i - startval], NULL, timeoutIpThread, &net[i - startval]) != 0)
-                printf("Error creating TimeOut thread\n");
-        }
-    }
-
-    // SDL_Delay(2000); // sleep a little and let the threads work
-
-    for (int i = startval; i < 255; i++)
-    {
-        sem_wait(&net[i - startval].done);
-        if (_pthread_tryjoin(tryOpenThread[i - startval], NULL) != 0)
-            pthread_cancel(tryOpenThread[i - startval]);
-
-        if (net[i - startval].connected)
-        {
-            if (!pLocalServer->ppIpStringList)
+            sprintf(ipStr, "%s%d", defaultGateway, i);
+            //printf("Trying: %s\n", ipStr);
+            if (SDLNet_ResolveHost(&net[i].ip, ipStr, 1234) != 0)
+                printf("Could not resolve host\n");
+            else
             {
-                printf("Allocating Memory for string array containing open IPs\n");
-                pLocalServer->ppIpStringList = (char **)malloc(sizeof(char *));
+                net[i].threadId = tryOpenThread[i];
+                sem_init(&net[i].started, 0, 0);
+                sem_init(&net[i].done, 0, 0);
+
+                if (pthread_create(&tryOpenThread[i], NULL, tryOpenIp, &net[i]) != 0)
+                    printf("Error creating tryOpen thread\n");
+                else if (pthread_create(&timeoutThread[i], NULL, timeoutIpThread, &net[i]) != 0)
+                    printf("Error creating TimeOut thread\n");
+            }
+        }
+
+        for (int i = 0; i < 255; i++)
+        {
+            sem_wait(&net[i].done);
+            if (_pthread_tryjoin(tryOpenThread[i], NULL) != 0)
+                pthread_cancel(tryOpenThread[i]);
+
+            if (net[i].connected)
+            {
                 if (!pLocalServer->ppIpStringList)
-                    printf("FAILED: When allocating Memory for string array containing open IPs\n");
+                {
+                    printf("Allocating Memory for string array containing open IPs\n");
+                    pLocalServer->ppIpStringList = (char **)malloc(sizeof(char *));
+                    if (!pLocalServer->ppIpStringList)
+                        printf("FAILED: When allocating Memory for string array containing open IPs\n");
+                }
+                else
+                {
+                    printf("Expanding string array for new open ip string\n");
+                    pLocalServer->ppIpStringList = (char **)realloc(pLocalServer->ppIpStringList, pLocalServer->nrOfServersFound + 1 * sizeof(char *));
+                }
+                printf("Calloc memory for string in string array\n");
+                pLocalServer->ppIpStringList[pLocalServer->nrOfServersFound] = (char *)calloc(16, sizeof(char));
+                if (!pLocalServer->ppIpStringList[pLocalServer->nrOfServersFound])
+                    printf("FAILED: When callocing memory for string in string array\n");
+                else
+                {
+                    sprintf(pLocalServer->ppIpStringList[pLocalServer->nrOfServersFound], "%s%d", defaultGateway, i);
+                    pLocalServer->nrOfServersFound++;
+                    pLocalServer->foundServer = true;
+                }
             }
-            else
-            {
-                printf("Expanding string array for new open ip string\n");
-                pLocalServer->ppIpStringList = (char **)realloc(pLocalServer->ppIpStringList, pLocalServer->nrOfServersFound + 1 * sizeof(char *));
-            }
-            printf("Calloc memory for string in string array\n");
-            pLocalServer->ppIpStringList[pLocalServer->nrOfServersFound] = (char *)calloc(16, sizeof(char));
-            if (!pLocalServer->ppIpStringList[pLocalServer->nrOfServersFound])
-                printf("FAILED: When callocing memory for string in string array\n");
-            else
-            {
-                sprintf(pLocalServer->ppIpStringList[pLocalServer->nrOfServersFound], "%s%d", defaultGateway, i);
-                pLocalServer->nrOfServersFound++;
-                pLocalServer->foundServer = true;
-            }
+            if (_pthread_tryjoin(timeoutThread[i], NULL) != 0)
+                pthread_cancel(timeoutThread[i]);
         }
-        if (_pthread_tryjoin(timeoutThread[i - startval], NULL) != 0)
-            pthread_cancel(timeoutThread[i - startval]);
-    }
-    /*if (found_ip_index != -1)
-    {
-        sprintf(pLocalServer->ipString, "%s%d", defaultGateway, found_ip_index);
-        pLocalServer->foundServer = true;
-    }
-    else
-    {
-        pLocalServer->foundServer = false;
-    }*/
+    //    printf("%d\n",k);
+    //}
 
     pLocalServer->searchDone = true; // set done with scan flag to true
     return NULL;
