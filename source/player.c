@@ -818,10 +818,8 @@ void chargingCollisions(Server *pServer, int originID) {
             if (players[originID].prevKeyPressed == 'S') dir = 'W';
             if (players[originID].prevKeyPressed == 'D') dir = 'A';
             
-            if ((SDL_GetTicks() - prevTime[id]) % 2000 >= invincibilityTicks[id]){
+            if ((SDL_GetTicks() - prevTime[id]) % 2000 >= invincibilityTicks[id])
                 damagePlayer(players, id, originID, dir);
-                damage[id] = oldHealthOpp - players[id].hp;
-            }
 
             if (oldHealthOpp > players[id].hp) {
                 prevTime[id] = SDL_GetTicks();
@@ -834,9 +832,9 @@ void chargingCollisions(Server *pServer, int originID) {
                 pServer->pSent->address.host = pServer->clients[id].address.host;
                 pServer->pSent->len = sizeof(PlayerUdpPkg);
 
-                if (!SDLNet_UDP_Send(pServer->socketUDP, -1, pServer->pSent)) {
+                if (!SDLNet_UDP_Send(pServer->socketUDP, -1, pServer->pSent))
                     printf("Error: Could not send package\n");
-                }
+                    
             } else if (oldHealthMe > players[originID].hp) {
                 prevTime[originID] = SDL_GetTicks();
                 invincibilityTicks[originID] = 1000;
@@ -854,24 +852,15 @@ void chargingCollisions(Server *pServer, int originID) {
 
 void damagePlayer(Player players[], int personalID, int id, char direction) {
     int tmp;
-    printf("player charge: %d\tcolliding charge: %d\n", players[personalID].charge, players[id].charge);
 
-    if (players[personalID].prevKeyPressed != direction) {
-        printf("You take damage in func 1, player charge: %d, colliding charge: %d\n", players[personalID].charge, players[id].charge);
+    if (players[personalID].prevKeyPressed != direction)                                                        // Charging into the side of another player
         players[personalID].hp -= players[id].charge * 2;
-    }
-    else if (players[personalID].charging == 0 && chargingIntoMe(players, id, direction)){
-        printf("You take damage in func 2, player charge: %d, colliding charge: %d\n", players[personalID].charge, players[id].charge);
+    else if (players[personalID].charging == 0 && chargingIntoMe(players, id, direction))                       // If player is charging up but yet to pounce
         players[personalID].hp -= players[id].charge * 2;
-    }
-    else if (players[personalID].charge < players[id].charge && headOnCollision(players, personalID, id) != -1) {
-        printf("You take damage in func 3, player charge: %d, colliding charge: %d\n", players[personalID].charge, players[id].charge);
+    else if (players[personalID].charge < players[id].charge && headOnCollision(players, personalID, id) != -1) // Head on collision first player takes damage
         players[personalID].hp -= (players[id].charge - players[personalID].charge) * 2;
-    }
-    else if (players[personalID].charge > players[id].charge && headOnCollision(players, personalID, id) != -1){
-        printf("You take damage in func 4, player charge: %d, colliding charge: %d\n", players[personalID].charge, players[id].charge);
+    else if (players[personalID].charge > players[id].charge && headOnCollision(players, personalID, id) != -1) // Head on collision second player takes damage
         players[id].hp -= (players[personalID].charge - players[id].charge) * 2;
-    }
 
     if (players[personalID].hp < 0) players[personalID].hp = 0;
     if (players[id].hp < 0) players[id].hp = 0;

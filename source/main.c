@@ -314,8 +314,6 @@ void run(Game *pGame)
                 if (pGame->config.multiThreading)
                 {
                     static int idle = 0;
-                    if (pGame->isConnected)
-                        getPlayerData(pGame);
                     pthread_join(movementThread, NULL);
                     int keepAliveDelta = SDL_GetTicks() - prevUDPTransfer;
                     if (pGame->isConnected)
@@ -337,6 +335,8 @@ void run(Game *pGame)
                             idle = 0;
                         } // Send one last data packet så other players know you are idle
                     }
+                    if (pGame->isConnected)
+                        getPlayerData(pGame);
 
                     pthread_create(&movementThread, NULL, handleInput, (void *)pGame);
                 }
