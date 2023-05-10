@@ -1011,7 +1011,7 @@ int serverSelectMenu(Game *pGame)
     Text *pCheckLocal = createText(pGame->pRenderer, 0, 0, 0, pLocalFont, "Press \"Scan network\" to start a scan", areaCenterX, areaCenterY);
     Text *pExitText = createText(pGame->pRenderer, 0, 0, 0, pLocalFont, "Back", buttons[firstInButtonRow*4].x + (buttons[firstInButtonRow*4].w / 2), buttons[firstInButtonRow*4].y + (buttons[firstInButtonRow*4].h / 2));
     Text *pSearchText = createText(pGame->pRenderer, 0, 0, 0, pLocalFont, "Search", buttons[lastButton].x + (buttons[lastButton].w / 2), buttons[lastButton].y + (buttons[lastButton].h / 2));
-    Text *pStartScanText = createText(pGame->pRenderer, 0, 0, 0, pLocalFont, "Scan network", buttons[firstInButtonRow*3 + lastInButtonRow].x + (buttons[firstInButtonRow*3 + lastInButtonRow].w / 2), buttons[firstInButtonRow*3 + lastInButtonRow].y + (buttons[firstInButtonRow*3 + lastInButtonRow].h / 2));
+    Text *pStartScanText = createText(pGame->pRenderer, 0, 0, 0, pLocalFont, "Scan network", buttons[lastButton-1].x + (buttons[lastButton-1].w / 2), buttons[lastButton-1].y + (buttons[lastButton-1].h / 2));
 
     Text *pIpText[firstInButtonRow];
 
@@ -1058,7 +1058,7 @@ int serverSelectMenu(Game *pGame)
                             {
                                 selected = i;
                                 printf("mouse is in button %d\n", i);
-                                switch (selected)
+                                /*switch (selected)
                                 {
                                 case 0:
                                     break;
@@ -1073,8 +1073,25 @@ int serverSelectMenu(Game *pGame)
                                     exit = true;
                                     returnValue = 1;
                                     break;
+                                }*/
+                                if(selected == lastButton -1)
+                                {
+                                    startScan = true;
+                                    break;
                                 }
-                                if (selected >= firstInButtonRow && selected < firstInButtonRow*2)
+                                else if(selected == firstInButtonRow*4)
+                                {
+                                    exit = true;
+                                    returnValue = 0;
+                                    break;
+                                }
+                                else if(selected == lastButton)
+                                {
+                                    exit = true;
+                                    returnValue = 1;
+                                    break;
+                                }
+                                else if (selected >= firstInButtonRow && selected < firstInButtonRow*2)
                                 {
                                     if (localServerInfo.nrOfServersFound > selected - firstInButtonRow)
                                     {
