@@ -502,3 +502,125 @@ void *scanForGamesOnLocalNetwork(void *arg)
 
     return NULL;
 }
+
+void *scanForGamesFromSavedList(void *arg)
+{
+    LocalServer *pLocalServer = (LocalServer *)arg;
+    char ipS[3][16] = {"192.168.1.70", "192.168.1.124"};
+    int nrOfIps = 2;
+
+    NetScanTcp net[nrOfIps];
+    pthread_t tryOpenThread[nrOfIps], timeoutThread[nrOfIps];
+    
+    for (int i = 0; i < nrOfIps; i++)
+    {
+        
+        if (SDLNet_ResolveHost(&net[i].ip, ipS[i], 1234) != 0)
+            printf("Could not resolve host\n");
+        else
+        {
+            printf("Trying: %s\n", ipS[i]);
+            net[i].threadId = tryOpenThread[i];
+            net[i].playersOnline = 0;
+            sem_init(&net[i].started, 0, 0);
+            sem_init(&net[i].waitingForMsg, 0, 0);
+            sem_init(&net[i].doneWaitingForMsg, 0, 0);
+            sem_init(&net[i].done, 0, 0);
+
+            if (pthread_create(&tryOpenThread[i], NULL, tryOpenIp, &net[i]) != 0)
+                printf("Error creating tryOpen thread\n");
+            else if (pthread_create(&timeoutThread[i], NULL, timeoutIpThread, &net[i]) != 0)
+                printf("Error creating TimeOut thread\n");
+        }
+    }
+
+    for (int i = 0; i < nrOfIps; i++)
+    {
+        sem_wait(&net[i].done);
+        if (_pthread_tryjoin(tryOpenThread[i], NULL) != 0)
+            pthread_cancel(tryOpenThread[i]);
+
+        Uint8 errFlag = 0;
+
+        if (net[i].connected)
+        {
+            if (!pLocalServer->ppIpStringList)
+            {
+                printf("Allocating Memory for string array containing open IPs\n");
+                pLocalServer->ppIpStringList = (char **)malloc(sizeof(char *));
+                if (!pLocalServer->ppIpStringList)
+                {
+                    printf("FAILED: When allocating Memory for string array containing open IPs\n");
+                    errFlag = 1;
+                }
+            }
+            else
+            {
+                printf("Expanding string array for new open ip string\n");
+                char **ppTemp = (char **)realloc(pLocalServer->ppIpStringList, pLocalServer->nrOfServersFound + 1 * sizeof(char *));
+                if (!ppTemp)
+                {
+                    printf("FAILED: When expanding string array for new open ip string\n");
+                    errFlag = 1;
+                }
+                pLocalServer->ppIpStringList = ppTemp;
+            }
+
+            if (!pLocalServer->pPlayersOnline)
+            {
+                printf("Allocating Memory for Array of online players\n");
+                pLocalServer->pPlayersOnline = (Uint8 *)malloc(sizeof(Uint8));
+                if (!pLocalServer->pPlayersOnline)
+                {
+                    printf("FAILED: When allocating Memory for Array of online players\n");
+                    errFlag = 1;
+                }
+            }
+            else
+            {
+                printf("Expanding array of online players\n");
+                Uint8 *pTemp = (Uint8 *)realloc(pLocalServer->pPlayersOnline, pLocalServer->nrOfServersFound + 1 * sizeof(Uint8));
+                if (!pTemp)
+                {
+                    printf("FAILED: When expanding array of online players\n");
+                    errFlag = 1;
+                }
+                else
+                    pLocalServer->pPlayersOnline = pTemp;
+            }
+
+            if (!errFlag)
+            {
+                pLocalServer->pPlayersOnline[pLocalServer->nrOfServersFound] = net[i].playersOnline;
+
+                printf("Calloc memory for string in string array\n");
+                char *pTemp = (char *)calloc(16, sizeof(char));
+                if (!pTemp)
+                {
+                    printf("FAILED: When callocing memory for string in string array\n");
+                    errFlag = 1;
+                }
+                else
+                {
+                    pLocalServer->ppIpStringList[pLocalServer->nrOfServersFound] = pTemp;
+                    strcpy(pLocalServer->ppIpStringList[pLocalServer->nrOfServersFound], ipS[i]);
+                    pLocalServer->nrOfServersFound++;
+                    pLocalServer->foundServer = true;
+                    printf("Done with allocation\n");
+                }
+            }
+        }
+
+        if (_pthread_tryjoin(timeoutThread[i], NULL) != 0)
+        {
+            printf("Trying to cancel timeout Thread\n");
+            pthread_cancel(timeoutThread[i]);
+        }
+    }
+
+    pLocalServer->searchDone = true; // set done with scan flag to true
+
+    return NULL;
+
+
+}

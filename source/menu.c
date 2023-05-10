@@ -1130,6 +1130,7 @@ int serverSelectMenu(Game *pGame)
             searchResultChecked = false;
 
             pthread_create(&scanNetThread, NULL, scanForGamesOnLocalNetwork, &localServerInfo);
+            //pthread_create(&scanNetThread, NULL, scanForGamesFromSavedList, &localServerInfo);
             freeText(pCheckLocal);
             pCheckLocal = createText(pGame->pRenderer, 0, 0, 0, pLocalFont, "Checking Local network...", areaCenterX, buttons[2].y + buttons[2].h / 2);
         }
