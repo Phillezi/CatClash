@@ -1013,6 +1013,7 @@ int serverSelectMenu(Game *pGame)
     localServerInfo.foundServer = false;
     localServerInfo.searchDone = true;
     localServerInfo.nrOfServersFound = 0;
+    localServerInfo.ppIpStringList = NULL;
 
     bool searchResultChecked = true;
     bool startScan = false;
@@ -1097,6 +1098,7 @@ int serverSelectMenu(Game *pGame)
                         free(localServerInfo.ppIpStringList[i]);
                     }
                     free(localServerInfo.ppIpStringList);
+                    localServerInfo.ppIpStringList = NULL;
 
                     sprintf(buffer, "Found %d servers!", localServerInfo.nrOfServersFound);
                     pCheckLocal = createText(pGame->pRenderer, 0, 255, 0, pLocalFont, buffer, areaCenterX, areaCenterY);

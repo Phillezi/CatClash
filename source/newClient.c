@@ -269,7 +269,6 @@ void *scanForGamesOnLocalNetwork(void *arg)
     bool found_ip = false;
 
     char ipStr[16], defaultGateway[16];
-    void *pThread_Result, *pFound_Ip;
 
     getDefaultGateway(defaultGateway);
     int pos = 0;
@@ -312,7 +311,6 @@ void *scanForGamesOnLocalNetwork(void *arg)
 
     // SDL_Delay(2000); // sleep a little and let the threads work
 
-    int found_ip_index = -1;
     for (int i = startval; i < 255; i++)
     {
         sem_wait(&net[i - startval].done);
