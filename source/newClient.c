@@ -1,6 +1,7 @@
 #include "../include/newClient.h"
 #include "../include/player.h"
 #include "../include/getDefaultGateway.h"
+#include "semaphore.h"
 
 enum TCPSTATE
 {
@@ -221,6 +222,9 @@ struct netscantcp
 {
     IPaddress ip;
     Uint8 connected;
+    pthread_t threadId;
+    sem_t started;
+    sem_t done;
 };
 typedef struct netscantcp NetScanTcp;
 
@@ -229,6 +233,7 @@ void *tryOpenIp(void *pNetScanIn)
     NetScanTcp *pNet = (NetScanTcp *)pNetScanIn;
     pNet->connected = 0;
     pthread_setcanceltype(PTHREAD_CANCEL_ASYNCHRONOUS, NULL);
+    sem_post(&pNet->started);
     TCPsocket socket = SDLNet_TCP_Open(&pNet->ip);
     pthread_setcanceltype(PTHREAD_CANCEL_DEFERRED, NULL);
     if (socket != NULL)
@@ -242,18 +247,19 @@ void *tryOpenIp(void *pNetScanIn)
     return (NULL);
 }
 
-void *timeoutIpThread(void *threadIDIn)
+void *timeoutIpThread(void *pNetScanIn)
 {
-    pthread_t threadID = *(pthread_t *)threadIDIn;
-    SDL_Delay(100);
-    if (_pthread_tryjoin(threadID, NULL) != 0)
+    NetScanTcp *pNet = (NetScanTcp *)pNetScanIn;
+    sem_wait(&pNet->started);
+    //SDL_Delay(100);
+    if (_pthread_tryjoin(pNet->threadId, NULL) != 0)
     {
-        if (pthread_cancel(threadID) == 0)
+        if (pthread_cancel(pNet->threadId) == 0)
             ;
     }
     else
         printf("Thread was done\n");
-
+    sem_post(&pNet->done);
     pthread_exit(NULL);
 }
 
@@ -293,9 +299,13 @@ void *scanForGamesOnLocalNetwork(void *arg)
             printf("Could not resolve host\n");
         else
         {
+            net[i - startval].threadId = tryOpenThread[i - startval];
+            sem_init(&net[i - startval].started, 0, 0);
+            sem_init(&net[i - startval].done, 0, 0);
+
             if (pthread_create(&tryOpenThread[i - startval], NULL, tryOpenIp, &net[i - startval]) != 0)
                 printf("Error creating tryOpen thread\n");
-            else if (pthread_create(&timeoutThread[i - startval], NULL, timeoutIpThread, &tryOpenThread[i - startval]) != 0)
+            else if (pthread_create(&timeoutThread[i - startval], NULL, timeoutIpThread, &net[i - startval]) != 0)
                 printf("Error creating TimeOut thread\n");
         }
     }
@@ -305,7 +315,7 @@ void *scanForGamesOnLocalNetwork(void *arg)
     int found_ip_index = -1;
     for (int i = startval; i < 255; i++)
     {
-        SDL_Delay(10);
+        sem_wait(&net[i - startval].done);
         if (_pthread_tryjoin(tryOpenThread[i - startval], NULL) != 0)
             pthread_cancel(tryOpenThread[i - startval]);
 
