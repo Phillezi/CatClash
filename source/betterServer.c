@@ -6,6 +6,7 @@
 #include "../include/init.h"
 #include "../include/text.h"
 #include "../include/ioHandler.h"
+#include "../include/player.h"
 
 #define PORT 1234
 
@@ -552,14 +553,34 @@ void checkIncommingUDP(Server *pServer)
     if (SDLNet_UDP_Recv(pServer->socketUDP, pServer->pRecieve) == 1)
     {
         PlayerUdpPkg data;
+        int id;
+        static int hp[MAX_PLAYERS] = {0};
         /*
         Ta emot mindre(i bytes) structar som innehåller bara x y riktning och id
         */
         memcpy(&data, pServer->pRecieve->data, sizeof(PlayerUdpPkg));
         checkUDPClient(pServer, data);
+
+        for (int i = 0; i < pServer->nrOfClients; i++)
+            if (data.id == pServer->clients[i].id) {
+                pServer->clients[i].timeout = SDL_GetTicks();
+                pServer->clients[i].data.x = data.x;
+                pServer->clients[i].data.y = data.y;
+                pServer->clients[i].data.prevKeyPressed = data.direction;
+                pServer->clients[i].data.idle = data.idle;
+                pServer->clients[i].data.charging = data.charging;
+                pServer->clients[i].data.charge = data.charge;
+                pServer->clients[i].data.state = data.state;
+                pServer->clients[i].data.hp = data.hp;
+                id = i;
+            }
+
+        chargingCollisions(pServer, id);    
+        data.hp = pServer->clients[id].data.hp;    
+
         for (int i = 0; i < pServer->nrOfClients; i++)
         {
-            if (pServer->clients[i].id != data.id && pServer->clients[i].address.port != 8888)
+            if (pServer->clients[i].address.port != 8888)
             {
                 /*
                 Skicka mindre(i bytes) structar som innehåller bara x y riktning och id
@@ -573,17 +594,6 @@ void checkIncommingUDP(Server *pServer)
                 {
                     printf("Error: Could not send package\n");
                 }
-            }
-            else if (pServer->clients[i].data.id == data.id)
-            {
-                pServer->clients[i].timeout = SDL_GetTicks();
-                pServer->clients[i].data.x = data.x;
-                pServer->clients[i].data.y = data.y;
-                pServer->clients[i].data.prevKeyPressed = data.direction;
-                pServer->clients[i].data.idle = data.idle;
-                pServer->clients[i].data.charging = data.charging;
-                pServer->clients[i].data.charge = data.charge;
-                pServer->clients[i].data.state = data.state;
             }
         }
     }

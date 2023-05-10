@@ -150,7 +150,7 @@ void *handleInput(void *pGameIn) // Game *pGame)
             }
         }
         pGame->pPlayer->hp -= damage;
-        pGame->pPlayer->charge -= 1;
+        if (pGame->pPlayer->charge > 0) pGame->pPlayer->charge -= 1;
     }
     else
     {
@@ -285,27 +285,28 @@ int playerCollision(Player player, Player players[], int nrOfPlayers, char direc
     for (int i = 0; i < nrOfPlayers; i++)
     {
         if (players[i].state == DEAD) continue;
+        if (players[i].id == player.id) continue;
         switch (direction)
         {
         case 'W': // First checks if rows overlap then if columns overlap
             if ((player.y > players[i].y) && (player.y - 1 - extraLength < players[i].y + tileSize - 1))
                 if (((player.x == players[i].x) || ((players[i].x + (tileSize - 1) > player.x) && (players[i].x < player.x)) || ((players[i].x > player.x) && (players[i].x < player.x + (tileSize - 1)))))
-                    return i;
+                    return players[i].id;
             break;
         case 'A': // First checks if columns overlap then if rows overlap
             if ((player.x > players[i].x) && (player.x - 1 - extraLength < players[i].x + tileSize - 1))
                 if (((player.y == players[i].y) || ((players[i].y + (tileSize - 1) > player.y) && (players[i].y < player.y)) || ((players[i].y > player.y) && (players[i].y < player.y + (tileSize - 1)))))
-                    return i;
+                    return players[i].id;
             break;
         case 'S': // First checks if rows overlap then if columns overlap
             if ((player.y < players[i].y) && (player.y + tileSize + extraLength > players[i].y))
                 if (((player.x == players[i].x) || ((players[i].x + (tileSize - 1) > player.x) && (players[i].x < player.x)) || ((players[i].x > player.x) && (players[i].x < player.x + (tileSize - 1)))))
-                    return i;
+                    return players[i].id;
             break;
         case 'D': // First checks if columns overlap then if rows overlap
             if ((player.x < players[i].x) && (player.x + tileSize + extraLength > players[i].x))
                 if (((player.y == players[i].y) || ((players[i].y + (tileSize - 1) > player.y) && (players[i].y < player.y)) || ((players[i].y > player.y) && (players[i].y < player.y + (tileSize - 1)))))
-                    return i;
+                    return players[i].id;
             break;
         }
     }
@@ -797,78 +798,103 @@ int getDeadPlayers(Game *pGame)
     return deadPlayers;
 }
 
-void checkChargingPlayers(Game *pGame) {
-    // Checking if other players charge into you
-    int id = 0, collision = 0, extraLength = 0;
-    static int invincibilityTicks = 0, prevTime = 0;
-    static char dir[4] = {'W', 'A', 'S', 'D'};
-    
-    if ((SDL_GetTicks() - prevTime) % 2000  >= invincibilityTicks)
-    {
-        invincibilityTicks = 0;
-        prevTime = 0;
+void chargingCollisions(Server *pServer, int originID) {
+    static int invincibilityTicks[MAX_PLAYERS] = {0}, prevTime[MAX_PLAYERS] = {0};
+    static int id, damage[MAX_PLAYERS] = {0};
+    static char dir;
+    static Player players[MAX_PLAYERS];
+    PlayerUdpPkg pkg;
 
-        for (int i = 0; i < 4; i++){
-            extraLength = 0;
-            if      (dir[i] == 'W' && pGame->pPlayer->prevKeyPressed == 'S') extraLength = 10;
-            else if (dir[i] == 'A' && pGame->pPlayer->prevKeyPressed == 'D') extraLength = 10;
-            else if (dir[i] == 'S' && pGame->pPlayer->prevKeyPressed == 'W') extraLength = 10;
-            else if (dir[i] == 'D' && pGame->pPlayer->prevKeyPressed == 'A') extraLength = 10;
+    for (int i = 0; i < pServer->nrOfClients; i++)
+        players[i] = pServer->clients[i].data;
 
-            if ((id = playerCollision(*pGame->pPlayer, pGame->pMultiPlayer, pGame->nrOfPlayers, dir[i], pGame->world.tileSize, extraLength)) != -1)
-                if (pGame->pMultiPlayer[id].charging) { 
-                    int oldHealth = pGame->pPlayer->hp;
-                    damagePlayer(pGame, id, dir[i]);
+    if (players[originID].charging) {
+        if ((id = playerCollision(players[originID], players, pServer->nrOfClients, players[originID].prevKeyPressed, players[originID].rect.w, 0)) != -1) {
+            int oldHealthOpp = players[id].hp;
+            int oldHealthMe = players[originID].hp;
 
-                    if (oldHealth > pGame->pPlayer->hp) {
-                        prevTime = SDL_GetTicks();
-                        invincibilityTicks = 1000;
-                    } else {
-                        prevTime = SDL_GetTicks();
-                        invincibilityTicks = 100;
-                    }
-                    break; 
+            if (players[originID].prevKeyPressed == 'W') dir = 'S';
+            if (players[originID].prevKeyPressed == 'A') dir = 'D';
+            if (players[originID].prevKeyPressed == 'S') dir = 'W';
+            if (players[originID].prevKeyPressed == 'D') dir = 'A';
+            
+            if ((SDL_GetTicks() - prevTime[id]) % 2000 >= invincibilityTicks[id]){
+                damagePlayer(players, id, originID, dir);
+                damage[id] = oldHealthOpp - players[id].hp;
+            }
+
+            if (oldHealthOpp > players[id].hp) {
+                prevTime[id] = SDL_GetTicks();
+                invincibilityTicks[id] = 1000;
+                pkg.id = id;
+                pkg.hp = players[id].hp;
+
+                memcpy(pServer->pSent->data, &pkg, sizeof(PlayerUdpPkg));
+                pServer->pSent->address.port = pServer->clients[id].address.port;
+                pServer->pSent->address.host = pServer->clients[id].address.host;
+                pServer->pSent->len = sizeof(PlayerUdpPkg);
+
+                if (!SDLNet_UDP_Send(pServer->socketUDP, -1, pServer->pSent)) {
+                    printf("Error: Could not send package\n");
                 }
+            } else if (oldHealthMe > players[originID].hp) {
+                prevTime[originID] = SDL_GetTicks();
+                invincibilityTicks[originID] = 1000;
+            } else {
+                prevTime[id] = SDL_GetTicks();
+                invincibilityTicks[id] = 50;
+                prevTime[originID] = SDL_GetTicks();
+                invincibilityTicks[originID] = 50;
+            }            
         }
     }
+
+    pServer->clients[originID].data.hp = players[originID].hp;
 }
 
-void damagePlayer(Game *pGame, int id, char direction) {
+void damagePlayer(Player players[], int personalID, int id, char direction) {
     int tmp;
-    printf("player charge: %d\tcolliding charge: %d\n", pGame->pPlayer->charge, pGame->pMultiPlayer[id].charge);
+    printf("player charge: %d\tcolliding charge: %d\n", players[personalID].charge, players[id].charge);
 
-    if (pGame->pPlayer->prevKeyPressed != direction) {
-        printf("You take damage in func 1, player charge: %d, colliding charge: %d\n", pGame->pPlayer->charge, pGame->pMultiPlayer[id].charge);
-        pGame->pPlayer->hp -= pGame->pMultiPlayer[id].charge * 2;
+    if (players[personalID].prevKeyPressed != direction) {
+        printf("You take damage in func 1, player charge: %d, colliding charge: %d\n", players[personalID].charge, players[id].charge);
+        players[personalID].hp -= players[id].charge * 2;
     }
-    else if (pGame->pPlayer->charge < pGame->pMultiPlayer[id].charge && headOnCollision(pGame, id) != -1) {
-        printf("You take damage in func 2, player charge: %d, colliding charge: %d\n", pGame->pPlayer->charge, pGame->pMultiPlayer[id].charge);
-        pGame->pPlayer->hp -= (pGame->pMultiPlayer[id].charge - pGame->pPlayer->charge) * 2;
+    else if (players[personalID].charging == 0 && chargingIntoMe(players, id, direction)){
+        printf("You take damage in func 2, player charge: %d, colliding charge: %d\n", players[personalID].charge, players[id].charge);
+        players[personalID].hp -= players[id].charge * 2;
     }
-    else if (pGame->pPlayer->charging == 0 && chargingIntoMe(pGame, id, direction)){
-        printf("You take damage in func 3, player charge: %d, colliding charge: %d\n", pGame->pPlayer->charge, pGame->pMultiPlayer[id].charge);
-        pGame->pPlayer->hp -= pGame->pMultiPlayer[id].charge * 2;
+    else if (players[personalID].charge < players[id].charge && headOnCollision(players, personalID, id) != -1) {
+        printf("You take damage in func 3, player charge: %d, colliding charge: %d\n", players[personalID].charge, players[id].charge);
+        players[personalID].hp -= (players[id].charge - players[personalID].charge) * 2;
     }
+    else if (players[personalID].charge > players[id].charge && headOnCollision(players, personalID, id) != -1){
+        printf("You take damage in func 4, player charge: %d, colliding charge: %d\n", players[personalID].charge, players[id].charge);
+        players[id].hp -= (players[personalID].charge - players[id].charge) * 2;
+    }
+
+    if (players[personalID].hp < 0) players[personalID].hp = 0;
+    if (players[id].hp < 0) players[id].hp = 0;
 }
 
 /* \returns 1 if players are in a head on collision, -1 if they are not */
-int headOnCollision(Game *pGame, int id) {
-    switch (pGame->pPlayer->prevKeyPressed) {
-    case 'W': if (pGame->pMultiPlayer[id].prevKeyPressed == 'S') return 1; break;
-    case 'A': if (pGame->pMultiPlayer[id].prevKeyPressed == 'D') return 1; break;
-    case 'S': if (pGame->pMultiPlayer[id].prevKeyPressed == 'W') return 1; break;
-    case 'D': if (pGame->pMultiPlayer[id].prevKeyPressed == 'A') return 1; break;
+int headOnCollision(Player players[], int personalID, int id) {
+    switch (players[personalID].prevKeyPressed) {
+    case 'W': if (players[id].prevKeyPressed == 'S') return 1; break;
+    case 'A': if (players[id].prevKeyPressed == 'D') return 1; break;
+    case 'S': if (players[id].prevKeyPressed == 'W') return 1; break;
+    case 'D': if (players[id].prevKeyPressed == 'A') return 1; break;
     }
     return -1;
 }
 
 /* \returns 1 if opposing player is charging into you, otherwise 0 */
-int chargingIntoMe(Game *pGame, int id, char direction) {
+int chargingIntoMe(Player players[], int id, char direction) {
     switch (direction) {
-    case 'W': if (pGame->pMultiPlayer[id].prevKeyPressed == 'S') return 1; break;
-    case 'A': if (pGame->pMultiPlayer[id].prevKeyPressed == 'D') return 1; break;
-    case 'S': if (pGame->pMultiPlayer[id].prevKeyPressed == 'W') return 1; break;
-    case 'D': if (pGame->pMultiPlayer[id].prevKeyPressed == 'A') return 1; break;
+    case 'W': if (players[id].prevKeyPressed) return 1; break;
+    case 'A': if (players[id].prevKeyPressed) return 1; break;
+    case 'S': if (players[id].prevKeyPressed) return 1; break;
+    case 'D': if (players[id].prevKeyPressed) return 1; break;
     }
     return 0;
 }

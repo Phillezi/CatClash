@@ -181,6 +181,7 @@ void sendData(Game *pGame)
     pkg.charge = pGame->pPlayer->charge;
     pkg.charging = pGame->pPlayer->charging;
     pkg.state = pGame->pPlayer->state;
+    pkg.hp = pGame->pPlayer->hp;
     memcpy(pGame->pPacket->data, &pkg, sizeof(PlayerUdpPkg));
 
     pGame->pPacket->len = sizeof(PlayerUdpPkg);
@@ -213,6 +214,10 @@ void getPlayerData(Game *pGame)
                 pGame->pMultiPlayer[j].charge = tmp.charge;
                 pGame->pMultiPlayer[j].charging = tmp.charging;
                 pGame->pMultiPlayer[j].state = tmp.state;
+            }
+            else if (pGame->pPlayer->id == tmp.id) {
+                pGame->pPlayer->hp = tmp.hp;
+                printf("Recived hp: %d\n", pGame->pPlayer->hp);
             }
         }
     }
