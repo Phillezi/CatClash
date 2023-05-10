@@ -982,8 +982,8 @@ int serverSelectMenu(Game *pGame)
     unsigned int areaH = pGame->windowHeight - (2 * marginH);
     unsigned int areaX = marginW;
     unsigned int areaY = marginH;
-    unsigned int areaCenterX = areaW / 2;
-    unsigned int areaCenterY = areaH / 2;
+    unsigned int areaCenterX = areaX + areaW / 2;
+    unsigned int areaCenterY = areaY + areaH / 2;
     unsigned int buttonW = areaW / 5;
     unsigned int buttonH = areaH / 5;
     unsigned int buttonX = areaX;
