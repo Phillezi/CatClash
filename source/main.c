@@ -53,9 +53,16 @@ int main(int argv, char **args)
             return 0;
             break;
         case JOIN:
-            if (joinServerMenu(&game))
+            switch (serverSelectMenu(&game))
+            {
+            case 0:
+                if (joinServerMenu(&game))
+                    break;
+                run(&game);
                 break;
-            run(&game);
+            case 1:
+                break;
+            }
             break;
         case CATSEL:
             if (catSelMenu(&game))

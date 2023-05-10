@@ -9,5 +9,6 @@ int getStringFromUser(char text[], SDL_Event event);
 int testSelectMenu(Game *pGame, char *mapName);
 int catSelMenu(Game *pGame);
 int mainMenu(Game *pGame);
+int serverSelectMenu(Game *pGame);
 
 #endif

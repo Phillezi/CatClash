@@ -395,16 +395,6 @@ int joinServerMenu(Game *pGame)
     Text *pPrompt2 = createText(pGame->pRenderer, 0, 0, 0, pGame->ui.pFpsFont, "of the Server:", pGame->windowWidth / 2, (pGame->windowHeight / 2) - pGame->world.tileSize);
     Text *pIpText = createText(pGame->pRenderer, 200, 200, 200, pGame->ui.pFpsFont, "192.168.0.1:1234", pGame->windowWidth / 2, (pGame->windowHeight / 2));
 
-    pthread_t scanNetThread;
-    LocalServer localServerInfo;
-    localServerInfo.foundServer = false;
-    localServerInfo.searchDone = false;
-    localServerInfo.nrOfServersFound = 0;
-    
-    pthread_create(&scanNetThread, NULL, scanForGamesOnLocalNetwork, &localServerInfo);
-    TTF_Font *pLocalFont = TTF_OpenFont("resources/fonts/RetroGaming.ttf", pGame->world.tileSize/4);
-    Text *pCheckLocal = createText(pGame->pRenderer, 0, 0, 0, pLocalFont, "Checking Local network...", pGame->windowWidth / 2, (pGame->windowHeight) - (pGame->world.tileSize));
-
     int counter = 0;
     char text[31] = {0};
     while (!exit)
@@ -418,8 +408,6 @@ int joinServerMenu(Game *pGame)
                 freeText(pIpText);
                 freeText(pPrompt);
                 freeText(pPrompt2);
-                freeText(pCheckLocal);
-                TTF_CloseFont(pLocalFont);
                 return 1;
             }
 
@@ -434,8 +422,6 @@ int joinServerMenu(Game *pGame)
                     freeText(pIpText);
                     freeText(pPrompt);
                     freeText(pPrompt2);
-                    freeText(pCheckLocal);
-                    TTF_CloseFont(pLocalFont);
                     return 1;
                 }
                 printf("Connected to Server\n");
@@ -454,31 +440,6 @@ int joinServerMenu(Game *pGame)
                 }
             }
         }
-        if (localServerInfo.searchDone)
-        {
-            freeText(pCheckLocal);
-            char buffer[100];
-            localServerInfo.searchDone = false;
-            pthread_join(scanNetThread, NULL);
-            if (localServerInfo.foundServer)
-            {
-
-                for (int i = 0; i < localServerInfo.nrOfServersFound; i++)
-                {
-                    printf("IP: %s\n", localServerInfo.ppIpStringList[i]);
-                    free(localServerInfo.ppIpStringList[i]);
-                }
-                free(localServerInfo.ppIpStringList);
-
-                sprintf(buffer,"Found %d servers!", localServerInfo.nrOfServersFound);
-                pCheckLocal = createText(pGame->pRenderer, 0, 255, 0, pLocalFont, buffer, pGame->windowWidth / 2, (pGame->windowHeight) - (pGame->world.tileSize));
-            }
-            else
-            {
-                strcpy(buffer, "No servers found :(");
-                pCheckLocal = createText(pGame->pRenderer, 255, 0, 0, pLocalFont, buffer, pGame->windowWidth / 2, (pGame->windowHeight) - (pGame->world.tileSize));
-            }
-        }
         if (SDL_GetTicks() - previousTime >= 1000 / 60)
         {
             previousTime = SDL_GetTicks();
@@ -487,7 +448,6 @@ int joinServerMenu(Game *pGame)
             SDL_RenderClear(pGame->pRenderer);
             drawText(pPrompt, pGame->pRenderer);
             drawText(pPrompt2, pGame->pRenderer);
-            drawText(pCheckLocal, pGame->pRenderer);
             if (text[0])
             {
                 drawText(pIpText, pGame->pRenderer);
@@ -499,8 +459,6 @@ int joinServerMenu(Game *pGame)
     freeText(pIpText);
     freeText(pPrompt);
     freeText(pPrompt2);
-    freeText(pCheckLocal);
-    TTF_CloseFont(pLocalFont);
     return 0;
 }
 
@@ -1014,4 +972,142 @@ int mainMenu(Game *pGame)
     freeText(pName); // PLAYERNAME ADDITION TEST
 
     return mode;
+}
+
+int serverSelectMenu(Game *pGame)
+{
+    // Setup UI
+    unsigned int marginW = pGame->windowWidth / 32;
+    unsigned int marginH = pGame->windowHeight / 32;
+    unsigned int areaW = pGame->windowWidth - (2 * marginW);
+    unsigned int areaH = pGame->windowHeight - (2 * marginH);
+    unsigned int areaX = marginW;
+    unsigned int areaY = marginH;
+    unsigned int areaCenterX = areaW/2;
+    unsigned int areaCenterY = areaH/2;
+    unsigned int buttonW = areaW / 5;
+    unsigned int buttonH = areaH / 5;
+    unsigned int buttonX = areaX;
+    unsigned int buttonY = areaY;
+
+    SDL_Rect area = {areaX, areaY, areaW, areaH};
+    SDL_Rect scanButton = {buttonX, buttonY, buttonW, buttonH};
+
+    SDL_Rect buttons[25];
+    int nrOfButtons = 25;
+    for(int i = 0; i < nrOfButtons; i++)
+    {
+        buttons[i].x = buttonX + (buttonW*(i%5));
+        buttons[i].y = buttonY + (buttonH*(i/5));
+        buttons[i].w = buttonW;
+        buttons[i].h = buttonH;
+    }
+
+    TTF_Font *pLocalFont = TTF_OpenFont("resources/fonts/RetroGaming.ttf", pGame->world.tileSize / 4);
+    Text *pCheckLocal = createText(pGame->pRenderer, 0, 0, 0, pLocalFont, "Checking Local network...", areaCenterX, areaCenterY);
+
+    //
+    // Setup Net search
+    pthread_t scanNetThread;
+    LocalServer localServerInfo;
+    localServerInfo.foundServer = false;
+    localServerInfo.searchDone = false;
+    localServerInfo.nrOfServersFound = 0;
+
+    pthread_create(&scanNetThread, NULL, scanForGamesOnLocalNetwork, &localServerInfo);
+    //
+
+    int mouseX, mouseY, selected = -1;
+
+    Uint32 prevUpdateTick = 0;
+    bool exit = false;
+    while (!exit)
+    {
+        SDL_Event event;
+        while (SDL_PollEvent(&event))
+        {
+            if (event.type == SDL_QUIT)
+            {
+                exit = true;
+                break;
+            }
+            else if(event.type == SDL_MOUSEBUTTONDOWN)
+            {
+                Uint32 mouseButtons = SDL_GetMouseState(&mouseX, &mouseY);
+                if(mouseButtons & SDL_BUTTON(SDL_BUTTON_LEFT))
+                {
+                    bool mouseIsInsideArea = (mouseX > areaX && mouseX < areaX + areaW) && (mouseY > areaY && mouseY < areaY + areaH);
+                    if(mouseIsInsideArea)
+                    {
+                        for(int i = 0; i < nrOfButtons; i++)
+                        {
+                            bool mouseIsInButton = (mouseX > buttons[i].x && mouseX < buttons[i].x + buttons[i].w) && (mouseY > buttons[i].y && mouseY < buttons[i].y + buttons[i].h);
+                            if(mouseIsInButton)
+                            {
+                                selected = i;
+                                printf("mouse is in button %d\n", i);
+                                break;
+                            }
+                        }
+                        
+                    }
+
+                }
+            }
+        }
+        Uint32 deltaTime = SDL_GetTicks() - prevUpdateTick;
+        if (deltaTime >= 1000 / 60)
+        {
+            prevUpdateTick = SDL_GetTicks();
+
+            if (localServerInfo.searchDone)
+            {
+                freeText(pCheckLocal);
+                char buffer[100];
+                localServerInfo.searchDone = false;
+                pthread_join(scanNetThread, NULL);
+                if (localServerInfo.foundServer)
+                {
+
+                    for (int i = 0; i < localServerInfo.nrOfServersFound; i++)
+                    {
+                        printf("IP: %s\n", localServerInfo.ppIpStringList[i]);
+                        free(localServerInfo.ppIpStringList[i]);
+                    }
+                    free(localServerInfo.ppIpStringList);
+
+                    sprintf(buffer, "Found %d servers!", localServerInfo.nrOfServersFound);
+                    pCheckLocal = createText(pGame->pRenderer, 0, 255, 0, pLocalFont, buffer, areaCenterX, areaCenterY);
+                }
+                else
+                {
+                    strcpy(buffer, "No servers found :(");
+                    pCheckLocal = createText(pGame->pRenderer, 255, 0, 0, pLocalFont, buffer, areaCenterX, areaCenterY);
+                }
+            }
+
+            SDL_SetRenderDrawColor(pGame->pRenderer, 255, 255, 255, 255);
+            SDL_RenderClear(pGame->pRenderer);
+            SDL_SetRenderDrawColor(pGame->pRenderer, 255, 0, 0, 255);
+            SDL_RenderDrawRect(pGame->pRenderer, &area);
+            //SDL_RenderDrawRect(pGame->pRenderer, &scanButton);
+            for(int i = 0; i < nrOfButtons; i++)
+            {
+                if(selected != i)
+                    SDL_RenderDrawRect(pGame->pRenderer, &buttons[i]);
+                else
+                    SDL_RenderFillRect(pGame->pRenderer, &buttons[i]);
+            }
+                
+
+            drawText(pCheckLocal, pGame->pRenderer);
+
+            SDL_RenderPresent(pGame->pRenderer);
+        }
+    }
+
+    freeText(pCheckLocal);
+    TTF_CloseFont(pLocalFont);
+
+    return 0;
 }
