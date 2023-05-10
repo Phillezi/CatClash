@@ -460,24 +460,6 @@ void close(Game *pGame)
         SDL_DestroyTexture(pGame->pPlayerTexture);
     }
 
-    if (pGame->ui.pNameTagFont)
-    {
-        printf("Freeing memory of: pNameTagFont\n");
-        TTF_CloseFont(pGame->ui.pNameTagFont);
-    }
-
-    if (pGame->ui.pGameFont)
-    {
-        printf("Freeing memory of: pGameFont\n");
-        TTF_CloseFont(pGame->ui.pGameFont);
-    }
-
-    if (pGame->ui.pFpsFont)
-    {
-        printf("Freeing memory of: pFpsFont\n");
-        TTF_CloseFont(pGame->ui.pFpsFont);
-    }
-
     if (pGame->ui.pMenuText)
     {
         printf("Freeing memory of: pMenuText\n");
@@ -500,6 +482,24 @@ void close(Game *pGame)
     {
         printf("Freeing memory of: pFpsText\n");
         freeText(pGame->ui.pFpsText);
+    }
+
+    if (pGame->ui.pNameTagFont)
+    {
+        printf("Freeing memory of: pNameTagFont\n");
+        TTF_CloseFont(pGame->ui.pNameTagFont);
+    }
+
+    if (pGame->ui.pGameFont)
+    {
+        printf("Freeing memory of: pGameFont\n");
+        TTF_CloseFont(pGame->ui.pGameFont);
+    }
+
+    if (pGame->ui.pFpsFont)
+    {
+        printf("Freeing memory of: pFpsFont\n");
+        TTF_CloseFont(pGame->ui.pFpsFont);
     }
 
     TTF_Quit();

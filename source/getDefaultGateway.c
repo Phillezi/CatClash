@@ -23,9 +23,9 @@
 #include <unistd.h>
 #endif
 
-int getDefaultGateway(char *gateway_ip)
+int getDefaultGateway(char *gateway_ip,char *subnet_mask_str)
 {
-    //char gateway_ip[INET_ADDRSTRLEN];
+    // char gateway_ip[INET_ADDRSTRLEN];
     memset(gateway_ip, 0, sizeof(gateway_ip));
 
 // Platform-specific code to retrieve default gateway IP
@@ -58,11 +58,27 @@ int getDefaultGateway(char *gateway_ip)
             struct in_addr gateway_addr;
             gateway_addr.S_un.S_addr = (u_long)pIpForwardTable->table[i].dwForwardNextHop;
             inet_ntop(AF_INET, &gateway_addr, gateway_ip, INET_ADDRSTRLEN);
+            //gateway_ip = inet_ntoa(gateway_addr);
+
+            /*DWORD subnet_mask = pIpForwardTable->table[i].dwForwardMask;
+            struct in_addr subnet_mask_addr;
+            subnet_mask_addr.S_un.S_addr = (u_long)subnet_mask;
+            inet_ntop(AF_INET, &subnet_mask_addr, subnet_mask_str, INET_ADDRSTRLEN);*/
             break;
         }
     }
 
+    PIP_ADAPTER_INFO pAdapterInfo;
+    ULONG ulOutBufLen = sizeof (IP_ADAPTER_INFO);
+    pAdapterInfo = (IP_ADAPTER_INFO *) malloc(sizeof (IP_ADAPTER_INFO));
+    GetAdaptersInfo(pAdapterInfo, &ulOutBufLen);
+    strcpy(subnet_mask_str, pAdapterInfo->IpAddressList.IpMask.String);
+
+    if (pAdapterInfo)
+        free(pAdapterInfo);
+
     free(pIpForwardTable);
+
 #elif defined(__linux__)
     // Linux code
     int sock = socket(AF_INET, SOCK_DGRAM, 0);
@@ -169,7 +185,7 @@ done:
 #else
 #error Unsupported operating system
 #endif
-    //printf("Default gateway IP: %s\n", gateway_ip);
+    // printf("Default gateway IP: %s\n", gateway_ip);
 
     return EXIT_SUCCESS;
 }

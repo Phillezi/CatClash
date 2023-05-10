@@ -8,6 +8,6 @@
     INET_ADDRSTRLEN is usually 16
     returns 0 on succes and 1 on failure
 */
-int getDefaultGateway(char *gateway_ip);
+int getDefaultGateway(char *gateway_ip, char *subnet_mask_str);
 
 #endif

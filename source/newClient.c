@@ -251,7 +251,7 @@ void *timeoutIpThread(void *pNetScanIn)
 {
     NetScanTcp *pNet = (NetScanTcp *)pNetScanIn;
     sem_wait(&pNet->started);
-    //SDL_Delay(100);
+    SDL_Delay(100);
     if (_pthread_tryjoin(pNet->threadId, NULL) != 0)
     {
         if (pthread_cancel(pNet->threadId) == 0)
@@ -268,9 +268,13 @@ void *scanForGamesOnLocalNetwork(void *arg)
     LocalServer *pLocalServer = (LocalServer *)arg;
     bool found_ip = false;
 
-    char ipStr[16], defaultGateway[16];
+    /*char ipStr[16], defaultGateway[16], subnetmask[16];
 
-    getDefaultGateway(defaultGateway);
+    getDefaultGateway(defaultGateway, subnetmask);
+
+    printf("Default Gateway: %s\n", defaultGateway);
+    printf("Subnet-mask: %s\n", subnetmask);
+
     int pos = 0;
     for (int i = strlen(defaultGateway) - 1; i > strlen(defaultGateway) - 1 - 3; i--)
         if (defaultGateway[i] == '.')
@@ -286,38 +290,76 @@ void *scanForGamesOnLocalNetwork(void *arg)
         defaultGateway[pos] = 0;
     }
 
-    // printf("Default Gateway: %s\n", defaultGateway);
+    pos = 0;
+    for (int i = strlen(defaultGateway) - 2; i > strlen(defaultGateway) - 1 - 3; i--)
+        if (defaultGateway[i] == '.')
+        {
+            pos = i + 1;
+            break;
+        }
+
 
     NetScanTcp net[255 - startval];
     pthread_t tryOpenThread[255 - startval], timeoutThread[255 - startval];
-    for (int i = startval; i < 255; i++)
+    int j = 0;
+    //for (int j = 0; j < 255; j++)
+    //{
+        if (j < 10)
+        {
+            defaultGateway[pos] = j + '0';
+            defaultGateway[pos + 1] = '.';
+        }
+        else if (j < 100)
+        {
+            defaultGateway[pos] = j / 10 + '0';
+            defaultGateway[pos + 1] = j % 10 + '0';
+            defaultGateway[pos + 2] = '.';
+        }
+        else
+        {
+            defaultGateway[pos] = j / 100 + '0';
+            defaultGateway[pos + 1] = (j / 10) % 10 + '0';
+            defaultGateway[pos + 1] = j % 10 + '0';
+            defaultGateway[pos + 3] = '.';
+        }*/
+
+    // for (int i = startval; i < 255; i++)
+    int max_addresses = 1024, pAddress_count = 0;
+    IPaddress *pAddresses = malloc(max_addresses * sizeof(IPaddress));
+    getLocalAddresses(pAddresses, &pAddress_count, max_addresses);
+
+    NetScanTcp net[pAddress_count];
+    pthread_t tryOpenThread[pAddress_count], timeoutThread[pAddress_count];
+    char currentIP[16];
+    for (int i = 0; i < pAddress_count; i++)
     {
-        sprintf(ipStr, "%s%d", defaultGateway, i);
-        printf("Trying: %s\n", ipStr);
-        if (SDLNet_ResolveHost(&net[i - startval].ip, ipStr, 1234) != 0)
+        ipToString(&pAddresses[i], currentIP);
+        printf("Trying: %s\n", currentIP);
+        // sprintf(ipStr, "%s%d", defaultGateway, i);
+        // printf("Trying: %s\n", ipStr);
+        if (SDLNet_ResolveHost(&net[i].ip, currentIP, 1234) != 0)
             printf("Could not resolve host\n");
         else
         {
-            net[i - startval].threadId = tryOpenThread[i - startval];
-            sem_init(&net[i - startval].started, 0, 0);
-            sem_init(&net[i - startval].done, 0, 0);
+            // net[i].ip = pAddresses[i];
+            net[i].threadId = tryOpenThread[i];
+            sem_init(&net[i].started, 0, 0);
+            sem_init(&net[i].done, 0, 0);
 
-            if (pthread_create(&tryOpenThread[i - startval], NULL, tryOpenIp, &net[i - startval]) != 0)
+            if (pthread_create(&tryOpenThread[i], NULL, tryOpenIp, &net[i]) != 0)
                 printf("Error creating tryOpen thread\n");
-            else if (pthread_create(&timeoutThread[i - startval], NULL, timeoutIpThread, &net[i - startval]) != 0)
+            else if (pthread_create(&timeoutThread[i], NULL, timeoutIpThread, &net[i]) != 0)
                 printf("Error creating TimeOut thread\n");
         }
     }
 
-    // SDL_Delay(2000); // sleep a little and let the threads work
-
-    for (int i = startval; i < 255; i++)
+    for (int i = 0; i < pAddress_count; i++)
     {
-        sem_wait(&net[i - startval].done);
-        if (_pthread_tryjoin(tryOpenThread[i - startval], NULL) != 0)
-            pthread_cancel(tryOpenThread[i - startval]);
+        sem_wait(&net[i].done);
+        if (_pthread_tryjoin(tryOpenThread[i], NULL) != 0)
+            pthread_cancel(tryOpenThread[i]);
 
-        if (net[i - startval].connected)
+        if (net[i].connected)
         {
             if (!pLocalServer->ppIpStringList)
             {
@@ -337,24 +379,71 @@ void *scanForGamesOnLocalNetwork(void *arg)
                 printf("FAILED: When callocing memory for string in string array\n");
             else
             {
-                sprintf(pLocalServer->ppIpStringList[pLocalServer->nrOfServersFound], "%s%d", defaultGateway, i);
+                // strcpy(pLocalServer->ppIpStringList[pLocalServer->nrOfServersFound], ipToString(&net[i].ip));
+
+                ipToString(&net[i].ip, pLocalServer->ppIpStringList[pLocalServer->nrOfServersFound]);
+                if (pLocalServer->ppIpStringList[pLocalServer->nrOfServersFound][0] == 0 || pLocalServer->ppIpStringList[pLocalServer->nrOfServersFound][0] == '0')
+                    strcpy(pLocalServer->ppIpStringList[pLocalServer->nrOfServersFound], "localhost");
                 pLocalServer->nrOfServersFound++;
                 pLocalServer->foundServer = true;
             }
         }
-        if (_pthread_tryjoin(timeoutThread[i - startval], NULL) != 0)
-            pthread_cancel(timeoutThread[i - startval]);
+        if (_pthread_tryjoin(timeoutThread[i], NULL) != 0)
+            pthread_cancel(timeoutThread[i]);
     }
-    /*if (found_ip_index != -1)
-    {
-        sprintf(pLocalServer->ipString, "%s%d", defaultGateway, found_ip_index);
-        pLocalServer->foundServer = true;
-    }
-    else
-    {
-        pLocalServer->foundServer = false;
-    }*/
-
+    //}
+    free(pAddresses);
     pLocalServer->searchDone = true; // set done with scan flag to true
     return NULL;
+}
+
+void getLocalAddresses(IPaddress *pAddresses, int *pAddress_count, int max_addresses)
+{
+    IPaddress *pTmpAddress = malloc(max_addresses * sizeof(IPaddress));
+    *pAddress_count = SDLNet_GetLocalAddresses(pTmpAddress, max_addresses);
+    if (*pAddress_count < 0)
+    {
+        printf("ERROR: %s\n", SDL_GetError());
+        return;
+    }
+    int acceptedAddresses = 0;
+    for (int i = 0; i < *pAddress_count; i++)
+    {
+        Uint8 ipAlreadyExistsInList = 0;
+
+        for (int j = 0; j < acceptedAddresses; j++)
+        {
+            if (pTmpAddress[i].host == pAddresses[j].host)
+            {
+                printf("Ip already exists in list\n");
+                ipAlreadyExistsInList = 1;
+                break;
+            }
+        }
+        if (!ipAlreadyExistsInList)
+        {
+            printf("Ip is unique\n");
+            pAddresses[acceptedAddresses] = pTmpAddress[i];
+            acceptedAddresses++;
+        }
+        printf("%d\n", pTmpAddress[i].host);
+    }
+    *pAddress_count = acceptedAddresses;
+    printf("Found %d addresses\n", acceptedAddresses);
+    free(pTmpAddress);
+}
+
+void ipToString(IPaddress *ip, char *ip_str)
+{
+    /*char *ip_str = (char *)malloc(16); // Maximum length of an IPv4 address is 15 characters
+    if (!ip_str)
+    {
+        fprintf(stderr, "Failed to allocate memory for IP address string.\n");
+        return NULL;
+    }*/
+
+    Uint8 *octets = (Uint8 *)&(ip->host);
+    sprintf(ip_str, "%d.%d.%d.%d", octets[0], octets[1], octets[2], octets[3]);
+
+    // return ip_str;
 }
