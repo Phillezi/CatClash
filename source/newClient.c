@@ -217,7 +217,6 @@ void getPlayerData(Game *pGame)
             }
             else if (pGame->pPlayer->id == tmp.id) {
                 pGame->pPlayer->hp = tmp.hp;
-                printf("Recived hp: %d\n", pGame->pPlayer->hp);
             }
         }
     }
