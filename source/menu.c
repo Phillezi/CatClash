@@ -1128,6 +1128,7 @@ int serverSelectMenu(Game *pGame)
             SDL_RenderPresent(pGame->pRenderer);
         }
     }
+    printf("Exiting server select menu...\n");
     freeText(pStartScanText);
     freeText(pExitText);
     freeText(pCheckLocal);
