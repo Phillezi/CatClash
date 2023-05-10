@@ -301,13 +301,25 @@ void *timeoutIpThread(void *pNetScanIn)
             if (pthread_cancel(pNet->threadId) != 0)
             {
                 pthread_join(pNet->threadId, NULL);
-                //SDL_Delay(2000); //printf("Could not cancel thread\n");
+                // SDL_Delay(2000); //printf("Could not cancel thread\n");
             }
         }
     }
     else
     {
-        sem_wait(&pNet->doneWaitingForMsg);
+        ts.tv_sec = time(NULL) + 1;
+        if (sem_timedwait(&pNet->doneWaitingForMsg, &ts))
+        {
+            printf("Semaphore timed out\n");
+            if (_pthread_tryjoin(pNet->threadId, NULL) != 0)
+            {
+                if (pthread_cancel(pNet->threadId) != 0)
+                {
+                    pthread_join(pNet->threadId, NULL);
+                    // SDL_Delay(2000); //printf("Could not cancel thread\n");
+                }
+            }
+        }
     }
 
     sem_post(&pNet->done);
