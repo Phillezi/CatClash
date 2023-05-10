@@ -982,8 +982,8 @@ int serverSelectMenu(Game *pGame)
     unsigned int areaH = pGame->windowHeight - (2 * marginH);
     unsigned int areaX = marginW;
     unsigned int areaY = marginH;
-    unsigned int areaCenterX = areaW/2;
-    unsigned int areaCenterY = areaH/2;
+    unsigned int areaCenterX = areaW / 2;
+    unsigned int areaCenterY = areaH / 2;
     unsigned int buttonW = areaW / 5;
     unsigned int buttonH = areaH / 5;
     unsigned int buttonX = areaX;
@@ -994,33 +994,36 @@ int serverSelectMenu(Game *pGame)
 
     SDL_Rect buttons[25];
     int nrOfButtons = 25;
-    for(int i = 0; i < nrOfButtons; i++)
+    for (int i = 0; i < nrOfButtons; i++)
     {
-        buttons[i].x = buttonX + (buttonW*(i%5));
-        buttons[i].y = buttonY + (buttonH*(i/5));
+        buttons[i].x = buttonX + (buttonW * (i % 5));
+        buttons[i].y = buttonY + (buttonH * (i / 5));
         buttons[i].w = buttonW;
         buttons[i].h = buttonH;
     }
 
     TTF_Font *pLocalFont = TTF_OpenFont("resources/fonts/RetroGaming.ttf", pGame->world.tileSize / 4);
-    Text *pCheckLocal = createText(pGame->pRenderer, 0, 0, 0, pLocalFont, "Checking Local network...", areaCenterX, areaCenterY);
+    Text *pCheckLocal = createText(pGame->pRenderer, 0, 0, 0, pLocalFont, "Press \"Scan network\" to start a scan", areaCenterX, areaCenterY);
+    Text *pExitText = createText(pGame->pRenderer, 0, 0, 0, pLocalFont, "Search", buttons[24].x + (buttons[24].w / 2), buttons[24].y + (buttons[24].h / 2));
+    Text *pStartScanText = createText(pGame->pRenderer, 0, 0, 0, pLocalFont, "Scan network", buttons[19].x + (buttons[19].w / 2), buttons[19].y + (buttons[19].h / 2));
 
     //
     // Setup Net search
     pthread_t scanNetThread;
     LocalServer localServerInfo;
     localServerInfo.foundServer = false;
-    localServerInfo.searchDone = false;
+    localServerInfo.searchDone = true;
     localServerInfo.nrOfServersFound = 0;
 
-    pthread_create(&scanNetThread, NULL, scanForGamesOnLocalNetwork, &localServerInfo);
+    bool searchResultChecked = true;
+    bool startScan = false;
     //
 
     int mouseX, mouseY, selected = -1;
 
     Uint32 prevUpdateTick = 0;
     bool exit = false;
-    while (!exit)
+    while (!exit || !localServerInfo.searchDone) // wait for search threads
     {
         SDL_Event event;
         while (SDL_PollEvent(&event))
@@ -1030,40 +1033,61 @@ int serverSelectMenu(Game *pGame)
                 exit = true;
                 break;
             }
-            else if(event.type == SDL_MOUSEBUTTONDOWN)
+            else if (event.type == SDL_MOUSEBUTTONDOWN)
             {
                 Uint32 mouseButtons = SDL_GetMouseState(&mouseX, &mouseY);
-                if(mouseButtons & SDL_BUTTON(SDL_BUTTON_LEFT))
+                if (mouseButtons & SDL_BUTTON(SDL_BUTTON_LEFT))
                 {
                     bool mouseIsInsideArea = (mouseX > areaX && mouseX < areaX + areaW) && (mouseY > areaY && mouseY < areaY + areaH);
-                    if(mouseIsInsideArea)
+                    if (mouseIsInsideArea)
                     {
-                        for(int i = 0; i < nrOfButtons; i++)
+                        for (int i = 0; i < nrOfButtons; i++)
                         {
                             bool mouseIsInButton = (mouseX > buttons[i].x && mouseX < buttons[i].x + buttons[i].w) && (mouseY > buttons[i].y && mouseY < buttons[i].y + buttons[i].h);
-                            if(mouseIsInButton)
+                            if (mouseIsInButton)
                             {
                                 selected = i;
                                 printf("mouse is in button %d\n", i);
+                                switch (selected)
+                                {
+                                case 0:
+                                    break;
+                                case 24:
+                                    exit = true;
+                                    break;
+                                case 19:
+                                    startScan = true;
+                                    break;
+                                }
                                 break;
                             }
                         }
-                        
                     }
-
                 }
             }
+        }
+        if (startScan && localServerInfo.searchDone)
+        {
+            startScan = false;
+            localServerInfo.foundServer = false;
+            localServerInfo.searchDone = false;
+            localServerInfo.nrOfServersFound = 0;
+            searchResultChecked = false;
+
+            pthread_create(&scanNetThread, NULL, scanForGamesOnLocalNetwork, &localServerInfo);
+            freeText(pCheckLocal);
+            pCheckLocal = createText(pGame->pRenderer, 0, 0, 0, pLocalFont, "Checking Local network...", areaCenterX, areaCenterY);
         }
         Uint32 deltaTime = SDL_GetTicks() - prevUpdateTick;
         if (deltaTime >= 1000 / 60)
         {
             prevUpdateTick = SDL_GetTicks();
 
-            if (localServerInfo.searchDone)
+            if (localServerInfo.searchDone && !searchResultChecked)
             {
                 freeText(pCheckLocal);
                 char buffer[100];
-                localServerInfo.searchDone = false;
+                searchResultChecked = true;
                 pthread_join(scanNetThread, NULL);
                 if (localServerInfo.foundServer)
                 {
@@ -1089,22 +1113,25 @@ int serverSelectMenu(Game *pGame)
             SDL_RenderClear(pGame->pRenderer);
             SDL_SetRenderDrawColor(pGame->pRenderer, 255, 0, 0, 255);
             SDL_RenderDrawRect(pGame->pRenderer, &area);
-            //SDL_RenderDrawRect(pGame->pRenderer, &scanButton);
-            for(int i = 0; i < nrOfButtons; i++)
+            // SDL_RenderDrawRect(pGame->pRenderer, &scanButton);
+            for (int i = 0; i < nrOfButtons; i++)
             {
-                if(selected != i)
+                if (selected != i)
                     SDL_RenderDrawRect(pGame->pRenderer, &buttons[i]);
                 else
                     SDL_RenderFillRect(pGame->pRenderer, &buttons[i]);
             }
-                
 
             drawText(pCheckLocal, pGame->pRenderer);
+            drawText(pExitText, pGame->pRenderer);
+            if (!startScan)
+                drawText(pStartScanText, pGame->pRenderer);
 
             SDL_RenderPresent(pGame->pRenderer);
         }
     }
-
+    freeText(pStartScanText);
+    freeText(pExitText);
     freeText(pCheckLocal);
     TTF_CloseFont(pLocalFont);
 
