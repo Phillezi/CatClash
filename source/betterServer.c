@@ -348,7 +348,14 @@ void checkTCPForNewConnections(Server *pServer)
             addTCPClient(pServer, tmpClient);
         }
         else
+        {
             printf("Connection was just ping\n");
+            packet = pServer->nrOfClients;
+            SDLNet_TCP_Send(tmpClient, &packet, sizeof(packet));
+            printf("Sent player amount\n");
+
+        }
+            
     }
 }
 

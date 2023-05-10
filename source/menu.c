@@ -989,12 +989,12 @@ int serverSelectMenu(Game *pGame)
     unsigned int buttonMarginH = marginH / (int)sqrt(nrOfButtons);
     unsigned int buttonW = areaW / (int)sqrt(nrOfButtons) - (2 * buttonMarginW);
     unsigned int buttonH = areaH / (int)sqrt(nrOfButtons) - (2 * buttonMarginH);
-    unsigned int buttonX = areaX + (buttonMarginW * ((int)sqrt(nrOfButtons)+1)) / 2;
-    unsigned int buttonY = areaY + (buttonMarginH * ((int)sqrt(nrOfButtons)+1)) / 2;
+    unsigned int buttonX = areaX + (buttonMarginW * ((int)sqrt(nrOfButtons) + 1)) / 2;
+    unsigned int buttonY = areaY + (buttonMarginH * ((int)sqrt(nrOfButtons) + 1)) / 2;
 
     unsigned int firstInButtonRow = (unsigned int)sqrt(nrOfButtons);
-    unsigned int lastInButtonRow = ((unsigned int)sqrt(nrOfButtons)-1);
-    unsigned int lastButton = nrOfButtons-1;
+    unsigned int lastInButtonRow = ((unsigned int)sqrt(nrOfButtons) - 1);
+    unsigned int lastButton = nrOfButtons - 1;
 
     SDL_Rect area = {areaX, areaY, areaW, areaH};
 
@@ -1007,13 +1007,15 @@ int serverSelectMenu(Game *pGame)
         buttons[i].h = buttonH;
     }
 
+    unsigned int fontSize = pGame->world.tileSize / 4;
     TTF_Font *pLocalFont = TTF_OpenFont("resources/fonts/RetroGaming.ttf", pGame->world.tileSize / 4);
-    Text *pCheckLocal = createText(pGame->pRenderer, 0, 0, 0, pLocalFont, "Press \"Scan network\" to start a scan", areaCenterX, areaCenterY);
-    Text *pExitText = createText(pGame->pRenderer, 0, 0, 0, pLocalFont, "Back", buttons[firstInButtonRow*4].x + (buttons[firstInButtonRow*4].w / 2), buttons[firstInButtonRow*4].y + (buttons[firstInButtonRow*4].h / 2));
+    Text *pCheckLocal = createText(pGame->pRenderer, 0, 0, 0, pLocalFont, "Press \"Scan network\" to start a scan", areaCenterX, buttons[2].y + buttons[2].h / 2);
+    Text *pExitText = createText(pGame->pRenderer, 0, 0, 0, pLocalFont, "Back", buttons[firstInButtonRow * 4].x + (buttons[firstInButtonRow * 4].w / 2), buttons[firstInButtonRow * 4].y + (buttons[firstInButtonRow * 4].h / 2));
     Text *pSearchText = createText(pGame->pRenderer, 0, 0, 0, pLocalFont, "Search", buttons[lastButton].x + (buttons[lastButton].w / 2), buttons[lastButton].y + (buttons[lastButton].h / 2));
-    Text *pStartScanText = createText(pGame->pRenderer, 0, 0, 0, pLocalFont, "Scan network", buttons[lastButton-1].x + (buttons[lastButton-1].w / 2), buttons[lastButton-1].y + (buttons[lastButton-1].h / 2));
+    Text *pStartScanText = createText(pGame->pRenderer, 0, 0, 0, pLocalFont, "Scan network", buttons[lastButton - 1].x + (buttons[lastButton - 1].w / 2), buttons[lastButton - 1].y + (buttons[lastButton - 1].h / 2));
 
     Text *pIpText[firstInButtonRow];
+    Text *pAmountOfPlayersText[firstInButtonRow];
 
     //
     // Setup Net search
@@ -1023,6 +1025,7 @@ int serverSelectMenu(Game *pGame)
     localServerInfo.searchDone = true;
     localServerInfo.nrOfServersFound = 0;
     localServerInfo.ppIpStringList = NULL;
+    localServerInfo.pPlayersOnline = NULL;
 
     bool searchResultChecked = true;
     bool startScan = false;
@@ -1058,40 +1061,24 @@ int serverSelectMenu(Game *pGame)
                             {
                                 selected = i;
                                 printf("mouse is in button %d\n", i);
-                                /*switch (selected)
-                                {
-                                case 0:
-                                    break;
-                                case 19:
-                                    startScan = true;
-                                    break;
-                                case 20:
-                                    exit = true;
-                                    returnValue = 0;
-                                    break;
-                                case 24:
-                                    exit = true;
-                                    returnValue = 1;
-                                    break;
-                                }*/
-                                if(selected == lastButton -1)
+                                if (selected == lastButton - 1)
                                 {
                                     startScan = true;
                                     break;
                                 }
-                                else if(selected == firstInButtonRow*4)
+                                else if (selected == firstInButtonRow * 4)
                                 {
                                     exit = true;
                                     returnValue = 0;
                                     break;
                                 }
-                                else if(selected == lastButton)
+                                else if (selected == lastButton)
                                 {
                                     exit = true;
                                     returnValue = 1;
                                     break;
                                 }
-                                else if (selected >= firstInButtonRow && selected < firstInButtonRow*2)
+                                else if (selected >= firstInButtonRow && selected < firstInButtonRow * 2)
                                 {
                                     if (localServerInfo.nrOfServersFound > selected - firstInButtonRow)
                                     {
@@ -1124,11 +1111,17 @@ int serverSelectMenu(Game *pGame)
             for (int i = 0; i < localServerInfo.nrOfServersFound; i++)
             {
                 if (i < firstInButtonRow)
+                {
                     freeText(pIpText[i]);
+                    freeText(pAmountOfPlayersText[i]);
+                }
+
                 free(localServerInfo.ppIpStringList[i]);
             }
             free(localServerInfo.ppIpStringList);
             localServerInfo.ppIpStringList = NULL;
+            free(localServerInfo.pPlayersOnline);
+            localServerInfo.pPlayersOnline = NULL;
 
             startScan = false;
             localServerInfo.foundServer = false;
@@ -1138,7 +1131,7 @@ int serverSelectMenu(Game *pGame)
 
             pthread_create(&scanNetThread, NULL, scanForGamesOnLocalNetwork, &localServerInfo);
             freeText(pCheckLocal);
-            pCheckLocal = createText(pGame->pRenderer, 0, 0, 0, pLocalFont, "Checking Local network...", areaCenterX, areaY + marginH);
+            pCheckLocal = createText(pGame->pRenderer, 0, 0, 0, pLocalFont, "Checking Local network...", areaCenterX, buttons[2].y + buttons[2].h / 2);
         }
         Uint32 deltaTime = SDL_GetTicks() - prevUpdateTick;
         if (deltaTime >= 1000 / 60)
@@ -1157,17 +1150,21 @@ int serverSelectMenu(Game *pGame)
                     for (int i = 0; i < localServerInfo.nrOfServersFound; i++)
                     {
                         printf("IP: %s\n", localServerInfo.ppIpStringList[i]);
-                        if (i < 5)
-                            pIpText[i] = createText(pGame->pRenderer, 0, 0, 0, pLocalFont, localServerInfo.ppIpStringList[i], buttons[5 + i].x + (buttons[5 + i].w / 2), buttons[5 + i].y + (buttons[5 + i].h / 2));
+                        if (i < firstInButtonRow)
+                        {
+                            pIpText[i] = createText(pGame->pRenderer, 0, 0, 0, pLocalFont, localServerInfo.ppIpStringList[i], buttons[5 + i].x + (buttons[5 + i].w / 2), buttons[5 + i].y + (fontSize / 2) + (fontSize / 4));
+                            sprintf(buffer, "%d players", localServerInfo.pPlayersOnline[i]);
+                            pAmountOfPlayersText[i] = createText(pGame->pRenderer, 0, 0, 0, pLocalFont, buffer, buttons[5 + i].x + (buttons[5 + i].w / 2), buttons[5 + i].y + (buttons[5 + i].h / 2));
+                        }
                     }
 
                     sprintf(buffer, "Found %d servers!", localServerInfo.nrOfServersFound);
-                    pCheckLocal = createText(pGame->pRenderer, 0, 255, 0, pLocalFont, buffer, areaCenterX, areaY + marginH);
+                    pCheckLocal = createText(pGame->pRenderer, 0, 255, 0, pLocalFont, buffer, areaCenterX, buttons[2].y + buttons[2].h / 2);
                 }
                 else
                 {
                     strcpy(buffer, "No servers found :(");
-                    pCheckLocal = createText(pGame->pRenderer, 255, 0, 0, pLocalFont, buffer, areaCenterX, areaY + marginH);
+                    pCheckLocal = createText(pGame->pRenderer, 255, 0, 0, pLocalFont, buffer, areaCenterX, buttons[2].y + buttons[2].h / 2);
                 }
             }
 
@@ -1175,7 +1172,7 @@ int serverSelectMenu(Game *pGame)
             SDL_RenderClear(pGame->pRenderer);
             SDL_SetRenderDrawColor(pGame->pRenderer, 200, 200, 200, 255);
             SDL_RenderDrawRect(pGame->pRenderer, &area);
-            for (int i = 0; i < nrOfButtons; i++)
+            for (int i = firstInButtonRow; i < nrOfButtons; i++)
             {
                 if (selected != i)
                     SDL_RenderDrawRect(pGame->pRenderer, &buttons[i]);
@@ -1185,7 +1182,11 @@ int serverSelectMenu(Game *pGame)
             for (int i = 0; i < localServerInfo.nrOfServersFound; i++)
             {
                 if (i < firstInButtonRow)
+                {
                     drawText(pIpText[i], pGame->pRenderer);
+                    drawText(pAmountOfPlayersText[i], pGame->pRenderer);
+                }
+                    
             }
             drawText(pCheckLocal, pGame->pRenderer);
             drawText(pExitText, pGame->pRenderer);
@@ -1200,11 +1201,19 @@ int serverSelectMenu(Game *pGame)
     for (int i = 0; i < localServerInfo.nrOfServersFound; i++)
     {
         if (i < firstInButtonRow)
+        {
             freeText(pIpText[i]);
+            freeText(pAmountOfPlayersText[i]);
+        }
+
         free(localServerInfo.ppIpStringList[i]);
     }
     free(localServerInfo.ppIpStringList);
     localServerInfo.ppIpStringList = NULL;
+
+    free(localServerInfo.pPlayersOnline);
+    localServerInfo.pPlayersOnline = NULL;
+
     freeText(pStartScanText);
     freeText(pExitText);
     freeText(pSearchText);
