@@ -185,7 +185,7 @@ int init(Game *pGame)
     pGame->ui.pWinText = createText(pGame->pRenderer, 255, 255, 255, pGame->ui.pFpsFont, "YOU WIN!!", pGame->windowWidth / 2, pGame->windowHeight / 5);
     pGame->ui.pMenuText = createText(pGame->pRenderer, 255, 255, 255, pGame->ui.pFpsFont, "Use <- -> To Spectate", pGame->windowWidth / 2, pGame->windowHeight - pGame->windowHeight / 5);
     pGame->ui.pOverText = createText(pGame->pRenderer, 255, 255, 255, pGame->ui.pFpsFont, "You Died!", pGame->windowWidth / 2, pGame->windowHeight / 5);
-    if (!pGame->ui.pMenuText || !pGame->ui.pOverText)
+    if (!pGame->ui.pMenuText || !pGame->ui.pOverText || !pGame->ui.pWinText)
     {
         printf("Error: %s\n", SDL_GetError());
         return 1;
@@ -460,24 +460,6 @@ void close(Game *pGame)
         SDL_DestroyTexture(pGame->pPlayerTexture);
     }
 
-    if (pGame->ui.pNameTagFont)
-    {
-        printf("Freeing memory of: pNameTagFont\n");
-        TTF_CloseFont(pGame->ui.pNameTagFont);
-    }
-
-    if (pGame->ui.pGameFont)
-    {
-        printf("Freeing memory of: pGameFont\n");
-        TTF_CloseFont(pGame->ui.pGameFont);
-    }
-
-    if (pGame->ui.pFpsFont)
-    {
-        printf("Freeing memory of: pFpsFont\n");
-        TTF_CloseFont(pGame->ui.pFpsFont);
-    }
-
     if (pGame->ui.pMenuText)
     {
         printf("Freeing memory of: pMenuText\n");
@@ -500,6 +482,24 @@ void close(Game *pGame)
     {
         printf("Freeing memory of: pFpsText\n");
         freeText(pGame->ui.pFpsText);
+    }
+
+    if (pGame->ui.pNameTagFont)
+    {
+        printf("Freeing memory of: pNameTagFont\n");
+        TTF_CloseFont(pGame->ui.pNameTagFont);
+    }
+
+    if (pGame->ui.pGameFont)
+    {
+        printf("Freeing memory of: pGameFont\n");
+        TTF_CloseFont(pGame->ui.pGameFont);
+    }
+
+    if (pGame->ui.pFpsFont)
+    {
+        printf("Freeing memory of: pFpsFont\n");
+        TTF_CloseFont(pGame->ui.pFpsFont);
     }
 
     TTF_Quit();
