@@ -62,6 +62,9 @@ int main(int argv, char **args)
                     break;
                 run(&game);
                 break;
+            case 2:
+                run(&game);
+                break;
             }
             break;
         case CATSEL:

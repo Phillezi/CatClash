@@ -1068,6 +1068,27 @@ int serverSelectMenu(Game *pGame)
                                     returnValue = 1;
                                     break;
                                 }
+                                if (selected >= 5 && selected < 10)
+                                {
+                                    if (localServerInfo.nrOfServersFound > selected - 5)
+                                    {
+                                        pGame->pClient = createClient(localServerInfo.ppIpStringList[selected - 5], 1234, 0, 100, 100);
+                                        if (connectToServer(pGame))
+                                        {
+                                            printf("Error: Could not join server\n");
+                                            exit = true;
+                                            free(pGame->pClient);
+                                            returnValue = 0;
+                                        }
+                                        printf("Connected to Server\n");
+                                        initMapFromTCP(pGame->map, pGame->world.tileSize);
+                                        getPlayerSpawnPos(pGame);
+                                        SDLNet_ResolveHost(&pGame->serverAddress, localServerInfo.ppIpStringList[selected - 5], 1234);
+                                        printf("Resolved UDP host\n");
+                                        exit = true;
+                                        returnValue = 2;
+                                    }
+                                }
                                 break;
                             }
                         }
@@ -1081,7 +1102,10 @@ int serverSelectMenu(Game *pGame)
             {
                 if (i < 5)
                     freeText(pIpText[i]);
+                free(localServerInfo.ppIpStringList[i]);
             }
+            free(localServerInfo.ppIpStringList);
+            localServerInfo.ppIpStringList = NULL;
 
             startScan = false;
             localServerInfo.foundServer = false;
@@ -1112,10 +1136,7 @@ int serverSelectMenu(Game *pGame)
                         printf("IP: %s\n", localServerInfo.ppIpStringList[i]);
                         if (i < 5)
                             pIpText[i] = createText(pGame->pRenderer, 0, 0, 0, pLocalFont, localServerInfo.ppIpStringList[i], buttons[5 + i].x + (buttons[5 + i].w / 2), buttons[5 + i].y + (buttons[5 + i].h / 2));
-                        free(localServerInfo.ppIpStringList[i]);
                     }
-                    free(localServerInfo.ppIpStringList);
-                    localServerInfo.ppIpStringList = NULL;
 
                     sprintf(buffer, "Found %d servers!", localServerInfo.nrOfServersFound);
                     pCheckLocal = createText(pGame->pRenderer, 0, 255, 0, pLocalFont, buffer, areaCenterX, areaY + marginH);
@@ -1157,7 +1178,10 @@ int serverSelectMenu(Game *pGame)
     {
         if (i < 5)
             freeText(pIpText[i]);
+        free(localServerInfo.ppIpStringList[i]);
     }
+    free(localServerInfo.ppIpStringList);
+    localServerInfo.ppIpStringList = NULL;
     freeText(pStartScanText);
     freeText(pExitText);
     freeText(pSearchText);
