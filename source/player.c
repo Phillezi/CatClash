@@ -805,7 +805,7 @@ void chargingCollisions(Server *pServer, int originID) {
         players[i] = pServer->clients[i].data;
 
     if (players[originID].charging) {
-        if ((id = playerCollision(players[originID], players, pServer->nrOfClients, players[originID].prevKeyPressed, players[originID].rect.w, 0)) != -1) {
+        if ((id = playerCollision(players[originID], players, pServer->nrOfClients, players[originID].prevKeyPressed, players[originID].rect.w, 5)) != -1) {
             if ((SDL_GetTicks() - prevTime[id]) % 2000 >= invincibilityTicks[id]) {
                 int oldHealthOpp = players[id].hp;
                 int oldHealthMe = players[originID].hp;
