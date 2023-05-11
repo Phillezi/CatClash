@@ -445,6 +445,7 @@ int joinServerMenu(Game *pGame)
 
             SDL_SetRenderDrawColor(pGame->pRenderer, 255, 255, 255, 255);
             SDL_RenderClear(pGame->pRenderer);
+
             drawText(pPrompt, pGame->pRenderer);
             drawText(pPrompt2, pGame->pRenderer);
             if (text[0])
@@ -1361,9 +1362,9 @@ int serverLobby(Game *pGame)
                 returnValue = 1;
                 break;
             }
-            else if(event.type == SDL_KEYDOWN)
+            else if (event.type == SDL_KEYDOWN)
             {
-                if(event.key.keysym.sym == SDLK_SPACE)
+                if (event.key.keysym.sym == SDLK_SPACE)
                 {
                     exit = true;
                     returnValue = 0;

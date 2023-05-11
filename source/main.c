@@ -251,6 +251,9 @@ int init(Game *pGame)
     return 0;
 }
 
+/*
+TODO: Uppdateringar styrda av semaforer för att göra spelet mer effektivt
+*/
 void run(Game *pGame)
 {
     bool playerWasConnected = false;
