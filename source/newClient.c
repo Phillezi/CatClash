@@ -197,7 +197,7 @@ void sendData(Game *pGame)
     }
 }
 
-void getPlayerData(Game *pGame, int oldHealth)
+void getPlayerData(Game *pGame)
 {
     while (SDLNet_UDP_Recv(pGame->socketDesc, pGame->pPacket))
     {
@@ -216,10 +216,10 @@ void getPlayerData(Game *pGame, int oldHealth)
                 pGame->pMultiPlayer[j].charging = tmp.charging;
                 pGame->pMultiPlayer[j].state = tmp.state;
             }
-            else if (pGame->pPlayer->id == tmp.id)
-            {
-                if (tmp.hp <= pGame->pPlayer->hp)
-                    pGame->pPlayer->hp = tmp.hp;
+            else if (pGame->pPlayer->id == tmp.id) {
+                if (tmp.hp <= pGame->pPlayer->hp) pGame->pPlayer->hp = tmp.hp;
+                if (tmp.charge == 0) pGame->pPlayer->charge = tmp.charge;
+                if (tmp.charging == 0 ) pGame->pPlayer->charging = tmp.charging;
             }
         }
     }

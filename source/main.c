@@ -332,14 +332,14 @@ void run(Game *pGame)
                         } // Send one last data packet så other players know you are idle
                     }
                     if (pGame->isConnected)
-                        getPlayerData(pGame, oldHealth);
+                        getPlayerData(pGame);
 
                     pthread_create(&movementThread, NULL, handleInput, (void *)pGame);
                 }
                 else
                 {
                     if (pGame->isConnected)
-                        getPlayerData(pGame, oldHealth);
+                        getPlayerData(pGame);
                     handleInput(pGame);
                     int keepAliveDelta = SDL_GetTicks() - prevUDPTransfer;
                     if (pGame->isConnected)
