@@ -6,6 +6,7 @@
 #include <stdlib.h>
 #include <stdbool.h>
 #include <pthread.h>
+#include <semaphore.h>
 
 // DEFINITIONS
 #define MAP_FILEPATH "resources/map.txt"
@@ -237,8 +238,14 @@ typedef struct udpPlayerPackage PlayerUdpPkg;
 
 struct localServer{
     char **ppIpStringList;
+    char defaultGateway[16];
+
+    sem_t done[255];
     Uint8 *pPlayersOnline;
     Uint8 nrOfServersFound;
+    SDLNet_SocketSet sockets;
+    UDPsocket socket[255];
+    UDPpacket *pPacket;
     bool searchDone;
     bool foundServer;
 };

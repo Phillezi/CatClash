@@ -353,9 +353,7 @@ void checkTCPForNewConnections(Server *pServer)
             packet = pServer->nrOfClients;
             SDLNet_TCP_Send(tmpClient, &packet, sizeof(packet));
             printf("Sent player amount\n");
-
         }
-            
     }
 }
 
@@ -559,48 +557,62 @@ void checkIncommingUDP(Server *pServer)
 {
     if (SDLNet_UDP_Recv(pServer->socketUDP, pServer->pRecieve) == 1)
     {
-        PlayerUdpPkg data;
-        int id;
-        static int hp[MAX_PLAYERS] = {0};
-        /*
-        Ta emot mindre(i bytes) structar som innehåller bara x y riktning och id
-        */
-        memcpy(&data, pServer->pRecieve->data, sizeof(PlayerUdpPkg));
-        checkUDPClient(pServer, data);
-
-        for (int i = 0; i < pServer->nrOfClients; i++)
-            if (data.id == pServer->clients[i].id) {
-                pServer->clients[i].timeout = SDL_GetTicks();
-                pServer->clients[i].data.x = data.x;
-                pServer->clients[i].data.y = data.y;
-                pServer->clients[i].data.prevKeyPressed = data.direction;
-                pServer->clients[i].data.idle = data.idle;
-                pServer->clients[i].data.charging = data.charging;
-                pServer->clients[i].data.charge = data.charge;
-                pServer->clients[i].data.state = data.state;
-                pServer->clients[i].data.hp = data.hp;
-                id = i;
-            }
-
-        chargingCollisions(pServer, id);    
-        data.hp = pServer->clients[id].data.hp < 0 ? 0 : pServer->clients[id].data.hp;    
-
-        for (int i = 0; i < pServer->nrOfClients; i++)
+        if (pServer->pRecieve->len > sizeof(Uint8))
         {
-            if (pServer->clients[i].address.port != 8888)
-            {
-                /*
-                Skicka mindre(i bytes) structar som innehåller bara x y riktning och id
-                */
-                memcpy(pServer->pSent->data, &data, sizeof(PlayerUdpPkg));
-                pServer->pSent->address.port = pServer->clients[i].address.port;
-                pServer->pSent->address.host = pServer->clients[i].address.host;
-                pServer->pSent->len = sizeof(PlayerUdpPkg);
+            PlayerUdpPkg data;
+            int id;
+            static int hp[MAX_PLAYERS] = {0};
+            /*
+            Ta emot mindre(i bytes) structar som innehåller bara x y riktning och id
+            */
+            memcpy(&data, pServer->pRecieve->data, sizeof(PlayerUdpPkg));
+            checkUDPClient(pServer, data);
 
-                if (!SDLNet_UDP_Send(pServer->socketUDP, -1, pServer->pSent))
+            for (int i = 0; i < pServer->nrOfClients; i++)
+                if (data.id == pServer->clients[i].id)
                 {
-                    printf("Error: Could not send package\n");
+                    pServer->clients[i].timeout = SDL_GetTicks();
+                    pServer->clients[i].data.x = data.x;
+                    pServer->clients[i].data.y = data.y;
+                    pServer->clients[i].data.prevKeyPressed = data.direction;
+                    pServer->clients[i].data.idle = data.idle;
+                    pServer->clients[i].data.charging = data.charging;
+                    pServer->clients[i].data.charge = data.charge;
+                    pServer->clients[i].data.state = data.state;
+                    pServer->clients[i].data.hp = data.hp;
+                    id = i;
                 }
+
+            chargingCollisions(pServer, id);
+            data.hp = pServer->clients[id].data.hp < 0 ? 0 : pServer->clients[id].data.hp;
+
+            for (int i = 0; i < pServer->nrOfClients; i++)
+            {
+                if (pServer->clients[i].address.port != 8888)
+                {
+                    /*
+                    Skicka mindre(i bytes) structar som innehåller bara x y riktning och id
+                    */
+                    memcpy(pServer->pSent->data, &data, sizeof(PlayerUdpPkg));
+                    pServer->pSent->address.port = pServer->clients[i].address.port;
+                    pServer->pSent->address.host = pServer->clients[i].address.host;
+                    pServer->pSent->len = sizeof(PlayerUdpPkg);
+
+                    if (!SDLNet_UDP_Send(pServer->socketUDP, -1, pServer->pSent))
+                    {
+                        printf("Error: Could not send package\n");
+                    }
+                }
+            }
+        }
+        else
+        {
+            if(*(Uint8 *)pServer->pRecieve->data == 0)
+            {
+                *pServer->pRecieve->data = (Uint8)pServer->nrOfClients;
+                SDLNet_UDP_Send(pServer->socketUDP, -1, pServer->pRecieve);
+                printf("Recv ping\n");
+                printf("Responded\n");
             }
         }
     }

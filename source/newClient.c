@@ -246,20 +246,59 @@ void *tryOpenIp(void *pNetScanIn)
     pthread_setcancelstate(PTHREAD_CANCEL_ENABLE, NULL);
     pthread_setcanceltype(PTHREAD_CANCEL_ASYNCHRONOUS, NULL);
     sem_post(&pNet->started);
-    TCPsocket socket = SDLNet_TCP_Open(&pNet->ip);
-    sem_post(&pNet->waitingForMsg);
+    // TCPsocket socket = SDLNet_TCP_Open(&pNet->ip);
+    UDPsocket socket = SDLNet_UDP_Open(0);
+
     // sem_init(&pNet->doneWaitingForMsg, 0, 0);
     pthread_setcanceltype(PTHREAD_CANCEL_DEFERRED, NULL);
     if (socket != NULL)
     {
         Uint8 joinFlag = 0;
-        int bytesSend = SDLNet_TCP_Send(socket, &joinFlag, sizeof(joinFlag));
-        SDLNet_TCP_Recv(socket, &pNet->playersOnline, sizeof(pNet->playersOnline)); // Get the playeramount of the server
-        // sem_init(&pNet->started, 0, 1);
-        // sem_post(&pNet->waitingForMsg);
-        printf("___Server found at %d:%d____\n", pNet->ip.host, pNet->ip.port);
-        SDLNet_TCP_Close(socket);
-        pNet->connected = 1;
+        UDPpacket *pPacket = SDLNet_AllocPacket(sizeof(joinFlag));
+        *pPacket->data = joinFlag;
+        pPacket->address = pNet->ip;
+        pPacket->len = sizeof(joinFlag);
+        SDLNet_UDP_Send(socket, -1, pPacket);
+
+        int bytesRecv = 0;
+        SDLNet_SocketSet sockets = SDLNet_AllocSocketSet(1);
+        SDLNet_AddSocket(sockets, (SDLNet_GenericSocket)socket);
+
+        pthread_setcanceltype(PTHREAD_CANCEL_ASYNCHRONOUS, NULL);
+        sem_post(&pNet->waitingForMsg);
+        // while (bytesRecv == 0)
+        //{
+        SDL_Delay(200);
+        while (SDLNet_CheckSockets(sockets, 0))
+        {
+            if (SDLNet_SocketReady(socket))
+            {
+                bytesRecv = SDLNet_UDP_Recv(socket, pPacket);
+            }
+        }
+        pthread_testcancel();
+        //}
+
+        // while(SDLNet_UDP_Recv(socket, pPacket) == 0)
+        //     ;
+
+        if (bytesRecv)
+        {
+            pNet->playersOnline = *(Uint8 *)pPacket->data;
+            // int bytesSend = SDLNet_TCP_Send(socket, &joinFlag, sizeof(joinFlag));
+            // SDLNet_TCP_Recv(socket, &pNet->playersOnline, sizeof(pNet->playersOnline)); // Get the playeramount of the server
+            //  sem_init(&pNet->started, 0, 1);
+            //  sem_post(&pNet->waitingForMsg);
+
+            printf("___Server found at %d:%d____\n", pNet->ip.host, pNet->ip.port);
+            // SDLNet_TCP_Close(socket);
+            SDLNet_UDP_Close(socket);
+            SDLNet_FreePacket(pPacket);
+            SDLNet_DelSocket(sockets, (SDLNet_GenericSocket)socket);
+            SDLNet_FreeSocketSet(sockets);
+            pNet->connected = 1;
+        }
+
         sem_post(&pNet->doneWaitingForMsg);
     }
     return (NULL);
@@ -295,7 +334,7 @@ void *timeoutIpThread(void *pNetScanIn)
 
     if (sem_timedwait(&pNet->waitingForMsg, &ts))
     {
-        printf("Semaphore timed out\n");
+        // printf("Semaphore timed out\n");
         if (_pthread_tryjoin(pNet->threadId, NULL) != 0)
         {
             if (pthread_cancel(pNet->threadId) != 0)
@@ -308,9 +347,10 @@ void *timeoutIpThread(void *pNetScanIn)
     else
     {
         ts.tv_sec = time(NULL) + 1;
+        ts.tv_nsec = 0;
         if (sem_timedwait(&pNet->doneWaitingForMsg, &ts))
         {
-            printf("Semaphore timed out\n");
+            // printf("Semaphore timed out\n");
             if (_pthread_tryjoin(pNet->threadId, NULL) != 0)
             {
                 if (pthread_cancel(pNet->threadId) != 0)
@@ -350,35 +390,181 @@ void *timeoutIpThread(void *pNetScanIn)
     sem_post(&pNet->done);
     pthread_exit(NULL);*/
 }
+void *waitForUDPResponse(void *arg)
+{
+    LocalServer *pLocalServer = (LocalServer *)arg;
+
+    Uint32 startTick = SDL_GetTicks();
+
+    //while (SDL_GetTicks() < startTick+100)
+    //{
+
+        while (SDLNet_CheckSockets(pLocalServer->sockets, 1000))
+        {
+            for (int i = 0; i < 255; i++)
+            {
+                //sem_wait(&pLocalServer->done[i]);
+                int val;
+                sem_getvalue(&pLocalServer->done[i], &val);
+
+                if(val == 0)
+                    break;
+                int bytesRecv = 0;
+                if (SDLNet_SocketReady(pLocalServer->socket[i]))
+                {
+                    printf("recived something\n");
+                    bytesRecv = SDLNet_UDP_Recv(pLocalServer->socket[i], pLocalServer->pPacket);
+                    if (bytesRecv > 0)
+                    {
+                        printf("Recived msg from udp server\n");
+                        // sprintf(ipStr, "%s%d", defaultGateway, i);
+
+                        Uint8 playersOnline = *(Uint8 *)pLocalServer->pPacket->data;
+                        Uint8 errFlag = 0;
+
+                        if (!pLocalServer->ppIpStringList)
+                        {
+                            printf("Allocating Memory for string array containing open IPs\n");
+                            pLocalServer->ppIpStringList = (char **)malloc(sizeof(char *));
+                            if (!pLocalServer->ppIpStringList)
+                            {
+                                printf("FAILED: When allocating Memory for string array containing open IPs\n");
+                                errFlag = 1;
+                            }
+                        }
+                        else
+                        {
+                            printf("Expanding string array for new open ip string\n");
+                            char **ppTemp = (char **)realloc(pLocalServer->ppIpStringList, pLocalServer->nrOfServersFound + 1 * sizeof(char *));
+                            if (!ppTemp)
+                            {
+                                printf("FAILED: When expanding string array for new open ip string\n");
+                                errFlag = 1;
+                            }
+                            pLocalServer->ppIpStringList = ppTemp;
+                        }
+
+                        if (!pLocalServer->pPlayersOnline)
+                        {
+                            printf("Allocating Memory for Array of online players\n");
+                            pLocalServer->pPlayersOnline = (Uint8 *)malloc(sizeof(Uint8));
+                            if (!pLocalServer->pPlayersOnline)
+                            {
+                                printf("FAILED: When allocating Memory for Array of online players\n");
+                                errFlag = 1;
+                            }
+                        }
+                        else
+                        {
+                            printf("Expanding array of online players\n");
+                            Uint8 *pTemp = (Uint8 *)realloc(pLocalServer->pPlayersOnline, pLocalServer->nrOfServersFound + 1 * sizeof(Uint8));
+                            if (!pTemp)
+                            {
+                                printf("FAILED: When expanding array of online players\n");
+                                errFlag = 1;
+                            }
+                            else
+                                pLocalServer->pPlayersOnline = pTemp;
+                        }
+
+                        if (!errFlag)
+                        {
+                            pLocalServer->pPlayersOnline[pLocalServer->nrOfServersFound] = playersOnline;
+
+                            printf("Calloc memory for string in string array\n");
+                            char *pTemp = (char *)calloc(16, sizeof(char));
+                            if (!pTemp)
+                            {
+                                printf("FAILED: When callocing memory for string in string array\n");
+                                errFlag = 1;
+                            }
+                            else
+                            {
+                                pLocalServer->ppIpStringList[pLocalServer->nrOfServersFound] = pTemp;
+                                sprintf(pLocalServer->ppIpStringList[pLocalServer->nrOfServersFound], "%s%d", pLocalServer->defaultGateway, i);
+                                pLocalServer->nrOfServersFound++;
+                                pLocalServer->foundServer = true;
+                                printf("Done with allocation\n");
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    //}
+    //sem_post(&pLocalServer->done);
+    printf("Done Waiting on udp\n");
+    pthread_exit(NULL);
+}
 
 void *scanForGamesOnLocalNetwork(void *arg)
 {
     LocalServer *pLocalServer = (LocalServer *)arg;
     bool found_ip = false;
 
-    char ipStr[16], defaultGateway[16], subnetmask[16];
+    char ipStr[16], subnetmask[16]; // defaultGateway[16], subnetmask[16];
 
-    getDefaultGateway(defaultGateway, subnetmask);
+    getDefaultGateway(pLocalServer->defaultGateway, subnetmask);
 
-    printf("Default Gateway: %s\n", defaultGateway);
+    printf("Default Gateway: %s\n", pLocalServer->defaultGateway);
     printf("Subnet-mask: %s\n", subnetmask);
 
     int pos = 0;
-    for (int i = strlen(defaultGateway) - 1; i > strlen(defaultGateway) - 1 - 3; i--)
-        if (defaultGateway[i] == '.')
+    for (int i = strlen(pLocalServer->defaultGateway) - 1; i > strlen(pLocalServer->defaultGateway) - 1 - 3; i--)
+        if (pLocalServer->defaultGateway[i] == '.')
         {
             pos = i + 1;
             break;
         }
 
     // Uint8 startval = 0;
-    for (pos; pos < strlen(defaultGateway); pos++)
+    for (pos; pos < strlen(pLocalServer->defaultGateway); pos++)
     {
         // startval = startval * 10 + defaultGateway[pos] - (int)'0' + 1;
-        defaultGateway[pos] = 0;
+        pLocalServer->defaultGateway[pos] = 0;
     }
 
-    NetScanTcp net[255];
+    IPaddress ip;
+    pLocalServer->sockets = SDLNet_AllocSocketSet(255);
+    Uint8 joinFlag = 0;
+    pLocalServer->pPacket = SDLNet_AllocPacket(sizeof(joinFlag));
+    pthread_t listenThread;
+    for(int i = 0; i < 255; i++)
+    sem_init(&pLocalServer->done[i], 0, 0);
+
+    
+    pthread_create(&listenThread, NULL, waitForUDPResponse, pLocalServer);
+    for (int i = 0; i < 255; i++)
+    {
+        sprintf(ipStr, "%s%d", pLocalServer->defaultGateway, i);
+        SDLNet_ResolveHost(&ip, ipStr, 1234);
+        pLocalServer->socket[i] = SDLNet_UDP_Open(0);
+
+        *pLocalServer->pPacket->data = joinFlag;
+        pLocalServer->pPacket->address = ip;
+        pLocalServer->pPacket->len = sizeof(joinFlag);
+        SDLNet_UDP_Send(pLocalServer->socket[i], -1, pLocalServer->pPacket);
+        SDLNet_AddSocket(pLocalServer->sockets, (SDLNet_GenericSocket)pLocalServer->socket[i]);
+        sem_post(&pLocalServer->done[i]);
+    }
+    printf("Done sending all packets, waiting for response...\n");
+    //sem_wait(&pLocalServer->done);
+    
+    pthread_join(listenThread, NULL);
+    printf("Scan done\n");
+    for(int i = 0; i < 255; i++)
+    {
+        SDLNet_UDP_Close(pLocalServer->socket[i]);
+        SDLNet_UDP_DelSocket(pLocalServer->sockets, pLocalServer->socket[i]);
+    }
+        
+    
+    SDLNet_FreePacket(pLocalServer->pPacket);
+    SDLNet_FreeSocketSet(pLocalServer->sockets);
+
+
+
+    /*NetScanTcp net[255];
     pthread_t tryOpenThread[255], timeoutThread[255];
     // char tmpIp[16];
     // defaultGateway[8] = 0;
@@ -496,7 +682,7 @@ void *scanForGamesOnLocalNetwork(void *arg)
         // sem_destroy(&net[i].done);
     }
     //    printf("%d\n",k);
-    //}
+    //}*/
 
     pLocalServer->searchDone = true; // set done with scan flag to true
 
@@ -511,10 +697,10 @@ void *scanForGamesFromSavedList(void *arg)
 
     NetScanTcp net[nrOfIps];
     pthread_t tryOpenThread[nrOfIps], timeoutThread[nrOfIps];
-    
+
     for (int i = 0; i < nrOfIps; i++)
     {
-        
+
         if (SDLNet_ResolveHost(&net[i].ip, ipS[i], 1234) != 0)
             printf("Could not resolve host\n");
         else
@@ -621,6 +807,4 @@ void *scanForGamesFromSavedList(void *arg)
     pLocalServer->searchDone = true; // set done with scan flag to true
 
     return NULL;
-
-
 }
