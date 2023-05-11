@@ -1315,7 +1315,7 @@ int serverLobby(Game *pGame)
                 }
             }
             if (pGame->isConnected)
-                getPlayerData(pGame, 0);
+                getPlayerData(pGame);
 
             if (pGame->nrOfPlayers != nrOfPlayersDisplayed)
             {
