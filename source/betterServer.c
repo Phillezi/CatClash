@@ -554,7 +554,6 @@ void checkIncommingUDP(Server *pServer)
     {
         PlayerUdpPkg data;
         int id;
-        static int hp[MAX_PLAYERS] = {0};
         /*
         Ta emot mindre(i bytes) structar som innehåller bara x y riktning och id
         */
@@ -578,7 +577,7 @@ void checkIncommingUDP(Server *pServer)
         chargingCollisions(pServer, id);    
         data.hp = pServer->clients[id].data.hp < 0 ? 0 : pServer->clients[id].data.hp;    
         data.charge   = pServer->clients[id].data.charge;    
-        data.charging = pServer->clients[id].data.charging;
+        data.charging = data.charge > 0 ? 1 : 0;
 
         for (int i = 0; i < pServer->nrOfClients; i++)
         {

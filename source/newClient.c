@@ -216,7 +216,7 @@ void getPlayerData(Game *pGame)
                 pGame->pMultiPlayer[j].state = tmp.state;
             }
             else if (pGame->pPlayer->id == tmp.id) {
-                if (tmp.hp <= pGame->pPlayer->hp)             pGame->pPlayer->hp = tmp.hp;
+                if (tmp.hp <= pGame->pPlayer->hp) pGame->pPlayer->hp = tmp.hp;
                 if (tmp.charge == 0) pGame->pPlayer->charge = tmp.charge;
                 if (tmp.charging == 0 ) pGame->pPlayer->charging = tmp.charging;
             }

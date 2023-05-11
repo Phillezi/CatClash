@@ -136,11 +136,7 @@ void *handleInput(void *pGameIn) // Game *pGame)
             else
             {
                 if (id != -1) {
-                    if (flag == 1) {
-                        pGame->pPlayer->charge = 1;
-                        flag = 0;
-                    } else
-                        flag = 1;
+                    continue;
                 }
                 else {
                     damage = pGame->pPlayer->charge * 2;
@@ -828,7 +824,7 @@ void chargingCollisions(Server *pServer, int originID) {
                     pkg.id = id;
                     pkg.hp = players[id].hp < 0 ? 0 : players[id].hp;
                     pkg.charge = players[id].charge;
-                    pkg.charging = players[id].charging;
+                    pkg.charging = pkg.charge > 0 ? 1 : 0;
 
                     memcpy(pServer->pSent->data, &pkg, sizeof(PlayerUdpPkg));
                     pServer->pSent->address.port = pServer->clients[id].address.port;
@@ -852,6 +848,8 @@ void chargingCollisions(Server *pServer, int originID) {
     }
 
     pServer->clients[originID].data.hp = players[originID].hp;
+    pServer->clients[originID].data.charge = players[originID].charge;
+    pServer->clients[originID].data.charging = players[originID].charging;
 }
 
 void damagePlayer(Player players[], int personalID, int id, char direction) {
