@@ -17,7 +17,7 @@ void *scanForGamesFromSavedList(void *arg);
 //UDP
 
 void sendData(Game *pGame);
-void getPlayerData(Game *pGame, int oldHealth);
+void getPlayerData(Game *pGame);
 
 
 

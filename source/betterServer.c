@@ -560,8 +560,7 @@ void checkIncommingUDP(Server *pServer)
     if (SDLNet_UDP_Recv(pServer->socketUDP, pServer->pRecieve) == 1)
     {
         PlayerUdpPkg data;
-        int id;
-        static int hp[MAX_PLAYERS] = {0};
+        int id, resend = 0;
         /*
         Ta emot mindre(i bytes) structar som innehåller bara x y riktning och id
         */
@@ -580,15 +579,18 @@ void checkIncommingUDP(Server *pServer)
                 pServer->clients[i].data.state = data.state;
                 pServer->clients[i].data.hp = data.hp;
                 id = i;
+                break;
             }
 
         chargingCollisions(pServer, id);    
-        data.hp = pServer->clients[id].data.hp < 0 ? 0 : pServer->clients[id].data.hp;    
+        if (data.hp != pServer->clients[id].data.hp) { data.hp = pServer->clients[id].data.hp < 0 ? 0 : pServer->clients[id].data.hp; resend = 1; }
+        if (data.charge != pServer->clients[id].data.charge) { data.charge = pServer->clients[id].data.charge; resend = 1; }
+        if (data.charging != pServer->clients[id].data.charging) { data.charging = data.charge > 0 ? 1 : 0; resend = 1; }
 
-        for (int i = 0; i < pServer->nrOfClients; i++)
-        {
-            if (pServer->clients[i].address.port != 8888)
-            {
+        for (int i = 0; i < pServer->nrOfClients; i++) {
+            if (pServer->clients[i].address.port != 8888) {
+                // Don't resend packets to original player with unchanged data
+                if (data.id == pServer->clients[i].id && resend == 0) continue;
                 /*
                 Skicka mindre(i bytes) structar som innehåller bara x y riktning och id
                 */

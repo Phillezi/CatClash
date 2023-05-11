@@ -136,11 +136,7 @@ void *handleInput(void *pGameIn) // Game *pGame)
             else
             {
                 if (id != -1) {
-                    if (flag == 1) {
-                        pGame->pPlayer->charge = 1;
-                        flag = 0;
-                    } else
-                        flag = 1;
+                    continue;
                 }
                 else {
                     damage = pGame->pPlayer->charge * 2;
@@ -801,7 +797,7 @@ int getDeadPlayers(Game *pGame)
 void chargingCollisions(Server *pServer, int originID) {
     static int invincibilityTicks[MAX_PLAYERS] = {0}, prevTime[MAX_PLAYERS] = {0};
     static char dir;
-    int id;
+    int id = -1;
     static Player players[MAX_PLAYERS];
     PlayerUdpPkg pkg;
 
@@ -809,8 +805,8 @@ void chargingCollisions(Server *pServer, int originID) {
         players[i] = pServer->clients[i].data;
 
     if (players[originID].charging) {
-        if ((id = playerCollision(players[originID], players, pServer->nrOfClients, players[originID].prevKeyPressed, players[originID].rect.w, 0)) != -1) {
-                if ((SDL_GetTicks() - prevTime[id]) % 2000 >= invincibilityTicks[id]) {
+        if ((id = playerCollision(players[originID], players, pServer->nrOfClients, players[originID].prevKeyPressed, players[originID].rect.w, 5)) != -1) {
+            if ((SDL_GetTicks() - prevTime[id]) % 2000 >= invincibilityTicks[id]) {
                 int oldHealthOpp = players[id].hp;
                 int oldHealthMe = players[originID].hp;
 
@@ -822,11 +818,13 @@ void chargingCollisions(Server *pServer, int originID) {
                 
                 damagePlayer(players, id, originID, dir);
 
-                if (oldHealthOpp > players[id].hp) {
+                if (oldHealthOpp > players[id].hp || players[id].charge == 0) {
                     prevTime[id] = SDL_GetTicks();
                     invincibilityTicks[id] = 1000;
                     pkg.id = id;
                     pkg.hp = players[id].hp < 0 ? 0 : players[id].hp;
+                    pkg.charge = players[id].charge;
+                    pkg.charging = pkg.charge > 0 ? 1 : 0;
 
                     memcpy(pServer->pSent->data, &pkg, sizeof(PlayerUdpPkg));
                     pServer->pSent->address.port = pServer->clients[id].address.port;
@@ -850,20 +848,24 @@ void chargingCollisions(Server *pServer, int originID) {
     }
 
     pServer->clients[originID].data.hp = players[originID].hp;
+    pServer->clients[originID].data.charge = id != -1 ? 0 : players[originID].charge;
+    pServer->clients[originID].data.charging = id != -1 ? 0 : players[originID].charging;
 }
 
 void damagePlayer(Player players[], int personalID, int id, char direction) {
     int tmp;
 
-    if (players[personalID].prevKeyPressed != direction)                                                        // Charging into the side of another player
+    if (players[personalID].prevKeyPressed != direction) {                                                          // Charging into the side of another player
         players[personalID].hp -= players[id].charge * 2;
-    else if (players[personalID].charging == 0 && chargingIntoMe(players, id, direction))                       // If player is charging up but yet to pounce
+    } else if (players[personalID].charging == 0 && chargingIntoMe(players, id, direction)) {                       // If player is charging up but yet to pounce
         players[personalID].hp -= players[id].charge * 2;
-    else if (players[personalID].charge < players[id].charge && headOnCollision(players, personalID, id) != -1) // Head on collision first player takes damage
+    } else if (players[personalID].charge < players[id].charge && headOnCollision(players, personalID, id) != -1) { // Head on collision first player takes damage
         players[personalID].hp -= (players[id].charge - players[personalID].charge) * 2;
-    else if (players[personalID].charge > players[id].charge && headOnCollision(players, personalID, id) != -1) // Head on collision second player takes damage
+        players[personalID].charge = 0;
+    } else if (players[personalID].charge > players[id].charge && headOnCollision(players, personalID, id) != -1) { // Head on collision second player takes damage
         players[id].hp -= (players[personalID].charge - players[id].charge) * 2;
-
+        players[personalID].charge = 0;
+    }
     if (players[personalID].hp < 0) players[personalID].hp = 0;
     if (players[id].hp < 0) players[id].hp = 0;
 }
