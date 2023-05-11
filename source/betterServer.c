@@ -572,6 +572,7 @@ void checkIncommingUDP(Server *pServer)
                 pServer->clients[i].data.state = data.state;
                 pServer->clients[i].data.hp = data.hp;
                 id = i;
+                break;
             }
 
         chargingCollisions(pServer, id);    

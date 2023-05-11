@@ -818,7 +818,7 @@ void chargingCollisions(Server *pServer, int originID) {
                 
                 damagePlayer(players, id, originID, dir);
 
-                if (oldHealthOpp > players[id].hp) {
+                if (oldHealthOpp > players[id].hp || players[id].charge == 0) {
                     prevTime[id] = SDL_GetTicks();
                     invincibilityTicks[id] = 1000;
                     pkg.id = id;
