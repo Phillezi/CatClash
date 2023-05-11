@@ -855,39 +855,17 @@ void chargingCollisions(Server *pServer, int originID) {
 void damagePlayer(Player players[], int personalID, int id, char direction) {
     int tmp;
 
-    if (players[personalID].prevKeyPressed != direction) {                                                          // Charging into the side of another player
+    if (players[personalID].prevKeyPressed != direction) {        // Charging into the side of another player
         players[personalID].hp -= players[id].charge * 2;
-    } else if (players[personalID].charging == 0 && chargingIntoMe(players, id, direction)) {                       // If player is charging up but yet to pounce
+    } else if (players[personalID].charging == 0) {               // If player is charging up but yet to pounce
         players[personalID].hp -= players[id].charge * 2;
-    } else if (players[personalID].charge < players[id].charge && headOnCollision(players, personalID, id) != -1) { // Head on collision first player takes damage
+    } else if (players[personalID].charge < players[id].charge) { // Head on collision first player takes damage
         players[personalID].hp -= (players[id].charge - players[personalID].charge) * 2;
         players[personalID].charge = 0;
-    } else if (players[personalID].charge > players[id].charge && headOnCollision(players, personalID, id) != -1) { // Head on collision second player takes damage
+    } else if (players[personalID].charge > players[id].charge) { // Head on collision second player takes damage
         players[id].hp -= (players[personalID].charge - players[id].charge) * 2;
         players[personalID].charge = 0;
     }
     if (players[personalID].hp < 0) players[personalID].hp = 0;
     if (players[id].hp < 0) players[id].hp = 0;
-}
-
-/* \returns 1 if players are in a head on collision, -1 if they are not */
-int headOnCollision(Player players[], int personalID, int id) {
-    switch (players[personalID].prevKeyPressed) {
-    case 'W': if (players[id].prevKeyPressed == 'S') return 1; break;
-    case 'A': if (players[id].prevKeyPressed == 'D') return 1; break;
-    case 'S': if (players[id].prevKeyPressed == 'W') return 1; break;
-    case 'D': if (players[id].prevKeyPressed == 'A') return 1; break;
-    }
-    return -1;
-}
-
-/* \returns 1 if opposing player is charging into you, otherwise 0 */
-int chargingIntoMe(Player players[], int id, char direction) {
-    switch (direction) {
-    case 'W': if (players[id].prevKeyPressed) return 1; break;
-    case 'A': if (players[id].prevKeyPressed) return 1; break;
-    case 'S': if (players[id].prevKeyPressed) return 1; break;
-    case 'D': if (players[id].prevKeyPressed) return 1; break;
-    }
-    return 0;
 }
