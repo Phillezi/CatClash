@@ -503,17 +503,17 @@ void loadMedia(SDL_Renderer *pRenderer, SDL_Texture **pPlayerTexture, SDL_Rect g
     // playerID--;   //for testing
 
     // IDLE
-    gSpriteClips[playerID][0].x = 36;
+    gSpriteClips[playerID][0].x = 35;
     gSpriteClips[playerID][0].y = 32 + (playerID * HEIGHT_OF_PLAYER_SPRITE);
     gSpriteClips[playerID][0].w = w;
     gSpriteClips[playerID][0].h = h;
 
-    gSpriteClips[playerID][1].x = 36;
+    gSpriteClips[playerID][1].x = 35;
     gSpriteClips[playerID][1].y = 288 + (playerID * HEIGHT_OF_PLAYER_SPRITE);
     gSpriteClips[playerID][1].w = w;
     gSpriteClips[playerID][1].h = h;
 
-    gSpriteClips[playerID][2].x = 5;
+    gSpriteClips[playerID][2].x = 4;
     gSpriteClips[playerID][2].y = 480 + (playerID * HEIGHT_OF_PLAYER_SPRITE);
     gSpriteClips[playerID][2].w = w;
     gSpriteClips[playerID][2].h = h;
@@ -530,7 +530,7 @@ void loadMedia(SDL_Renderer *pRenderer, SDL_Texture **pPlayerTexture, SDL_Rect g
     gSpriteClips[playerID][28].h = h;
 
     // RUNNING DOWN
-    int x[4] = {644, 676, 708, 740};
+    int x[4] = {643, 675, 707, 739};
     int y[2] = {32 + (playerID * HEIGHT_OF_PLAYER_SPRITE), 63 + (playerID * HEIGHT_OF_PLAYER_SPRITE)};
 
     gSpriteClips[playerID][3].x = x[0];
