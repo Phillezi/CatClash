@@ -577,6 +577,8 @@ void checkIncommingUDP(Server *pServer)
 
         chargingCollisions(pServer, id);    
         data.hp = pServer->clients[id].data.hp < 0 ? 0 : pServer->clients[id].data.hp;    
+        data.charge   = pServer->clients[id].data.charge;    
+        data.charging = pServer->clients[id].data.charging;
 
         for (int i = 0; i < pServer->nrOfClients; i++)
         {

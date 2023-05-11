@@ -827,6 +827,8 @@ void chargingCollisions(Server *pServer, int originID) {
                     invincibilityTicks[id] = 1000;
                     pkg.id = id;
                     pkg.hp = players[id].hp < 0 ? 0 : players[id].hp;
+                    pkg.charge = players[id].charge;
+                    pkg.charging = players[id].charging;
 
                     memcpy(pServer->pSent->data, &pkg, sizeof(PlayerUdpPkg));
                     pServer->pSent->address.port = pServer->clients[id].address.port;
@@ -855,15 +857,21 @@ void chargingCollisions(Server *pServer, int originID) {
 void damagePlayer(Player players[], int personalID, int id, char direction) {
     int tmp;
 
-    if (players[personalID].prevKeyPressed != direction)                                                        // Charging into the side of another player
+    if (players[personalID].prevKeyPressed != direction) {                                                       // Charging into the side of another player
         players[personalID].hp -= players[id].charge * 2;
-    else if (players[personalID].charging == 0 && chargingIntoMe(players, id, direction))                       // If player is charging up but yet to pounce
+        players[id].charge = 0;
+    } else if (players[personalID].charging == 0 && chargingIntoMe(players, id, direction)) {                      // If player is charging up but yet to pounce
         players[personalID].hp -= players[id].charge * 2;
-    else if (players[personalID].charge < players[id].charge && headOnCollision(players, personalID, id) != -1) // Head on collision first player takes damage
+        players[id].charge = 0;
+    } else if (players[personalID].charge < players[id].charge && headOnCollision(players, personalID, id) != -1) {// Head on collision first player takes damage
         players[personalID].hp -= (players[id].charge - players[personalID].charge) * 2;
-    else if (players[personalID].charge > players[id].charge && headOnCollision(players, personalID, id) != -1) // Head on collision second player takes damage
+        players[id].charge = 0;
+        players[personalID].charge = 0;
+    } else if (players[personalID].charge > players[id].charge && headOnCollision(players, personalID, id) != -1) { // Head on collision second player takes damage
         players[id].hp -= (players[personalID].charge - players[id].charge) * 2;
-
+        players[id].charge = 0;
+        players[personalID].charge = 0;
+    }
     if (players[personalID].hp < 0) players[personalID].hp = 0;
     if (players[id].hp < 0) players[id].hp = 0;
 }
