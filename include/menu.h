@@ -11,6 +11,7 @@ int catSelMenu(Game *pGame);
 int mainMenu(Game *pGame);
 int serverSelectMenu(Game *pGame);
 void render_rounded_rect(SDL_Renderer *pRenderer, SDL_Rect rect, int radius);
+int serverLobby(Game *pGame);
 
 
 #endif

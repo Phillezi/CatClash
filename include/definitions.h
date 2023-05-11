@@ -127,6 +127,7 @@ typedef struct playerNet
 
 struct game
 {
+    bool packetAllocatedFlag;
     bool isConnected;
     bool isDrawing;
     int tempID;

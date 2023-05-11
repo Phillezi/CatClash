@@ -1130,7 +1130,7 @@ int serverSelectMenu(Game *pGame)
             searchResultChecked = false;
 
             pthread_create(&scanNetThread, NULL, scanForGamesOnLocalNetwork, &localServerInfo);
-            //pthread_create(&scanNetThread, NULL, scanForGamesFromSavedList, &localServerInfo);
+            // pthread_create(&scanNetThread, NULL, scanForGamesFromSavedList, &localServerInfo);
             freeText(pCheckLocal);
             pCheckLocal = createText(pGame->pRenderer, 0, 0, 0, pLocalFont, "Checking Local network...", areaCenterX, buttons[2].y + buttons[2].h / 2);
         }
@@ -1259,4 +1259,128 @@ void render_rounded_rect(SDL_Renderer *pRenderer, SDL_Rect rect, int radius)
     SDL_RenderDrawLine(pRenderer, rect.x + radius, rect.y + rect.h, rect.x + rect.w - radius, rect.y + rect.h);
     SDL_RenderDrawLine(pRenderer, rect.x, rect.y + radius, rect.x, rect.y + rect.h - radius);
     SDL_RenderDrawLine(pRenderer, rect.x + rect.w, rect.y + radius, rect.x + rect.w, rect.y + rect.h - radius);
+}
+
+int serverLobby(Game *pGame)
+{
+    bool playerWasConnected = false, exit = false;
+    Uint32 prevUDPTransfer = 0, prevUpdateTick = 0, deltaTime = 0;
+    int returnValue = 0, nrOfPlayersDisplayed = -1;
+
+    Text *pTitleText = createText(pGame->pRenderer, 0, 0, 0, pGame->ui.pFpsFont, "Server Lobby", pGame->windowWidth / 2, (3 * pGame->world.tileSize) / 2);
+    Text *pNrOfPlayersText = createText(pGame->pRenderer, 0, 0, 0, pGame->ui.pFpsFont, "Loading...", pGame->windowWidth / 2, 2 * (3 * pGame->world.tileSize) / 2);
+    Text *pInfoText = createText(pGame->pRenderer, 0, 0, 0, pGame->ui.pFpsFont, "Press space", pGame->windowWidth / 2, pGame->windowHeight - (3 * pGame->world.tileSize) / 2);
+
+    pGame->pPlayer->state = ALIVE;
+    pGame->pPlayer->hp = 255;
+
+    if (pGame->isConnected && !pGame->packetAllocatedFlag)
+    {
+        pGame->pPacket = SDLNet_AllocPacket(sizeof(PlayerUdpPkg));
+        if (pGame->socketDesc = SDLNet_UDP_Open(0))
+        {
+            printf("UDP init\n");
+        }
+        pGame->packetAllocatedFlag = true;
+    }
+    while (!exit)
+    {
+        deltaTime = SDL_GetTicks() - prevUpdateTick;
+        if (deltaTime >= 1000 / 60)
+        {
+            prevUpdateTick = SDL_GetTicks();
+            if (pGame->isConnected)
+            {
+                checkTCP(pGame);
+                playerWasConnected = true;
+            }
+            else if (playerWasConnected)
+            {
+                playerWasConnected = false;
+                pGame->nrOfPlayers = 0;
+                if (pGame->pMultiPlayer)
+                    free(pGame->pMultiPlayer);
+                SDLNet_TCP_Close(pGame->pClient->socketTCP);
+                SDLNet_FreeSocketSet(pGame->pClient->sockets);
+                free(pGame->pClient);
+            }
+
+            int keepAliveDelta = SDL_GetTicks() - prevUDPTransfer;
+            if (pGame->isConnected)
+            {
+                if (keepAliveDelta > 4500)
+                {
+                    prevUDPTransfer = SDL_GetTicks();
+                    sendData(pGame);
+                }
+            }
+            if (pGame->isConnected)
+                getPlayerData(pGame, 0);
+
+            if (pGame->nrOfPlayers != nrOfPlayersDisplayed)
+            {
+                nrOfPlayersDisplayed = pGame->nrOfPlayers;
+                char buffer[31];
+                freeText(pNrOfPlayersText);
+                switch (pGame->nrOfPlayers)
+                {
+                case 0:
+                    strcpy(buffer, "Just you");
+                    break;
+                case 1:
+                    if (strlen(pGame->pMultiPlayer[0].name) + strlen("You and ") < 30 && pGame->pMultiPlayer[0].name[0])
+                    {
+                        sprintf(buffer, "You and %s", pGame->pMultiPlayer[0].name);
+                        break;
+                    }
+                    else
+                        strcpy(buffer, "You and another player");
+                    break;
+                default:
+                    sprintf(buffer, "You and %d Players", pGame->nrOfPlayers);
+                    break;
+                }
+
+                pNrOfPlayersText = createText(pGame->pRenderer, 0, 0, 0, pGame->ui.pFpsFont, buffer, pGame->windowWidth / 2, 2 * (3 * pGame->world.tileSize) / 2);
+            }
+
+            SDL_SetRenderDrawColor(pGame->pRenderer, 200, 200, 200, 255);
+            SDL_RenderClear(pGame->pRenderer);
+            drawText(pTitleText, pGame->pRenderer);
+            drawText(pNrOfPlayersText, pGame->pRenderer);
+            drawText(pInfoText, pGame->pRenderer);
+
+            SDL_RenderPresent(pGame->pRenderer);
+        }
+        SDL_Event event;
+        while (SDL_PollEvent(&event))
+        {
+            if (event.type == SDL_QUIT)
+            {
+                exit = true;
+                returnValue = 1;
+                break;
+            }
+            else if(event.type == SDL_KEYDOWN)
+            {
+                if(event.key.keysym.sym == SDLK_SPACE)
+                {
+                    exit = true;
+                    returnValue = 0;
+                }
+            }
+        }
+    }
+    if (pGame->isConnected && returnValue)
+    {
+        SDLNet_TCP_Close(pGame->pClient->socketTCP);
+        SDLNet_FreeSocketSet(pGame->pClient->sockets);
+        free(pGame->pClient);
+    }
+    freeText(pTitleText);
+    freeText(pNrOfPlayersText);
+    freeText(pInfoText);
+    pGame->pPlayer->state = ALIVE;
+    pGame->pPlayer->hp = 255;
+    return returnValue;
 }

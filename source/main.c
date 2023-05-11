@@ -60,10 +60,9 @@ int main(int argv, char **args)
             case 1:
                 if (joinServerMenu(&game))
                     break;
-                run(&game);
-                break;
             case 2:
-                run(&game);
+                while (!serverLobby(&game))
+                    run(&game);
                 break;
             }
             break;
@@ -247,6 +246,8 @@ int init(Game *pGame)
 
     pGame->tempID = 0;
 
+    pGame->packetAllocatedFlag = 0;
+
     return 0;
 }
 
@@ -257,14 +258,6 @@ void run(Game *pGame)
     char windowTitle[31];
     sprintf(windowTitle, "CLIENT: %d", pGame->pPlayer->id);
     SDL_SetWindowTitle(pGame->pWindow, windowTitle);
-    if (pGame->isConnected)
-    {
-        pGame->pPacket = SDLNet_AllocPacket(sizeof(PlayerUdpPkg));
-        if (pGame->socketDesc = SDLNet_UDP_Open(0))
-        {
-            printf("UDP init\n");
-        }
-    }
 
     // if(pGame->config.multiThreading)
     // pthread_t renderThread;
@@ -418,12 +411,12 @@ void run(Game *pGame)
             }
         }
     }
-    if (pGame->isConnected)
+    /*if (pGame->isConnected)
     {
         SDLNet_TCP_Close(pGame->pClient->socketTCP);
         SDLNet_FreeSocketSet(pGame->pClient->sockets);
         free(pGame->pClient);
-    }
+    }*/
 }
 
 void close(Game *pGame)
@@ -605,9 +598,12 @@ void *updateScreen(void *pGameIn)
                 if (i == (((pGame->pMultiPlayer[j].y / pGame->map[0].wall.w) * MAPSIZE) + ((pGame->pMultiPlayer[j].x - 1) / pGame->map[0].wall.w) + 2))
                 {
                     drawPlayer(pGame, pGame->pMultiPlayer[j], pGame->pMultiPlayer[j].id);
-                    pGame->ui.pPlayerName = createText(pGame->pRenderer, 0, 0, 0, pGame->ui.pNameTagFont, pGame->pMultiPlayer[j].name, pGame->pMultiPlayer[j].rect.x + (pGame->pMultiPlayer[j].rect.w / 2), pGame->pMultiPlayer[j].rect.y);
-                    drawText(pGame->ui.pPlayerName, pGame->pRenderer);
-                    freeText(pGame->ui.pPlayerName);
+                    if (pGame->pMultiPlayer[j].name[0])
+                    {
+                        pGame->ui.pPlayerName = createText(pGame->pRenderer, 0, 0, 0, pGame->ui.pNameTagFont, pGame->pMultiPlayer[j].name, pGame->pMultiPlayer[j].rect.x + (pGame->pMultiPlayer[j].rect.w / 2), pGame->pMultiPlayer[j].rect.y);
+                        drawText(pGame->ui.pPlayerName, pGame->pRenderer);
+                        freeText(pGame->ui.pPlayerName);
+                    }
                 }
             }
 
