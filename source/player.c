@@ -797,7 +797,7 @@ int getDeadPlayers(Game *pGame)
 void chargingCollisions(Server *pServer, int originID) {
     static int invincibilityTicks[MAX_PLAYERS] = {0}, prevTime[MAX_PLAYERS] = {0};
     static char dir;
-    int id;
+    int id = -1;
     static Player players[MAX_PLAYERS];
     PlayerUdpPkg pkg;
 
@@ -849,7 +849,7 @@ void chargingCollisions(Server *pServer, int originID) {
 
     pServer->clients[originID].data.hp = players[originID].hp;
     pServer->clients[originID].data.charge = id != -1 ? 0 : players[originID].charge;
-    pServer->clients[originID].data.charging = id != -1 ? 1 : 0;
+    pServer->clients[originID].data.charging = id != -1 ? 0 : players[originID].charging;
 }
 
 void damagePlayer(Player players[], int personalID, int id, char direction) {
