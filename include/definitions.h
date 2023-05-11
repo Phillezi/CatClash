@@ -6,6 +6,7 @@
 #include <stdlib.h>
 #include <stdbool.h>
 #include <pthread.h>
+#include <semaphore.h>
 
 // DEFINITIONS
 #define MAP_FILEPATH "resources/map.txt"
@@ -127,6 +128,10 @@ typedef struct playerNet
 
 struct game
 {
+    Uint32 fps;
+    Uint32 frameCounter;
+    sem_t updateScreenSemaphore;
+    sem_t updateMovementSemaphore;
     bool packetAllocatedFlag;
     bool isConnected;
     bool isDrawing;

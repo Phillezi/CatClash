@@ -10,18 +10,18 @@
 
 void centerPlayer(Game *pGame, Player *pPlayer)
 {
-    while (pGame->isDrawing)
-        ; // temporary fix to screenTearing?
+    /*while (pGame->isDrawing)
+        ; // temporary fix to screenTearing?*/
 
     int screenShiftAmount = pGame->movementAmount;
 
-    bool playerIsInOneFifthOfScreenBorder       = (pPlayer->rect.x >= (4 * pGame->windowWidth) / 5 || pPlayer->rect.x <= pGame->windowWidth / 5) || (pPlayer->rect.y >= (4 * pGame->windowHeight) / 5 || pPlayer->rect.y <= pGame->windowHeight / 5);
-    bool playerIsOutsideScreen                  = (pPlayer->rect.x >= pGame->windowWidth || pPlayer->rect.x <= 0) || (pPlayer->rect.y >= pGame->windowHeight || pPlayer->rect.y <= 0);
+    bool playerIsInOneFifthOfScreenBorder = (pPlayer->rect.x >= (4 * pGame->windowWidth) / 5 || pPlayer->rect.x <= pGame->windowWidth / 5) || (pPlayer->rect.y >= (4 * pGame->windowHeight) / 5 || pPlayer->rect.y <= pGame->windowHeight / 5);
+    bool playerIsOutsideScreen = (pPlayer->rect.x >= pGame->windowWidth || pPlayer->rect.x <= 0) || (pPlayer->rect.y >= pGame->windowHeight || pPlayer->rect.y <= 0);
     bool playerIsMoreThanOneTileOutsideOfScreen = (pPlayer->rect.x >= pGame->windowWidth + pGame->world.tileSize || pPlayer->rect.x <= -pGame->world.tileSize) || (pPlayer->rect.y >= pGame->windowHeight + pGame->world.tileSize || pPlayer->rect.y <= -pGame->world.tileSize);
-    bool playerIsCloseToUpperBorder             = pPlayer->rect.y < (2 * pGame->windowHeight) / 5;
-    bool playerIsCloseToLowerBorder             = pPlayer->rect.y > (3 * pGame->windowHeight) / 5;
-    bool playerIsCloseToLeftBorder              = pPlayer->rect.x < (2 * pGame->windowWidth) / 5;
-    bool playerIsCloseToRigthBorder             = pPlayer->rect.x > (3 * pGame->windowWidth) / 5;
+    bool playerIsCloseToUpperBorder = pPlayer->rect.y < (2 * pGame->windowHeight) / 5;
+    bool playerIsCloseToLowerBorder = pPlayer->rect.y > (3 * pGame->windowHeight) / 5;
+    bool playerIsCloseToLeftBorder = pPlayer->rect.x < (2 * pGame->windowWidth) / 5;
+    bool playerIsCloseToRigthBorder = pPlayer->rect.x > (3 * pGame->windowWidth) / 5;
 
     if (playerIsMoreThanOneTileOutsideOfScreen)
         screenShiftAmount = pGame->movementAmount * 30;
@@ -63,189 +63,218 @@ void centerPlayer(Game *pGame, Player *pPlayer)
 void *handleInput(void *pGameIn) // Game *pGame)
 {
     Game *pGame = (Game *)pGameIn;
-    const Uint8 *currentKeyStates = SDL_GetKeyboardState(NULL);
-    float scaleY = (float)pGame->map[0].wall.h / pGame->world.tileSize;
-    float scaleX = (float)pGame->map[0].wall.w / pGame->world.tileSize;
-    if (pGame->pPlayer->charge == 0)
-        pGame->pPlayer->charging = 0;
+    Uint32 movementPreviousTime = 0;
 
-    if (currentKeyStates[SDL_SCANCODE_Q])
+    sem_t internalTimer;
+    sem_init(&internalTimer, 0, 1);
+    struct timespec timeout, timeout2;
+    clock_gettime(CLOCK_REALTIME, &timeout);
+    clock_gettime(CLOCK_REALTIME, &timeout2);
+    // timeout.tv_nsec += 1000000000 / 165;
+    timeout2.tv_nsec += 1000000000 / 165;
+
+    printf("Starting handle input\n");
+    while (pGame->state != OVER)
     {
-        if (pGame->world.angle >= 0.01)
-        {
-            pGame->world.angle -= 0.01;
-            for (int i = 0; i < MAPSIZE * MAPSIZE; i++)
-            {
-                pGame->map[i].wall.h = ((float)pGame->world.tileSize * (1 - pGame->world.angle));
+        sem_timedwait(&pGame->updateMovementSemaphore, &timeout);
+        clock_gettime(CLOCK_REALTIME, &timeout);
+        timeout.tv_nsec += 1000000000 / 165;
 
-                if (i > (MAPSIZE - 1))
+        if (sem_timedwait(&internalTimer, &timeout2) != 0)
+        {
+            clock_gettime(CLOCK_REALTIME, &timeout2);
+            timeout2.tv_nsec += 1000000000 / 165;
+            const Uint8 *currentKeyStates = SDL_GetKeyboardState(NULL);
+            float scaleY = (float)pGame->map[0].wall.h / pGame->world.tileSize;
+            float scaleX = (float)pGame->map[0].wall.w / pGame->world.tileSize;
+            if (pGame->pPlayer->charge == 0)
+                pGame->pPlayer->charging = 0;
+
+            if (currentKeyStates[SDL_SCANCODE_Q])
+            {
+                if (pGame->world.angle >= 0.01)
                 {
-                    pGame->map[i].wall.y = pGame->map[i - MAPSIZE].wall.y + pGame->map[i].wall.h;
+                    pGame->world.angle -= 0.01;
+                    for (int i = 0; i < MAPSIZE * MAPSIZE; i++)
+                    {
+                        pGame->map[i].wall.h = ((float)pGame->world.tileSize * (1 - pGame->world.angle));
+
+                        if (i > (MAPSIZE - 1))
+                        {
+                            pGame->map[i].wall.y = pGame->map[i - MAPSIZE].wall.y + pGame->map[i].wall.h;
+                        }
+                    }
                 }
             }
-        }
-    }
-    if (currentKeyStates[SDL_SCANCODE_E])
-    {
-        if (pGame->world.angle < 1)
-        {
-            pGame->world.angle += 0.01;
-            for (int i = 0; i < MAPSIZE * MAPSIZE; i++)
+            if (currentKeyStates[SDL_SCANCODE_E])
             {
-                pGame->map[i].wall.h = ((float)pGame->world.tileSize * (1 - pGame->world.angle));
-
-                if (i > (MAPSIZE - 1))
+                if (pGame->world.angle < 1)
                 {
-                    pGame->map[i].wall.y = pGame->map[i - MAPSIZE].wall.y + pGame->map[i].wall.h;
+                    pGame->world.angle += 0.01;
+                    for (int i = 0; i < MAPSIZE * MAPSIZE; i++)
+                    {
+                        pGame->map[i].wall.h = ((float)pGame->world.tileSize * (1 - pGame->world.angle));
+
+                        if (i > (MAPSIZE - 1))
+                        {
+                            pGame->map[i].wall.y = pGame->map[i - MAPSIZE].wall.y + pGame->map[i].wall.h;
+                        }
+                    }
                 }
             }
-        }
-    }
-    if (currentKeyStates[SDL_SCANCODE_SPACE] && pGame->pPlayer->charging == 0)
-    {
-        pGame->pPlayer->idle = 1;
-        pGame->state = START;
-        if (pGame->pPlayer->charge < MAX_CHARGE)
-        {
-            pGame->pPlayer->charge += 1;
-        }
-        else
-        {
-            printf("FULLY CHARGED\n");
-        }
-    }
-    else if (pGame->pPlayer->charge > 0)
-    {
-        srand(time(NULL));
-        int damage = 0, id = 0;
-        static int flag = 0;
-        pGame->pPlayer->charging = 1;
-
-        for (int i = 0; i < 2 * (pGame->pPlayer->charge / 2); i++)
-        {
-            if (checkCollision(*pGame->pPlayer, pGame->map, pGame->pPlayer->prevKeyPressed, pGame->world.tileSize) == 1)
+            if (currentKeyStates[SDL_SCANCODE_SPACE] && pGame->pPlayer->charging == 0)
             {
-                int temp = rand() % pGame->nrOfPortals;
-                pGame->pPlayer->x = pGame->portalList[temp].x;
-                pGame->pPlayer->y = pGame->portalList[temp].y;
+                pGame->pPlayer->idle = 1;
+                pGame->state = START;
+                if (pGame->pPlayer->charge < MAX_CHARGE)
+                {
+                    pGame->pPlayer->charge += 1;
+                }
+                else
+                {
+                    printf("FULLY CHARGED\n");
+                }
             }
-            if (((id = playerCollision(*pGame->pPlayer, pGame->pMultiPlayer, pGame->nrOfPlayers, pGame->pPlayer->prevKeyPressed, pGame->world.tileSize, 0)) == -1) && (checkCollision(*pGame->pPlayer, pGame->map, pGame->pPlayer->prevKeyPressed, pGame->world.tileSize) <= 0))
+            else if (pGame->pPlayer->charge > 0)
             {
-                movePlayer(pGame->pPlayer, pGame->pPlayer->prevKeyPressed);
+                srand(time(NULL));
+                int damage = 0, id = 0;
+                static int flag = 0;
+                pGame->pPlayer->charging = 1;
+
+                for (int i = 0; i < 2 * (pGame->pPlayer->charge / 2); i++)
+                {
+                    if (checkCollision(*pGame->pPlayer, pGame->map, pGame->pPlayer->prevKeyPressed, pGame->world.tileSize) == 1)
+                    {
+                        int temp = rand() % pGame->nrOfPortals;
+                        pGame->pPlayer->x = pGame->portalList[temp].x;
+                        pGame->pPlayer->y = pGame->portalList[temp].y;
+                    }
+                    if (((id = playerCollision(*pGame->pPlayer, pGame->pMultiPlayer, pGame->nrOfPlayers, pGame->pPlayer->prevKeyPressed, pGame->world.tileSize, 0)) == -1) && (checkCollision(*pGame->pPlayer, pGame->map, pGame->pPlayer->prevKeyPressed, pGame->world.tileSize) <= 0))
+                    {
+                        movePlayer(pGame->pPlayer, pGame->pPlayer->prevKeyPressed);
+                    }
+                    else
+                    {
+                        if (id != -1)
+                        {
+                            continue;
+                        }
+                        else
+                        {
+                            damage = pGame->pPlayer->charge * 2;
+                            pGame->pPlayer->charge = 1;
+                        }
+                        break;
+                    }
+                }
+                pGame->pPlayer->hp -= damage;
+                if (pGame->pPlayer->charge > 0)
+                    pGame->pPlayer->charge -= 1;
             }
             else
             {
-                if (id != -1) {
-                    continue;
+                srand(time(NULL));
+                for (int i = 0; i < pGame->movementAmount; i++)
+                {
+                    pGame->pPlayer->idle = 1;
+                    if (currentKeyStates[SDL_SCANCODE_W] || currentKeyStates[SDL_SCANCODE_UP])
+                    {
+                        if (checkCollision(*pGame->pPlayer, pGame->map, 'W', pGame->world.tileSize) == 1)
+                        {
+                            int temp = rand() % pGame->nrOfPortals;
+                            while ((pGame->portalList[temp].y / pGame->world.tileSize) - (pGame->pPlayer->y / pGame->world.tileSize) >= -1 && (pGame->portalList[temp].y / pGame->world.tileSize) - (pGame->pPlayer->y / pGame->world.tileSize) <= 1)
+                            {
+                                int temp = rand() % pGame->nrOfPortals;
+                                pGame->pPlayer->x = pGame->portalList[temp].x;
+                                pGame->pPlayer->y = pGame->portalList[temp].y;
+                            }
+                        }
+                        if ((checkCollision(*pGame->pPlayer, pGame->map, 'W', pGame->world.tileSize) < 1) && (playerCollision(*pGame->pPlayer, pGame->pMultiPlayer, pGame->nrOfPlayers, 'W', pGame->world.tileSize, 0) == -1))
+                        {
+                            movePlayer(pGame->pPlayer, 'W');
+                        }
+                    }
+                    if (currentKeyStates[SDL_SCANCODE_A] || currentKeyStates[SDL_SCANCODE_LEFT])
+                    {
+                        if (checkCollision(*pGame->pPlayer, pGame->map, 'A', pGame->world.tileSize) == 1)
+                        {
+                            int temp = rand() % pGame->nrOfPortals;
+                            while ((pGame->portalList[temp].x / pGame->world.tileSize) - (pGame->pPlayer->x / pGame->world.tileSize) >= -1 && (pGame->portalList[temp].x / pGame->world.tileSize) - (pGame->pPlayer->x / pGame->world.tileSize) <= 1)
+                            {
+                                int temp = rand() % pGame->nrOfPortals;
+                                pGame->pPlayer->x = pGame->portalList[temp].x;
+                                pGame->pPlayer->y = pGame->portalList[temp].y;
+                            }
+                        }
+                        if ((checkCollision(*pGame->pPlayer, pGame->map, 'A', pGame->world.tileSize) < 1) && (playerCollision(*pGame->pPlayer, pGame->pMultiPlayer, pGame->nrOfPlayers, 'A', pGame->world.tileSize, 0) == -1))
+                        {
+                            movePlayer(pGame->pPlayer, 'A');
+                        }
+                    }
+                    if (currentKeyStates[SDL_SCANCODE_S] || currentKeyStates[SDL_SCANCODE_DOWN])
+                    {
+                        if (checkCollision(*pGame->pPlayer, pGame->map, 'S', pGame->world.tileSize) == 1)
+                        {
+                            int temp = rand() % pGame->nrOfPortals;
+                            while ((pGame->portalList[temp].y / pGame->world.tileSize) - (pGame->pPlayer->y / pGame->world.tileSize) >= -1 && (pGame->portalList[temp].y / pGame->world.tileSize) - (pGame->pPlayer->y / pGame->world.tileSize) <= 1)
+                            {
+                                int temp = rand() % pGame->nrOfPortals;
+                                pGame->pPlayer->x = pGame->portalList[temp].x;
+                                pGame->pPlayer->y = pGame->portalList[temp].y;
+                            }
+                        }
+                        if ((checkCollision(*pGame->pPlayer, pGame->map, 'S', pGame->world.tileSize) < 1) && (playerCollision(*pGame->pPlayer, pGame->pMultiPlayer, pGame->nrOfPlayers, 'S', pGame->world.tileSize, 0) == -1))
+                        {
+                            movePlayer(pGame->pPlayer, 'S');
+                        }
+                    }
+                    if (currentKeyStates[SDL_SCANCODE_D] || currentKeyStates[SDL_SCANCODE_RIGHT])
+                    {
+                        if (checkCollision(*pGame->pPlayer, pGame->map, 'D', pGame->world.tileSize) == 1)
+                        {
+                            int temp = rand() % pGame->nrOfPortals;
+                            while ((pGame->portalList[temp].x / pGame->world.tileSize) - (pGame->pPlayer->x / pGame->world.tileSize) >= -1 && (pGame->portalList[temp].x / pGame->world.tileSize) - (pGame->pPlayer->x / pGame->world.tileSize) <= 1)
+                            {
+                                int temp = rand() % pGame->nrOfPortals;
+                                pGame->pPlayer->x = pGame->portalList[temp].x;
+                                pGame->pPlayer->y = pGame->portalList[temp].y;
+                            }
+                        }
+                        if ((checkCollision(*pGame->pPlayer, pGame->map, 'D', pGame->world.tileSize) < 1) && (playerCollision(*pGame->pPlayer, pGame->pMultiPlayer, pGame->nrOfPlayers, 'D', pGame->world.tileSize, 0) == -1))
+                        {
+                            movePlayer(pGame->pPlayer, 'D');
+                        }
+                    }
                 }
-                else {
-                    damage = pGame->pPlayer->charge * 2;
-                    pGame->pPlayer->charge = 1;
-                }
+            }
+
+            int offsetX = pGame->map[0].wall.x - pGame->map[0].x;
+            int offsetY = pGame->map[0].wall.y - pGame->map[0].y;
+            pGame->pPlayer->rect.x = ((float)pGame->pPlayer->x * scaleX) + offsetX;
+            pGame->pPlayer->rect.y = ((float)pGame->pPlayer->y * scaleY) + offsetY;
+
+            pGame->pPlayer->rect.h = (pGame->world.tileSize / 2) + ((pGame->world.tileSize / 2) * (1 - (float)pGame->pPlayer->charge / MAX_CHARGE));
+            pGame->pPlayer->rect.y += pGame->world.tileSize - pGame->pPlayer->rect.h;
+
+            // CENTER PLAYER + SPECTATE
+
+            switch (pGame->pPlayer->state)
+            {
+            case ALIVE:
+                centerPlayer(pGame, pGame->pPlayer);
+                break;
+            case DEAD:
+                if (&pGame->pMultiPlayer[pGame->tempID])
+                    centerPlayer(pGame, &pGame->pMultiPlayer[pGame->tempID]);
                 break;
             }
         }
-        pGame->pPlayer->hp -= damage;
-        if (pGame->pPlayer->charge > 0) pGame->pPlayer->charge -= 1;
+
+        sem_post(&pGame->updateScreenSemaphore);
     }
-    else
-    {
-        srand(time(NULL));
-        for (int i = 0; i < pGame->movementAmount; i++)
-        {
-            pGame->pPlayer->idle = 1;
-            if (currentKeyStates[SDL_SCANCODE_W] || currentKeyStates[SDL_SCANCODE_UP])
-            {
-                if (checkCollision(*pGame->pPlayer, pGame->map, 'W', pGame->world.tileSize) == 1)
-                {
-                    int temp = rand() % pGame->nrOfPortals;
-                    while ((pGame->portalList[temp].y / pGame->world.tileSize) - (pGame->pPlayer->y / pGame->world.tileSize) >= -1 && (pGame->portalList[temp].y / pGame->world.tileSize) - (pGame->pPlayer->y / pGame->world.tileSize) <= 1)
-                    {
-                        int temp = rand() % pGame->nrOfPortals;
-                        pGame->pPlayer->x = pGame->portalList[temp].x;
-                        pGame->pPlayer->y = pGame->portalList[temp].y;
-                    }
-                }
-                if ((checkCollision(*pGame->pPlayer, pGame->map, 'W', pGame->world.tileSize) < 1) && (playerCollision(*pGame->pPlayer, pGame->pMultiPlayer, pGame->nrOfPlayers, 'W', pGame->world.tileSize, 0) == -1))
-                {
-                    movePlayer(pGame->pPlayer, 'W');
-                }
-            }
-            if (currentKeyStates[SDL_SCANCODE_A] || currentKeyStates[SDL_SCANCODE_LEFT])
-            {
-                if (checkCollision(*pGame->pPlayer, pGame->map, 'A', pGame->world.tileSize) == 1)
-                {
-                    int temp = rand() % pGame->nrOfPortals;
-                    while ((pGame->portalList[temp].x / pGame->world.tileSize) - (pGame->pPlayer->x / pGame->world.tileSize) >= -1 && (pGame->portalList[temp].x / pGame->world.tileSize) - (pGame->pPlayer->x / pGame->world.tileSize) <= 1)
-                    {
-                        int temp = rand() % pGame->nrOfPortals;
-                        pGame->pPlayer->x = pGame->portalList[temp].x;
-                        pGame->pPlayer->y = pGame->portalList[temp].y;
-                    }
-                }
-                if ((checkCollision(*pGame->pPlayer, pGame->map, 'A', pGame->world.tileSize) < 1) && (playerCollision(*pGame->pPlayer, pGame->pMultiPlayer, pGame->nrOfPlayers, 'A', pGame->world.tileSize, 0) == -1))
-                {
-                    movePlayer(pGame->pPlayer, 'A');
-                }
-            }
-            if (currentKeyStates[SDL_SCANCODE_S] || currentKeyStates[SDL_SCANCODE_DOWN])
-            {
-                if (checkCollision(*pGame->pPlayer, pGame->map, 'S', pGame->world.tileSize) == 1)
-                {
-                    int temp = rand() % pGame->nrOfPortals;
-                    while ((pGame->portalList[temp].y / pGame->world.tileSize) - (pGame->pPlayer->y / pGame->world.tileSize) >= -1 && (pGame->portalList[temp].y / pGame->world.tileSize) - (pGame->pPlayer->y / pGame->world.tileSize) <= 1)
-                    {
-                        int temp = rand() % pGame->nrOfPortals;
-                        pGame->pPlayer->x = pGame->portalList[temp].x;
-                        pGame->pPlayer->y = pGame->portalList[temp].y;
-                    }
-                }
-                if ((checkCollision(*pGame->pPlayer, pGame->map, 'S', pGame->world.tileSize) < 1) && (playerCollision(*pGame->pPlayer, pGame->pMultiPlayer, pGame->nrOfPlayers, 'S', pGame->world.tileSize, 0) == -1))
-                {
-                    movePlayer(pGame->pPlayer, 'S');
-                }
-            }
-            if (currentKeyStates[SDL_SCANCODE_D] || currentKeyStates[SDL_SCANCODE_RIGHT])
-            {
-                if (checkCollision(*pGame->pPlayer, pGame->map, 'D', pGame->world.tileSize) == 1)
-                {
-                    int temp = rand() % pGame->nrOfPortals;
-                    while ((pGame->portalList[temp].x / pGame->world.tileSize) - (pGame->pPlayer->x / pGame->world.tileSize) >= -1 && (pGame->portalList[temp].x / pGame->world.tileSize) - (pGame->pPlayer->x / pGame->world.tileSize) <= 1)
-                    {
-                        int temp = rand() % pGame->nrOfPortals;
-                        pGame->pPlayer->x = pGame->portalList[temp].x;
-                        pGame->pPlayer->y = pGame->portalList[temp].y;
-                    }
-                }
-                if ((checkCollision(*pGame->pPlayer, pGame->map, 'D', pGame->world.tileSize) < 1) && (playerCollision(*pGame->pPlayer, pGame->pMultiPlayer, pGame->nrOfPlayers, 'D', pGame->world.tileSize, 0) == -1))
-                {
-                    movePlayer(pGame->pPlayer, 'D');
-                }
-            }
-        }
-    }
-
-    int offsetX = pGame->map[0].wall.x - pGame->map[0].x;
-    int offsetY = pGame->map[0].wall.y - pGame->map[0].y;
-    pGame->pPlayer->rect.x = ((float)pGame->pPlayer->x * scaleX) + offsetX;
-    pGame->pPlayer->rect.y = ((float)pGame->pPlayer->y * scaleY) + offsetY;
-
-    pGame->pPlayer->rect.h = (pGame->world.tileSize / 2) + ((pGame->world.tileSize / 2) * (1 - (float)pGame->pPlayer->charge / MAX_CHARGE));
-    pGame->pPlayer->rect.y += pGame->world.tileSize - pGame->pPlayer->rect.h;
-
-    // CENTER PLAYER + SPECTATE
-
-    switch (pGame->pPlayer->state)
-    {
-    case ALIVE:
-        centerPlayer(pGame, pGame->pPlayer);
-        break;
-    case DEAD:
-        if (&pGame->pMultiPlayer[pGame->tempID])
-            centerPlayer(pGame, &pGame->pMultiPlayer[pGame->tempID]);
-        break;
-    }
-    return 0;
+    printf("Terminating Movement Thread\n");
+    pthread_exit(NULL);
 }
 
 void movePlayer(Player *pPlayer, char direction)
@@ -280,8 +309,10 @@ int playerCollision(Player player, Player players[], int nrOfPlayers, char direc
         return -1;
     for (int i = 0; i < nrOfPlayers; i++)
     {
-        if (players[i].state == DEAD) continue;
-        if (players[i].id == player.id) continue;
+        if (players[i].state == DEAD)
+            continue;
+        if (players[i].id == player.id)
+            continue;
         switch (direction)
         {
         case 'W': // First checks if rows overlap then if columns overlap
@@ -715,8 +746,13 @@ void drawPlayer(Game *pGame, Player player, int i)
                 SDL_RenderCopyEx(pGame->pRenderer, pGame->pPlayerTexture, &pGame->gSpriteClips[i][frame[i] + 3 + 8 + 8], &player.rect, 0, NULL, flip);
             break;
         }
-        if (((SDL_GetTicks() - prevTime[i]) % 1000) / 95) { frame[i]++; prevTime[i] = SDL_GetTicks(); }
-        if (frame[i] >= 8) frame[i] = 0;
+        if (((SDL_GetTicks() - prevTime[i]) % 1000) / 95)
+        {
+            frame[i]++;
+            prevTime[i] = SDL_GetTicks();
+        }
+        if (frame[i] >= 8)
+            frame[i] = 0;
     }
     else if (player.state == DEAD)
         SDL_RenderCopyEx(pGame->pRenderer, pGame->pPlayerTexture, &pGame->gSpriteClips[i][27], &player.rect, 0, NULL, SDL_FLIP_NONE);
@@ -794,7 +830,8 @@ int getDeadPlayers(Game *pGame)
     return deadPlayers;
 }
 
-void chargingCollisions(Server *pServer, int originID) {
+void chargingCollisions(Server *pServer, int originID)
+{
     static int invincibilityTicks[MAX_PLAYERS] = {0}, prevTime[MAX_PLAYERS] = {0};
     static char dir;
     int id = -1;
@@ -804,21 +841,28 @@ void chargingCollisions(Server *pServer, int originID) {
     for (int i = 0; i < pServer->nrOfClients; i++)
         players[i] = pServer->clients[i].data;
 
-    if (players[originID].charging) {
-        if ((id = playerCollision(players[originID], players, pServer->nrOfClients, players[originID].prevKeyPressed, players[originID].rect.w, 5)) != -1) {
-            if ((SDL_GetTicks() - prevTime[id]) % 2000 >= invincibilityTicks[id]) {
+    if (players[originID].charging)
+    {
+        if ((id = playerCollision(players[originID], players, pServer->nrOfClients, players[originID].prevKeyPressed, players[originID].rect.w, 5)) != -1)
+        {
+            if ((SDL_GetTicks() - prevTime[id]) % 2000 >= invincibilityTicks[id])
+            {
                 int oldHealthOpp = players[id].hp;
                 int oldHealthMe = players[originID].hp;
 
-                if (players[originID].prevKeyPressed == 'W') dir = 'S';
-                if (players[originID].prevKeyPressed == 'A') dir = 'D';
-                if (players[originID].prevKeyPressed == 'S') dir = 'W';
-                if (players[originID].prevKeyPressed == 'D') dir = 'A';
-                
-                
+                if (players[originID].prevKeyPressed == 'W')
+                    dir = 'S';
+                if (players[originID].prevKeyPressed == 'A')
+                    dir = 'D';
+                if (players[originID].prevKeyPressed == 'S')
+                    dir = 'W';
+                if (players[originID].prevKeyPressed == 'D')
+                    dir = 'A';
+
                 damagePlayer(players, id, originID, dir);
 
-                if (oldHealthOpp > players[id].hp || players[id].charge == 0) {
+                if (oldHealthOpp > players[id].hp || players[id].charge == 0)
+                {
                     prevTime[id] = SDL_GetTicks();
                     invincibilityTicks[id] = 1000;
                     pkg.id = id;
@@ -833,17 +877,20 @@ void chargingCollisions(Server *pServer, int originID) {
 
                     if (!SDLNet_UDP_Send(pServer->socketUDP, -1, pServer->pSent))
                         printf("Error: Could not send package\n");
-
-                } else if (oldHealthMe > players[originID].hp) {
+                }
+                else if (oldHealthMe > players[originID].hp)
+                {
                     prevTime[originID] = SDL_GetTicks();
                     invincibilityTicks[originID] = 1000;
-                } else {
+                }
+                else
+                {
                     prevTime[id] = SDL_GetTicks();
                     invincibilityTicks[id] = 50;
                     prevTime[originID] = SDL_GetTicks();
                     invincibilityTicks[originID] = 50;
-                }    
-            }        
+                }
+            }
         }
     }
 
@@ -852,42 +899,80 @@ void chargingCollisions(Server *pServer, int originID) {
     pServer->clients[originID].data.charging = id != -1 ? 0 : players[originID].charging;
 }
 
-void damagePlayer(Player players[], int personalID, int id, char direction) {
+void damagePlayer(Player players[], int personalID, int id, char direction)
+{
     int tmp;
 
-    if (players[personalID].prevKeyPressed != direction) {                                                          // Charging into the side of another player
+    if (players[personalID].prevKeyPressed != direction)
+    { // Charging into the side of another player
         players[personalID].hp -= players[id].charge * 2;
-    } else if (players[personalID].charging == 0 && chargingIntoMe(players, id, direction)) {                       // If player is charging up but yet to pounce
+    }
+    else if (players[personalID].charging == 0 && chargingIntoMe(players, id, direction))
+    { // If player is charging up but yet to pounce
         players[personalID].hp -= players[id].charge * 2;
-    } else if (players[personalID].charge < players[id].charge && headOnCollision(players, personalID, id) != -1) { // Head on collision first player takes damage
+    }
+    else if (players[personalID].charge < players[id].charge && headOnCollision(players, personalID, id) != -1)
+    { // Head on collision first player takes damage
         players[personalID].hp -= (players[id].charge - players[personalID].charge) * 2;
         players[personalID].charge = 0;
-    } else if (players[personalID].charge > players[id].charge && headOnCollision(players, personalID, id) != -1) { // Head on collision second player takes damage
+    }
+    else if (players[personalID].charge > players[id].charge && headOnCollision(players, personalID, id) != -1)
+    { // Head on collision second player takes damage
         players[id].hp -= (players[personalID].charge - players[id].charge) * 2;
         players[personalID].charge = 0;
     }
-    if (players[personalID].hp < 0) players[personalID].hp = 0;
-    if (players[id].hp < 0) players[id].hp = 0;
+    if (players[personalID].hp < 0)
+        players[personalID].hp = 0;
+    if (players[id].hp < 0)
+        players[id].hp = 0;
 }
 
 /* \returns 1 if players are in a head on collision, -1 if they are not */
-int headOnCollision(Player players[], int personalID, int id) {
-    switch (players[personalID].prevKeyPressed) {
-    case 'W': if (players[id].prevKeyPressed == 'S') return 1; break;
-    case 'A': if (players[id].prevKeyPressed == 'D') return 1; break;
-    case 'S': if (players[id].prevKeyPressed == 'W') return 1; break;
-    case 'D': if (players[id].prevKeyPressed == 'A') return 1; break;
+int headOnCollision(Player players[], int personalID, int id)
+{
+    switch (players[personalID].prevKeyPressed)
+    {
+    case 'W':
+        if (players[id].prevKeyPressed == 'S')
+            return 1;
+        break;
+    case 'A':
+        if (players[id].prevKeyPressed == 'D')
+            return 1;
+        break;
+    case 'S':
+        if (players[id].prevKeyPressed == 'W')
+            return 1;
+        break;
+    case 'D':
+        if (players[id].prevKeyPressed == 'A')
+            return 1;
+        break;
     }
     return -1;
 }
 
 /* \returns 1 if opposing player is charging into you, otherwise 0 */
-int chargingIntoMe(Player players[], int id, char direction) {
-    switch (direction) {
-    case 'W': if (players[id].prevKeyPressed) return 1; break;
-    case 'A': if (players[id].prevKeyPressed) return 1; break;
-    case 'S': if (players[id].prevKeyPressed) return 1; break;
-    case 'D': if (players[id].prevKeyPressed) return 1; break;
+int chargingIntoMe(Player players[], int id, char direction)
+{
+    switch (direction)
+    {
+    case 'W':
+        if (players[id].prevKeyPressed)
+            return 1;
+        break;
+    case 'A':
+        if (players[id].prevKeyPressed)
+            return 1;
+        break;
+    case 'S':
+        if (players[id].prevKeyPressed)
+            return 1;
+        break;
+    case 'D':
+        if (players[id].prevKeyPressed)
+            return 1;
+        break;
     }
     return 0;
 }

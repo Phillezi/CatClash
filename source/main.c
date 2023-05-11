@@ -16,6 +16,7 @@ int init(Game *pGame);
 void run(Game *pGame);
 void close(Game *pGame);
 void *updateScreen(void *pGameIn);
+void *perfMonitor(void *pGameIn);
 
 int main(int argv, char **args)
 {
@@ -263,19 +264,33 @@ void run(Game *pGame)
     SDL_SetWindowTitle(pGame->pWindow, windowTitle);
 
     // if(pGame->config.multiThreading)
-    // pthread_t renderThread;
+
+    pGame->pPlayer->state = ALIVE;
+
     int oldX = 0;
     int oldY = 0;
     int oldCharge = 0;
     int prevUDPTransfer = 0;
     int oldHealth = 0;
+
     pthread_t movementThread;
+    pthread_t renderThread;
+    pthread_t perfThread;
+    sem_init(&pGame->updateScreenSemaphore, 0, 1);
+    sem_init(&pGame->updateMovementSemaphore, 0, 1);
+
+    pGame->state = ONGOING;
+
+    pthread_create(&movementThread, NULL, handleInput, (void *)pGame);
+    pthread_create(&renderThread, NULL, updateScreen, (void *)pGame);
+    pthread_create(&perfThread, NULL, perfMonitor, (void *)pGame);
+
     bool exit = false;
     pGame->config.fps = 60;
     int frameCounter = 0, oneSecTimer = 0, previousTime = 0, movementPreviousTime = 0;
     while (!exit)
     {
-        if (SDL_GetTicks() - oneSecTimer >= 1000) // Performance monitor
+        /*if (SDL_GetTicks() - oneSecTimer >= 1000) // Performance monitor
         {
             oneSecTimer = SDL_GetTicks();
             char buffer[50];
@@ -309,11 +324,12 @@ void run(Game *pGame)
             int movementDeltaTime = SDL_GetTicks() - movementPreviousTime;
             if (movementDeltaTime >= (1000 / 60))
             {
+                sem_post(&pGame->updateMovementSemaphore);
                 movementPreviousTime = SDL_GetTicks();
                 if (pGame->config.multiThreading)
                 {
                     static int idle = 0;
-                    pthread_join(movementThread, NULL);
+                    // pthread_join(movementThread, NULL);
                     int keepAliveDelta = SDL_GetTicks() - prevUDPTransfer;
                     if (pGame->isConnected)
                     {
@@ -337,13 +353,13 @@ void run(Game *pGame)
                     if (pGame->isConnected)
                         getPlayerData(pGame);
 
-                    pthread_create(&movementThread, NULL, handleInput, (void *)pGame);
+                    // pthread_create(&movementThread, NULL, handleInput, (void *)pGame);
                 }
                 else
                 {
                     if (pGame->isConnected)
                         getPlayerData(pGame);
-                    handleInput(pGame);
+                    // handleInput(pGame);
                     int keepAliveDelta = SDL_GetTicks() - prevUDPTransfer;
                     if (pGame->isConnected)
                     {
@@ -377,25 +393,26 @@ void run(Game *pGame)
             }
             previousTime = SDL_GetTicks();
 
-            updateScreen(pGame);
+            // updateScreen(pGame);
             frameCounter++;
-        }
-        const Uint8 *currentKeyStates = SDL_GetKeyboardState(NULL);
+        }*/
+        /*const Uint8 *currentKeyStates = SDL_GetKeyboardState(NULL);
         if (currentKeyStates[SDL_SCANCODE_ESCAPE])
         {
             exit = true;
+            pGame->state = OVER;
             break;
-        }
+        }*/
         SDL_Event event;
-        while (SDL_PollEvent(&event))
+        while (SDL_WaitEvent(&event))
         {
             if (event.type == SDL_QUIT)
             {
                 exit = true;
+                pGame->state = OVER;
                 break;
             }
-
-            else if (event.type == SDL_KEYDOWN)
+            else if (event.type == SDL_KEYDOWN && pGame->pPlayer->state == DEAD)
             {
                 if (event.key.keysym.sym == SDLK_RIGHT)
                 {
@@ -412,8 +429,15 @@ void run(Game *pGame)
                         pGame->tempID -= 1;
                 }
             }
+            else
+            {
+                sem_post(&pGame->updateMovementSemaphore);
+            }
         }
     }
+    pthread_join(renderThread, NULL);
+    pthread_join(movementThread, NULL);
+    pthread_join(perfThread, NULL);
     /*if (pGame->isConnected)
     {
         SDLNet_TCP_Close(pGame->pClient->socketTCP);
@@ -526,124 +550,172 @@ void close(Game *pGame)
 void *updateScreen(void *pGameIn)
 {
     Game *pGame = (Game *)pGameIn;
+    struct timespec timeout;
+    clock_gettime(CLOCK_REALTIME, &timeout);
+    // timeout.tv_nsec += 1000000000 / 165;
+    timeout.tv_sec += 1;
 
-    SDL_Rect backGround;
-    backGround.x = pGame->map[0].wall.x;
-    backGround.y = pGame->map[0].wall.y + (pGame->world.tileSize - pGame->map[0].wall.h);
-    backGround.w = MAPSIZE * pGame->map[0].wall.w;
-    backGround.h = MAPSIZE * pGame->map[0].wall.h;
-    SDL_SetRenderDrawColor(pGame->pRenderer, 0, 0, 0, 255);
-    SDL_RenderClear(pGame->pRenderer);
-    SDL_RenderCopy(pGame->pRenderer, pGame->pTileTextures[19], NULL, &backGround);
-    SDL_Rect temp;
-
-    translatePositionToScreen(pGame);
-    static int k = 0;
-    if (k < MAX_PLAYERS)
+    printf("Starting update screen\n");
+    while (pGame->state != OVER)
     {
-        if (k == pGame->pPlayer->id)
+        sem_timedwait(&pGame->updateScreenSemaphore, &timeout);
+        clock_gettime(CLOCK_REALTIME, &timeout);
+        // timeout.tv_nsec += 1000000000 / 165;
+        timeout.tv_sec += 1;
+
+        SDL_Rect backGround;
+        backGround.x = pGame->map[0].wall.x;
+        backGround.y = pGame->map[0].wall.y + (pGame->world.tileSize - pGame->map[0].wall.h);
+        backGround.w = MAPSIZE * pGame->map[0].wall.w;
+        backGround.h = MAPSIZE * pGame->map[0].wall.h;
+        SDL_SetRenderDrawColor(pGame->pRenderer, 0, 0, 0, 255);
+        SDL_RenderClear(pGame->pRenderer);
+        SDL_RenderCopy(pGame->pRenderer, pGame->pTileTextures[19], NULL, &backGround);
+        SDL_Rect temp;
+
+        translatePositionToScreen(pGame);
+        static int k = 0;
+        if (k < MAX_PLAYERS)
         {
-            loadMedia(pGame->pRenderer, &pGame->pPlayerTexture, pGame->gSpriteClips, pGame->pPlayer->id);
-            k++;
-        }
-        for (int i = 0; i < pGame->nrOfPlayers; i++)
-            if (k == pGame->pMultiPlayer[i].id)
+            if (k == pGame->pPlayer->id)
             {
-                loadMedia(pGame->pRenderer, &pGame->pPlayerTexture, pGame->gSpriteClips, pGame->pMultiPlayer[i].id);
+                loadMedia(pGame->pRenderer, &pGame->pPlayerTexture, pGame->gSpriteClips, pGame->pPlayer->id);
                 k++;
             }
-    }
-
-    pGame->isDrawing = true; // temporary fix to screen-tearing?
-    int darkness = 0;
-    for (int i = 0; i < MAPSIZE * MAPSIZE; i++)
-    {
-        if (((pGame->map[i].wall.x <= pGame->windowWidth) && (pGame->map[i].wall.x + pGame->world.tileSize >= 0)) && ((pGame->map[i].wall.y <= pGame->windowHeight) && (pGame->map[i].wall.y + pGame->world.tileSize >= 0)))
-        {
-            if (pGame->pPlayer->state == ALIVE)
-                darkness = (255 * ((float)(abs(pGame->map[i].x - pGame->pPlayer->x) + abs(pGame->map[i].y - pGame->pPlayer->y)) / (16 * pGame->world.tileSize)));
-            if (darkness > 255)
-                darkness = 255;
-            SDL_SetRenderDrawBlendMode(pGame->pRenderer, SDL_BLENDMODE_BLEND);
-            SDL_SetRenderDrawColor(pGame->pRenderer, 0, 0, 0, darkness);
-            if (pGame->map[i].type > 0)
-            {
-                SDL_RenderCopy(pGame->pRenderer, pGame->pTileTextures[pGame->map[i].type], NULL, &pGame->map[i].wall);
-            }
-            else
-            {
-                if (i > MAPSIZE - 1)
+            for (int i = 0; i < pGame->nrOfPlayers; i++)
+                if (k == pGame->pMultiPlayer[i].id)
                 {
-                    if (pGame->map[i - MAPSIZE].type == 1)
-                    {
-                        temp = pGame->map[i].wall;
-                        temp.h = ((float)pGame->world.tileSize * pGame->world.angle);
-
-                        SDL_RenderCopy(pGame->pRenderer, pGame->pTileTextures[(pGame->map[i - MAPSIZE].type)], NULL, &temp);
-
-                        SDL_RenderFillRect(pGame->pRenderer, &temp);
-                    }
-                    else if (pGame->map[i - MAPSIZE].type > 0)
-                    {
-                        temp = pGame->map[i].wall;
-                        temp.h = ((float)pGame->world.tileSize * pGame->world.angle);
-                        SDL_RenderCopy(pGame->pRenderer, pGame->pTileTextures[2], NULL, &temp);
-                        SDL_RenderFillRect(pGame->pRenderer, &temp);
-                    }
+                    loadMedia(pGame->pRenderer, &pGame->pPlayerTexture, pGame->gSpriteClips, pGame->pMultiPlayer[i].id);
+                    k++;
                 }
-            }
-            if (i == (((pGame->pPlayer->y / pGame->map[0].wall.w) * MAPSIZE) + ((pGame->pPlayer->x - 1) / pGame->map[0].wall.w) + 2))
-            {
-                drawPlayer(pGame, *pGame->pPlayer, pGame->pPlayer->id);
-            }
-            for (int j = 0; j < pGame->nrOfPlayers; j++)
-            {
-                if (i == (((pGame->pMultiPlayer[j].y / pGame->map[0].wall.w) * MAPSIZE) + ((pGame->pMultiPlayer[j].x - 1) / pGame->map[0].wall.w) + 2))
-                {
-                    drawPlayer(pGame, pGame->pMultiPlayer[j], pGame->pMultiPlayer[j].id);
-                    if (pGame->pMultiPlayer[j].name[0])
-                    {
-                        pGame->ui.pPlayerName = createText(pGame->pRenderer, 0, 0, 0, pGame->ui.pNameTagFont, pGame->pMultiPlayer[j].name, pGame->pMultiPlayer[j].rect.x + (pGame->pMultiPlayer[j].rect.w / 2), pGame->pMultiPlayer[j].rect.y);
-                        drawText(pGame->ui.pPlayerName, pGame->pRenderer);
-                        freeText(pGame->ui.pPlayerName);
-                    }
-                }
-            }
-
-            SDL_SetRenderDrawColor(pGame->pRenderer, 0, 0, 0, darkness);
-            if (pGame->map[i].type <= 0)
-            {
-                temp = pGame->map[i].wall;
-                temp.y += ((float)pGame->world.tileSize * pGame->world.angle);
-                SDL_RenderFillRect(pGame->pRenderer, &temp);
-            }
-            else
-                SDL_RenderFillRect(pGame->pRenderer, &pGame->map[i].wall);
         }
-    }
-    pGame->isDrawing = false; // temporary fix to screen-tearing?
 
-    if (pGame->pPlayer->state == DEAD)
+        pGame->isDrawing = true; // temporary fix to screen-tearing?
+        int darkness = 0;
+        for (int i = 0; i < MAPSIZE * MAPSIZE; i++)
+        {
+            if (((pGame->map[i].wall.x <= pGame->windowWidth) && (pGame->map[i].wall.x + pGame->world.tileSize >= 0)) && ((pGame->map[i].wall.y <= pGame->windowHeight) && (pGame->map[i].wall.y + pGame->world.tileSize >= 0)))
+            {
+                if (pGame->pPlayer->state == ALIVE)
+                    darkness = (255 * ((float)(abs(pGame->map[i].x - pGame->pPlayer->x) + abs(pGame->map[i].y - pGame->pPlayer->y)) / (16 * pGame->world.tileSize)));
+                if (darkness > 255)
+                    darkness = 255;
+                SDL_SetRenderDrawBlendMode(pGame->pRenderer, SDL_BLENDMODE_BLEND);
+                SDL_SetRenderDrawColor(pGame->pRenderer, 0, 0, 0, darkness);
+                if (pGame->map[i].type > 0)
+                {
+                    SDL_RenderCopy(pGame->pRenderer, pGame->pTileTextures[pGame->map[i].type], NULL, &pGame->map[i].wall);
+                }
+                else
+                {
+                    if (i > MAPSIZE - 1)
+                    {
+                        if (pGame->map[i - MAPSIZE].type == 1)
+                        {
+                            temp = pGame->map[i].wall;
+                            temp.h = ((float)pGame->world.tileSize * pGame->world.angle);
+
+                            SDL_RenderCopy(pGame->pRenderer, pGame->pTileTextures[(pGame->map[i - MAPSIZE].type)], NULL, &temp);
+
+                            SDL_RenderFillRect(pGame->pRenderer, &temp);
+                        }
+                        else if (pGame->map[i - MAPSIZE].type > 0)
+                        {
+                            temp = pGame->map[i].wall;
+                            temp.h = ((float)pGame->world.tileSize * pGame->world.angle);
+                            SDL_RenderCopy(pGame->pRenderer, pGame->pTileTextures[2], NULL, &temp);
+                            SDL_RenderFillRect(pGame->pRenderer, &temp);
+                        }
+                    }
+                }
+                if (i == (((pGame->pPlayer->y / pGame->map[0].wall.w) * MAPSIZE) + ((pGame->pPlayer->x - 1) / pGame->map[0].wall.w) + 2))
+                {
+                    drawPlayer(pGame, *pGame->pPlayer, pGame->pPlayer->id);
+                }
+                for (int j = 0; j < pGame->nrOfPlayers; j++)
+                {
+                    if (i == (((pGame->pMultiPlayer[j].y / pGame->map[0].wall.w) * MAPSIZE) + ((pGame->pMultiPlayer[j].x - 1) / pGame->map[0].wall.w) + 2))
+                    {
+                        drawPlayer(pGame, pGame->pMultiPlayer[j], pGame->pMultiPlayer[j].id);
+                        if (pGame->pMultiPlayer[j].name[0])
+                        {
+                            pGame->ui.pPlayerName = createText(pGame->pRenderer, 0, 0, 0, pGame->ui.pNameTagFont, pGame->pMultiPlayer[j].name, pGame->pMultiPlayer[j].rect.x + (pGame->pMultiPlayer[j].rect.w / 2), pGame->pMultiPlayer[j].rect.y);
+                            drawText(pGame->ui.pPlayerName, pGame->pRenderer);
+                            freeText(pGame->ui.pPlayerName);
+                        }
+                    }
+                }
+
+                SDL_SetRenderDrawColor(pGame->pRenderer, 0, 0, 0, darkness);
+                if (pGame->map[i].type <= 0)
+                {
+                    temp = pGame->map[i].wall;
+                    temp.y += ((float)pGame->world.tileSize * pGame->world.angle);
+                    SDL_RenderFillRect(pGame->pRenderer, &temp);
+                }
+                else
+                    SDL_RenderFillRect(pGame->pRenderer, &pGame->map[i].wall);
+            }
+        }
+        pGame->isDrawing = false; // temporary fix to screen-tearing?
+
+        if (pGame->pPlayer->state == DEAD)
+        {
+            drawText(pGame->ui.pOverText, pGame->pRenderer);
+            drawText(pGame->ui.pMenuText, pGame->pRenderer);
+        }
+
+        if (pGame->pPlayer->state == WIN)
+        {
+            drawText(pGame->ui.pWinText, pGame->pRenderer);
+        }
+
+        if (pGame->frameCounter == 0)
+        {
+            char buffer[50];
+            if (pGame->ui.pFpsText)
+                freeText(pGame->ui.pFpsText);
+            sprintf(buffer, "%d", pGame->fps);
+            pGame->ui.pFpsText = createText(pGame->pRenderer, 0, 255, 0, pGame->ui.pFpsFont, buffer, pGame->windowWidth - pGame->world.tileSize, pGame->world.tileSize);
+            
+        }
+        if (pGame->ui.pFpsText)
+            drawText(pGame->ui.pFpsText, pGame->pRenderer);
+
+        if (pGame->pPlayer->state == ALIVE)
+        {
+            SDL_SetRenderDrawColor(pGame->pRenderer, 255 - pGame->pPlayer->hp, pGame->pPlayer->hp, 0, 255);
+            SDL_RenderFillRect(pGame->pRenderer, &pGame->ui.healthbar);
+
+            SDL_SetRenderDrawColor(pGame->pRenderer, 0, 0, 255, 255);
+            SDL_RenderFillRect(pGame->pRenderer, &pGame->ui.chargebar);
+        }
+
+        SDL_RenderPresent(pGame->pRenderer);
+        pGame->frameCounter += 1;
+    }
+    printf("Terminating renderThread\n");
+    pthread_exit(NULL);
+}
+
+void *perfMonitor(void *pGameIn)
+{
+    Game *pGame = (Game *)pGameIn;
+    struct timespec timeout;
+    sem_t fakeSem;
+    sem_init(&fakeSem, 0, 0);
+    clock_gettime(CLOCK_REALTIME, &timeout);
+    timeout.tv_sec += 1;
+
+    printf("Starting performance monitor\n");
+    while (pGame->state != OVER)
     {
-        drawText(pGame->ui.pOverText, pGame->pRenderer);
-        drawText(pGame->ui.pMenuText, pGame->pRenderer);
+        sem_timedwait(&fakeSem, &timeout);
+        pGame->fps = pGame->frameCounter;
+        pGame->frameCounter = 0;
+        clock_gettime(CLOCK_REALTIME, &timeout);
+        timeout.tv_sec += 1;
     }
-
-    if (pGame->pPlayer->state == WIN)
-    {
-        drawText(pGame->ui.pWinText, pGame->pRenderer);
-    }
-
-    drawText(pGame->ui.pFpsText, pGame->pRenderer);
-
-    if (pGame->pPlayer->state == ALIVE)
-    {
-        SDL_SetRenderDrawColor(pGame->pRenderer, 255 - pGame->pPlayer->hp, pGame->pPlayer->hp, 0, 255);
-        SDL_RenderFillRect(pGame->pRenderer, &pGame->ui.healthbar);
-
-        SDL_SetRenderDrawColor(pGame->pRenderer, 0, 0, 255, 255);
-        SDL_RenderFillRect(pGame->pRenderer, &pGame->ui.chargebar);
-    }
-
-    SDL_RenderPresent(pGame->pRenderer);
+    printf("Terminating performance monitor\n");
+    pthread_exit(NULL);
 }
