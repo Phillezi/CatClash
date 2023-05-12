@@ -837,15 +837,16 @@ void chargingCollisions(Server *pServer, int originID) {
                 } else if (oldHealthMe > players[originID].hp) {
                     prevTime[originID] = SDL_GetTicks();
                     invincibilityTicks[originID] = 1000;
-                } else {
-                    prevTime[id] = SDL_GetTicks();
-                    invincibilityTicks[id] = 50;
-                    prevTime[originID] = SDL_GetTicks();
-                    invincibilityTicks[originID] = 50;
-                }    
+                }  
             }        
         }
     }
+
+    for (int i = 0; i < pServer->nrOfClients; i++) 
+        if ((SDL_GetTicks() - prevTime[i]) >= invincibilityTicks[i]) {
+            invincibilityTicks[i] = 0;
+            prevTime[i] = 0; 
+        }
 
     pServer->clients[originID].data.hp = players[originID].hp;
     pServer->clients[originID].data.charge = id != -1 ? 0 : players[originID].charge;
