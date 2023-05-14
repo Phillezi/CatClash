@@ -1268,6 +1268,12 @@ int serverLobby(Game *pGame)
     Uint32 prevUDPTransfer = 0, prevUpdateTick = 0, deltaTime = 0;
     int returnValue = 0, nrOfPlayersDisplayed = -1;
 
+    SDL_Rect *pIcons = (SDL_Rect *)malloc(sizeof(SDL_Rect));
+    pIcons[0].x = (pGame->windowWidth - pGame->world.tileSize) / 2;
+    pIcons[0].y = pGame->windowHeight / 2;
+    pIcons[0].w = pGame->world.tileSize;
+    pIcons[0].h = pGame->world.tileSize;
+
     Text *pTitleText = createText(pGame->pRenderer, 0, 0, 0, pGame->ui.pFpsFont, "Server Lobby", pGame->windowWidth / 2, (3 * pGame->world.tileSize) / 2);
     Text *pNrOfPlayersText = createText(pGame->pRenderer, 0, 0, 0, pGame->ui.pFpsFont, "Loading...", pGame->windowWidth / 2, 2 * (3 * pGame->world.tileSize) / 2);
     Text *pInfoText = createText(pGame->pRenderer, 0, 0, 0, pGame->ui.pFpsFont, "Press space", pGame->windowWidth / 2, pGame->windowHeight - (3 * pGame->world.tileSize) / 2);
@@ -1320,7 +1326,7 @@ int serverLobby(Game *pGame)
 
             if (pGame->nrOfPlayers != nrOfPlayersDisplayed)
             {
-                nrOfPlayersDisplayed = pGame->nrOfPlayers;
+
                 char buffer[31];
                 freeText(pNrOfPlayersText);
                 switch (pGame->nrOfPlayers)
@@ -1342,14 +1348,64 @@ int serverLobby(Game *pGame)
                     break;
                 }
 
+                pIcons = (SDL_Rect *)realloc(pIcons, (pGame->nrOfPlayers + 1) * sizeof(SDL_Rect));
+
+                int x = (pGame->windowWidth - ((pGame->nrOfPlayers + 1) * pGame->world.tileSize)) / 2;
+                int y = pGame->windowHeight / 2;
+
+                for (int i = 0; i < pGame->nrOfPlayers + 1; i++)
+                {
+                    pIcons[i].x = x + (i * pGame->world.tileSize);
+                    pIcons[i].y = y;
+                    pIcons[i].w = pGame->world.tileSize;
+                    pIcons[i].h = pGame->world.tileSize;
+                }
+
+                nrOfPlayersDisplayed = pGame->nrOfPlayers;
                 pNrOfPlayersText = createText(pGame->pRenderer, 0, 0, 0, pGame->ui.pFpsFont, buffer, pGame->windowWidth / 2, 2 * (3 * pGame->world.tileSize) / 2);
             }
 
             SDL_SetRenderDrawColor(pGame->pRenderer, 200, 200, 200, 255);
             SDL_RenderClear(pGame->pRenderer);
+
+            static int k = 0;
+            if (k < MAX_PLAYERS)
+            {
+                if (k == pGame->pPlayer->id)
+                {
+                    loadMedia(pGame->pRenderer, &pGame->pPlayerTexture, pGame->gSpriteClips, pGame->pPlayer->id);
+                    k++;
+                }
+                for (int i = 0; i < pGame->nrOfPlayers; i++)
+                    if (k == pGame->pMultiPlayer[i].id)
+                    {
+                        loadMedia(pGame->pRenderer, &pGame->pPlayerTexture, pGame->gSpriteClips, pGame->pMultiPlayer[i].id);
+                        k++;
+                    }
+            }
+
             drawText(pTitleText, pGame->pRenderer);
             drawText(pNrOfPlayersText, pGame->pRenderer);
             drawText(pInfoText, pGame->pRenderer);
+
+            
+            for (int i = 0; i < pGame->nrOfPlayers + 1; i++)
+            {
+                
+                if(i<pGame->nrOfPlayers)
+                {
+                    SDL_SetRenderDrawColor(pGame->pRenderer, 255, 255, 255, 255);
+                    SDL_RenderDrawRect(pGame->pRenderer, &pIcons[i]);
+                    SDL_RenderCopy(pGame->pRenderer, pGame->pPlayerTexture, &pGame->gSpriteClips[pGame->pMultiPlayer[i].id][0], &pIcons[i]);
+                }
+                else
+                {
+                    SDL_SetRenderDrawColor(pGame->pRenderer, 255, 0, 0, 255);
+                    SDL_RenderDrawRect(pGame->pRenderer, &pIcons[i]);
+                    SDL_RenderCopy(pGame->pRenderer, pGame->pPlayerTexture, &pGame->gSpriteClips[pGame->pPlayer->id][0], &pIcons[i]);
+                }
+                    
+            }
 
             SDL_RenderPresent(pGame->pRenderer);
         }
@@ -1381,6 +1437,7 @@ int serverLobby(Game *pGame)
     freeText(pTitleText);
     freeText(pNrOfPlayersText);
     freeText(pInfoText);
+    free(pIcons);
     pGame->pPlayer->state = ALIVE;
     pGame->pPlayer->hp = 255;
     return returnValue;
