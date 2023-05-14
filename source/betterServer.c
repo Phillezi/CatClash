@@ -19,7 +19,7 @@ int udpSetup(Server *pServer);
 int getMapToHost(Server *pServer);
 void *sendMapToPlayer(void *pServerIn);
 
-void checkIncommingTCP(Server *pServer);
+void *checkIncommingTCP(void *pServerIn);
 void checkTCPForNewConnections(Server *pServer);
 void addTCPClient(Server *pServer, TCPsocket client);
 void checkTCPTimeout(Server *pServer);
@@ -30,34 +30,55 @@ void getPlayerData(Server *pServer, int clientIndex);
 void sendPlayerData(Server *pServer);
 void updateTCPStateText(Server *pServer);
 
-void checkIncommingUDP(Server *pServer);
+void *checkIncommingUDP(void *pServerIn);
 void checkUDPClient(Server *pServer, PlayerUdpPkg data);
 
-void updateServerWindow(Server *pServer);
+void *updateServerWindow(void *pServerIn);
 void dbgPrint();
 void closeS(Server *pServer);
 
 int main(int argv, char **args)
 {
     Server server;
-    bool exit = false;
+    server.exit = false;
     server.tcpState = IDLE;
+
+    pthread_t tcpThread, udpThread, uiThread; // create thread ids
+    sem_init(&server.tcpSemaphore, 0, 1);     // initialize semaphores to pshared=0, and value=1
+    sem_init(&server.udpSemaphore, 0, 1);
+    sem_init(&server.uiSemaphore, 0, 1);
+
     if (!initServer(&server))
     {
-        while (!exit)
+        // checkIncommingTCP(&server);
+        // checkIncommingUDP(&server);
+        // updateServerWindow(&server);
+
+        pthread_create(&tcpThread, NULL, checkIncommingTCP, &server);
+        pthread_create(&udpThread, NULL, checkIncommingUDP, &server);
+        pthread_create(&uiThread, NULL, updateServerWindow, &server);
+
+        while (!server.exit)
         {
-            checkIncommingTCP(&server);
-            checkIncommingUDP(&server);
-            updateServerWindow(&server);
             SDL_Event event;
-            while (SDL_PollEvent(&event))
+            if (SDL_WaitEvent(&event))
             {
                 if (event.type == SDL_QUIT)
                 {
-                    exit = true;
+                    server.exit = true;
                 }
             }
         }
+        sem_post(&server.uiSemaphore);
+        printf("Trying to close tcp thread...\n");
+        pthread_join(tcpThread, NULL);
+        printf("Closed tcp thread\n");
+        printf("Trying to close udp thread...\n");
+        pthread_join(udpThread, NULL);
+        printf("Closed udp thread\n");
+        printf("Trying to close ui thread...\n");
+        pthread_join(uiThread, NULL);
+        printf("Closed ui thread\n");
     }
 
     closeS(&server);
@@ -353,9 +374,7 @@ void checkTCPForNewConnections(Server *pServer)
             packet = pServer->nrOfClients;
             SDLNet_TCP_Send(tmpClient, &packet, sizeof(packet));
             printf("Sent player amount\n");
-
         }
-            
     }
 }
 
@@ -401,7 +420,7 @@ void checkTCPTimeout(Server *pServer)
                 }
             }
             pServer->nrOfClients--;
-            pServer->updateScreenFlag = 1;
+            sem_post(&pServer->uiSemaphore);
         }
     }
 }
@@ -455,7 +474,7 @@ void getPlayerData(Server *pServer, int clientIndex)
     char buffer[32];
     sprintf(buffer, "%d %s", pServer->clients[pServer->nrOfClients].data.id, pServer->clients[pServer->nrOfClients].data.name);
     pServer->pClientText[clientIndex] = createText(pServer->pRenderer, 0, 0, 0, pServer->pFont, buffer, pServer->windowWidth / 2, pServer->clients[pServer->nrOfClients].data.id * pServer->fontSize + 3 * pServer->fontSize);
-    pServer->updateScreenFlag = 1;
+    sem_post(&pServer->uiSemaphore);
     pServer->nrOfClients++;
     pServer->tcpState++;
 }
@@ -500,112 +519,158 @@ void updateTCPStateText(Server *pServer)
     pServer->pServerStateText = createText(pServer->pRenderer, 0, 0, 0, pServer->pFont, buffer, pServer->windowWidth / 2, pServer->fontSize);
     pServer->progressBar.w = pServer->fontSize * pServer->tcpState;
     if (pServer->tcpState == IDLE)
+    {
         pServer->progressBar.w = 0;
-    pServer->updateScreenFlag = 1;
+    }
+        
+    sem_post(&pServer->uiSemaphore);
 }
 
-void checkIncommingTCP(Server *pServer)
+void *checkIncommingTCP(void *pServerIn)
 {
+    Server *pServer = (Server *)pServerIn;
     pthread_t mapThread;
     int bytesSent, bytesRecv, prevState = pServer->tcpState;
-
-    checkTCPTimeout(pServer);
-
-    switch (pServer->tcpState)
+    struct timespec time;
+    clock_gettime(CLOCK_REALTIME, &time);
+    time.tv_nsec += 1000;
+    while (!pServer->exit)
     {
-    case IDLE:
-        checkTCPForNewConnections(pServer);
-        break;
-    case CLIENT_JOINING:
-        pthread_create(&mapThread, NULL, sendMapToPlayer, pServer); // start sending map
-        pServer->tcpState++;
-    case SENDING_MAP:
-        if (pServer->mapPos == MAPSIZE * MAPSIZE) // check if server is done sending map
+        sem_timedwait(&pServer->tcpSemaphore, &time);
+        clock_gettime(CLOCK_REALTIME, &time);
+        time.tv_nsec += 1000;
+
+        prevState = pServer->tcpState;
+
+        checkTCPTimeout(pServer);
+
+        switch (pServer->tcpState)
         {
-            pthread_join(mapThread, NULL);
-            occupySpawntile(pServer);
+        case IDLE:
+            checkTCPForNewConnections(pServer);
+            break;
+        case CLIENT_JOINING:
+            pthread_create(&mapThread, NULL, sendMapToPlayer, pServer); // start sending map
             pServer->tcpState++;
-        }
-        break;
-    case SENDING_PLAYER_ID:
-        sendPlayerId(pServer);
-        break;
-    case GET_PLAYER_DATA:
-        while (SDLNet_CheckSockets(pServer->socketSetTCP, 0) > 0)
-        {
-            for (int i = 0; i < pServer->nrOfClients + 1; i++)
+        case SENDING_MAP:
+            if (pServer->mapPos == MAPSIZE * MAPSIZE) // check if server is done sending map
             {
-                if (SDLNet_SocketReady(pServer->clients[i].tcpSocket))
+                pthread_join(mapThread, NULL);
+                occupySpawntile(pServer);
+                pServer->tcpState++;
+            }
+            sem_post(&pServer->tcpSemaphore);
+            break;
+        case SENDING_PLAYER_ID:
+            sendPlayerId(pServer);
+            sem_post(&pServer->tcpSemaphore);
+            break;
+        case GET_PLAYER_DATA:
+            while (SDLNet_CheckSockets(pServer->socketSetTCP, 0) > 0)
+            {
+                for (int i = 0; i < pServer->nrOfClients + 1; i++)
                 {
-                    getPlayerData(pServer, i);
+                    if (SDLNet_SocketReady(pServer->clients[i].tcpSocket))
+                    {
+                        getPlayerData(pServer, i);
+                    }
                 }
             }
-        }
-        break;
+            sem_post(&pServer->tcpSemaphore);
+            break;
 
-    case SEND_NEW_PLATER_DATA:
-        sendPlayerData(pServer);
-        pServer->tcpState = IDLE;
-        printf("DONE: Player joining complete!\n");
-        break;
+        case SEND_NEW_PLATER_DATA:
+            sendPlayerData(pServer);
+            pServer->tcpState = IDLE;
+            printf("DONE: Player joining complete!\n");
+            break;
+        }
+        if (prevState != pServer->tcpState)
+        {
+            updateTCPStateText(pServer);
+        }
     }
-    if (prevState != pServer->tcpState)
-    {
-        updateTCPStateText(pServer);
-    }
+    pthread_exit(NULL);
 }
 
-void checkIncommingUDP(Server *pServer)
+void *checkIncommingUDP(void *pServerIn)
 {
-    if (SDLNet_UDP_Recv(pServer->socketUDP, pServer->pRecieve) == 1)
+    Server *pServer = (Server *)pServerIn;
+    struct timespec time;
+    clock_gettime(CLOCK_REALTIME, &time);
+    time.tv_nsec += 1000;
+    while (!pServer->exit)
     {
-        PlayerUdpPkg data;
-        int id, resend = 0;
-        /*
-        Ta emot mindre(i bytes) structar som innehåller bara x y riktning och id
-        */
-        memcpy(&data, pServer->pRecieve->data, sizeof(PlayerUdpPkg));
-        checkUDPClient(pServer, data);
+        sem_timedwait(&pServer->udpSemaphore, &time);
+        clock_gettime(CLOCK_REALTIME, &time);
+        time.tv_nsec += 1000;
+        if (SDLNet_UDP_Recv(pServer->socketUDP, pServer->pRecieve) == 1)
+        {
+            PlayerUdpPkg data;
+            int id, resend = 0;
+            /*
+            Ta emot mindre(i bytes) structar som innehåller bara x y riktning och id
+            */
+            memcpy(&data, pServer->pRecieve->data, sizeof(PlayerUdpPkg));
+            checkUDPClient(pServer, data);
 
-        for (int i = 0; i < pServer->nrOfClients; i++)
-            if (data.id == pServer->clients[i].id) {
-                pServer->clients[i].timeout = SDL_GetTicks();
-                pServer->clients[i].data.x = data.x;
-                pServer->clients[i].data.y = data.y;
-                pServer->clients[i].data.prevKeyPressed = data.direction;
-                pServer->clients[i].data.idle = data.idle;
-                pServer->clients[i].data.charging = data.charging;
-                pServer->clients[i].data.charge = data.charge;
-                pServer->clients[i].data.state = data.state;
-                pServer->clients[i].data.hp = data.hp;
-                id = i;
-                break;
+            for (int i = 0; i < pServer->nrOfClients; i++)
+                if (data.id == pServer->clients[i].id)
+                {
+                    pServer->clients[i].timeout = SDL_GetTicks();
+                    pServer->clients[i].data.x = data.x;
+                    pServer->clients[i].data.y = data.y;
+                    pServer->clients[i].data.prevKeyPressed = data.direction;
+                    pServer->clients[i].data.idle = data.idle;
+                    pServer->clients[i].data.charging = data.charging;
+                    pServer->clients[i].data.charge = data.charge;
+                    pServer->clients[i].data.state = data.state;
+                    pServer->clients[i].data.hp = data.hp;
+                    id = i;
+                    break;
+                }
+
+            chargingCollisions(pServer, id);
+            if (data.hp != pServer->clients[id].data.hp)
+            {
+                data.hp = pServer->clients[id].data.hp < 0 ? 0 : pServer->clients[id].data.hp;
+                resend = 1;
+            }
+            if (data.charge != pServer->clients[id].data.charge)
+            {
+                data.charge = pServer->clients[id].data.charge;
+                resend = 1;
+            }
+            if (data.charging != pServer->clients[id].data.charging)
+            {
+                data.charging = data.charge > 0 ? 1 : 0;
+                resend = 1;
             }
 
-        chargingCollisions(pServer, id);    
-        if (data.hp != pServer->clients[id].data.hp) { data.hp = pServer->clients[id].data.hp < 0 ? 0 : pServer->clients[id].data.hp; resend = 1; }
-        if (data.charge != pServer->clients[id].data.charge) { data.charge = pServer->clients[id].data.charge; resend = 1; }
-        if (data.charging != pServer->clients[id].data.charging) { data.charging = data.charge > 0 ? 1 : 0; resend = 1; }
-
-        for (int i = 0; i < pServer->nrOfClients; i++) {
-            if (pServer->clients[i].address.port != 8888) {
-                // Don't resend packets to original player with unchanged data
-                if (data.id == pServer->clients[i].id && resend == 0) continue;
-                /*
-                Skicka mindre(i bytes) structar som innehåller bara x y riktning och id
-                */
-                memcpy(pServer->pSent->data, &data, sizeof(PlayerUdpPkg));
-                pServer->pSent->address.port = pServer->clients[i].address.port;
-                pServer->pSent->address.host = pServer->clients[i].address.host;
-                pServer->pSent->len = sizeof(PlayerUdpPkg);
-
-                if (!SDLNet_UDP_Send(pServer->socketUDP, -1, pServer->pSent))
+            for (int i = 0; i < pServer->nrOfClients; i++)
+            {
+                if (pServer->clients[i].address.port != 8888)
                 {
-                    printf("Error: Could not send package\n");
+                    // Don't resend packets to original player with unchanged data
+                    if (data.id == pServer->clients[i].id && resend == 0)
+                        continue;
+                    /*
+                    Skicka mindre(i bytes) structar som innehåller bara x y riktning och id
+                    */
+                    memcpy(pServer->pSent->data, &data, sizeof(PlayerUdpPkg));
+                    pServer->pSent->address.port = pServer->clients[i].address.port;
+                    pServer->pSent->address.host = pServer->clients[i].address.host;
+                    pServer->pSent->len = sizeof(PlayerUdpPkg);
+
+                    if (!SDLNet_UDP_Send(pServer->socketUDP, -1, pServer->pSent))
+                    {
+                        printf("Error: Could not send package\n");
+                    }
                 }
             }
         }
     }
+    pthread_exit(NULL);
 }
 
 void checkUDPClient(Server *pServer, PlayerUdpPkg data)
@@ -631,11 +696,12 @@ void checkUDPClient(Server *pServer, PlayerUdpPkg data)
     }
 }
 
-void updateServerWindow(Server *pServer)
+void *updateServerWindow(void *pServerIn)
 {
-    if (pServer->updateScreenFlag)
+    Server *pServer = (Server *)pServerIn;
+    while (!pServer->exit)
     {
-        pServer->updateScreenFlag = 0;
+        sem_wait(&pServer->uiSemaphore);
         SDL_SetRenderDrawColor(pServer->pRenderer, 255, 255, 255, 255);
         SDL_RenderClear(pServer->pRenderer);
 
@@ -651,6 +717,7 @@ void updateServerWindow(Server *pServer)
 
         SDL_RenderPresent(pServer->pRenderer);
     }
+    pthread_exit(NULL);
 }
 
 void dbgPrint()

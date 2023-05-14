@@ -196,6 +196,10 @@ typedef struct info Info;
 
 struct server
 {
+    sem_t udpSemaphore, tcpSemaphore, uiSemaphore;
+    bool exit;
+
+
     Uint8 updateScreenFlag;
     int mapPos;
     TcpState tcpState;

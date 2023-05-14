@@ -113,8 +113,8 @@ int init(Game *pGame)
     pGame->windowWidth = (float)displayMode.w * 0.3; // 70% of avaliable space
     pGame->windowHeight = (float)displayMode.h * 0.3;
 
-    // pGame->windowWidth = 1920; // 70% of avaliable space
-    // pGame->windowHeight = 1080;
+    pGame->windowWidth = 1920; // 70% of avaliable space
+    pGame->windowHeight = 1080;
 
     pGame->world.tileSize = (pGame->windowHeight / MAPSIZE) * 4;
 
@@ -562,6 +562,13 @@ void *updateScreen(void *pGameIn)
         clock_gettime(CLOCK_REALTIME, &timeout);
         // timeout.tv_nsec += 1000000000 / 165;
         timeout.tv_sec += 1;
+        if(pGame->isConnected)
+        {
+            sendData(pGame);
+            getPlayerData(pGame);
+            checkTCP(pGame);
+        }
+            
 
         SDL_Rect backGround;
         backGround.x = pGame->map[0].wall.x;
