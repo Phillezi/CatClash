@@ -121,8 +121,9 @@ void *handleInput(void *pGameIn) // Game *pGame)
         static int flag = 0;
         pGame->pPlayer->charging = 1;
 
-        for (int i = 0; i < 2 * (pGame->pPlayer->charge / 2); i++)
+        for (int i = 0; i < pGame->pPlayer->charge/2; i++)
         {
+            printf("i: %d\n", i);
             if (checkCollision(*pGame->pPlayer, pGame->map, pGame->pPlayer->prevKeyPressed, pGame->world.tileSize) == 1)
             {
                 int temp = rand() % pGame->nrOfPortals;
@@ -146,7 +147,8 @@ void *handleInput(void *pGameIn) // Game *pGame)
             }
         }
         pGame->pPlayer->hp -= damage;
-        if (pGame->pPlayer->charge > 0) pGame->pPlayer->charge -= 1;
+        if (pGame->pPlayer->charge > 0) pGame->pPlayer->charge -= 5;
+        if (pGame->pPlayer->charge < 0) pGame->pPlayer->charge = 0;
     }
     else
     {
