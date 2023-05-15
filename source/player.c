@@ -121,9 +121,8 @@ void *handleInput(void *pGameIn) // Game *pGame)
         static int flag = 0;
         pGame->pPlayer->charging = 1;
 
-        for (int i = 0; i < pGame->pPlayer->charge/2; i++)
+        for (int i = 0; i < pGame->pPlayer->charge/3; i++)
         {
-            printf("i: %d\n", i);
             if (checkCollision(*pGame->pPlayer, pGame->map, pGame->pPlayer->prevKeyPressed, pGame->world.tileSize) == 1)
             {
                 int temp = rand() % pGame->nrOfPortals;
@@ -817,14 +816,13 @@ void chargingCollisions(Server *pServer, int originID) {
                 if (players[originID].prevKeyPressed == 'S') dir = 'W';
                 if (players[originID].prevKeyPressed == 'D') dir = 'A';
                 
-                
                 damagePlayer(players, id, originID, dir);
 
                 if (oldHealthOpp > players[id].hp || players[id].charge == 0) {
                     prevTime[id] = SDL_GetTicks();
                     invincibilityTicks[id] = 1000;
                     pkg.id = id;
-                    pkg.hp = players[id].hp < 0 ? 0 : players[id].hp;
+                    pkg.hp = players[id].hp;
                     pkg.charge = players[id].charge;
                     pkg.charging = pkg.charge > 0 ? 1 : 0;
 
