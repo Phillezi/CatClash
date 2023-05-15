@@ -3,6 +3,7 @@
 #include "../include/getDefaultGateway.h"
 #include <semaphore.h>
 #include <time.h>
+#include <stdio.h>
 
 enum TCPSTATE
 {
@@ -506,8 +507,26 @@ void *scanForGamesOnLocalNetwork(void *arg)
 void *scanForGamesFromSavedList(void *arg)
 {
     LocalServer *pLocalServer = (LocalServer *)arg;
-    char ipS[3][16] = {"192.168.1.70", "192.168.1.124"};
-    int nrOfIps = 2;
+    char pIpS[5][16];
+    int nrOfIps = 0;
+    FILE *pFile;
+    pFile = fopen("resources/network/saved_ips.txt", "r");
+    if(pFile)
+    {
+        while(!feof(pFile) && nrOfIps<5)
+        {
+            fscanf(pFile, "%16s", pIpS[nrOfIps]);
+            printf("LIST IP: %s\n", pIpS[nrOfIps]);
+            nrOfIps++;
+        }
+        fclose(pFile);
+    }
+    else
+    {
+        printf("Error: Could not open file\n");
+        pLocalServer->searchDone = true;
+        return 0;
+    }
 
     NetScanTcp net[nrOfIps];
     pthread_t tryOpenThread[nrOfIps], timeoutThread[nrOfIps];
@@ -515,11 +534,11 @@ void *scanForGamesFromSavedList(void *arg)
     for (int i = 0; i < nrOfIps; i++)
     {
         
-        if (SDLNet_ResolveHost(&net[i].ip, ipS[i], 1234) != 0)
+        if (SDLNet_ResolveHost(&net[i].ip, pIpS[i], 1234) != 0)
             printf("Could not resolve host\n");
         else
         {
-            printf("Trying: %s\n", ipS[i]);
+            printf("Trying: %s\n", pIpS[i]);
             net[i].threadId = tryOpenThread[i];
             net[i].playersOnline = 0;
             sem_init(&net[i].started, 0, 0);
@@ -603,7 +622,7 @@ void *scanForGamesFromSavedList(void *arg)
                 else
                 {
                     pLocalServer->ppIpStringList[pLocalServer->nrOfServersFound] = pTemp;
-                    strcpy(pLocalServer->ppIpStringList[pLocalServer->nrOfServersFound], ipS[i]);
+                    strcpy(pLocalServer->ppIpStringList[pLocalServer->nrOfServersFound], pIpS[i]);
                     pLocalServer->nrOfServersFound++;
                     pLocalServer->foundServer = true;
                     printf("Done with allocation\n");

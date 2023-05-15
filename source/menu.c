@@ -639,13 +639,17 @@ int serverSelectMenu(Game *pGame)
     Text *pExitText = createText(pGame->pRenderer, 0, 0, 0, pLocalFont, "Back", buttons[firstInButtonRow * 4].x + (buttons[firstInButtonRow * 4].w / 2), buttons[firstInButtonRow * 4].y + (buttons[firstInButtonRow * 4].h / 2));
     Text *pSearchText = createText(pGame->pRenderer, 0, 0, 0, pLocalFont, "Search", buttons[lastButton].x + (buttons[lastButton].w / 2), buttons[lastButton].y + (buttons[lastButton].h / 2));
     Text *pStartScanText = createText(pGame->pRenderer, 0, 0, 0, pLocalFont, "Scan network", buttons[lastButton - 1].x + (buttons[lastButton - 1].w / 2), buttons[lastButton - 1].y + (buttons[lastButton - 1].h / 2));
+    Text *pStartListScanText = createText(pGame->pRenderer, 0, 0, 0, pLocalFont, "Scan saved", buttons[lastButton - 2].x + (buttons[lastButton - 2].w / 2), buttons[lastButton - 2].y + (buttons[lastButton - 2].h / 2));
 
     Text *pIpText[firstInButtonRow];
     Text *pAmountOfPlayersText[firstInButtonRow];
 
+    Text *pIpText2[firstInButtonRow];
+    Text *pAmountOfPlayersText2[firstInButtonRow];
+
     //
     // Setup Net search
-    pthread_t scanNetThread;
+    pthread_t scanNetThread, scanListThread;
     LocalServer localServerInfo;
     localServerInfo.foundServer = false;
     localServerInfo.searchDone = true;
@@ -653,8 +657,17 @@ int serverSelectMenu(Game *pGame)
     localServerInfo.ppIpStringList = NULL;
     localServerInfo.pPlayersOnline = NULL;
 
+    LocalServer savedServerInfo;
+    savedServerInfo.foundServer = false;
+    savedServerInfo.searchDone = true;
+    savedServerInfo.nrOfServersFound = 0;
+    savedServerInfo.ppIpStringList = NULL;
+    savedServerInfo.pPlayersOnline = NULL;
+
     bool searchResultChecked = true;
+    bool searchResultChecked2 = true;
     bool startScan = false;
+    bool startScan2 = false;
     //
 
     int mouseX, mouseY, selected = -1;
@@ -692,6 +705,11 @@ int serverSelectMenu(Game *pGame)
                                     startScan = true;
                                     break;
                                 }
+                                else if (selected == lastButton - 2)
+                                {
+                                    startScan2 = true;
+                                    break;
+                                }
                                 else if (selected == firstInButtonRow * 4)
                                 {
                                     exit = true;
@@ -719,7 +737,29 @@ int serverSelectMenu(Game *pGame)
                                         printf("Connected to Server\n");
                                         initMapFromTCP(pGame->map, pGame->world.tileSize);
                                         getPlayerSpawnPos(pGame);
-                                        SDLNet_ResolveHost(&pGame->serverAddress, localServerInfo.ppIpStringList[selected - 5], 1234);
+                                        SDLNet_ResolveHost(&pGame->serverAddress, localServerInfo.ppIpStringList[selected - firstInButtonRow], 1234);
+                                        printf("Resolved UDP host\n");
+                                        exit = true;
+                                        returnValue = 2;
+                                    }
+                                    
+                                }
+                                else if (selected >= firstInButtonRow*2 && selected < firstInButtonRow * 3)
+                                {
+                                    if (savedServerInfo.nrOfServersFound > selected - firstInButtonRow * 2)
+                                    {
+                                        pGame->pClient = createClient(savedServerInfo.ppIpStringList[selected - firstInButtonRow * 2], 1234, 0, 100, 100);
+                                        if (connectToServer(pGame))
+                                        {
+                                            printf("Error: Could not join server\n");
+                                            exit = true;
+                                            free(pGame->pClient);
+                                            returnValue = 0;
+                                        }
+                                        printf("Connected to Server\n");
+                                        initMapFromTCP(pGame->map, pGame->world.tileSize);
+                                        getPlayerSpawnPos(pGame);
+                                        SDLNet_ResolveHost(&pGame->serverAddress, savedServerInfo.ppIpStringList[selected - firstInButtonRow * 2], 1234);
                                         printf("Resolved UDP host\n");
                                         exit = true;
                                         returnValue = 2;
@@ -732,7 +772,7 @@ int serverSelectMenu(Game *pGame)
                 }
             }
         }
-        if (startScan && localServerInfo.searchDone)
+        if (startScan && localServerInfo.searchDone && savedServerInfo.searchDone)
         {
             for (int i = 0; i < localServerInfo.nrOfServersFound; i++)
             {
@@ -756,7 +796,33 @@ int serverSelectMenu(Game *pGame)
             searchResultChecked = false;
 
             pthread_create(&scanNetThread, NULL, scanForGamesOnLocalNetwork, &localServerInfo);
-            // pthread_create(&scanNetThread, NULL, scanForGamesFromSavedList, &localServerInfo);
+            freeText(pCheckLocal);
+            pCheckLocal = createText(pGame->pRenderer, 0, 0, 0, pLocalFont, "Checking Local network...", areaCenterX, buttons[2].y + buttons[2].h / 2);
+        }
+        if (startScan2 && localServerInfo.searchDone && savedServerInfo.searchDone)
+        {
+            for (int i = 0; i < savedServerInfo.nrOfServersFound; i++)
+            {
+                if (i < firstInButtonRow)
+                {
+                    freeText(pIpText2[i]);
+                    freeText(pAmountOfPlayersText2[i]);
+                }
+
+                free(savedServerInfo.ppIpStringList[i]);
+            }
+            free(savedServerInfo.ppIpStringList);
+            savedServerInfo.ppIpStringList = NULL;
+            free(savedServerInfo.pPlayersOnline);
+            savedServerInfo.pPlayersOnline = NULL;
+
+            startScan2 = false;
+            savedServerInfo.foundServer = false;
+            savedServerInfo.searchDone = false;
+            savedServerInfo.nrOfServersFound = 0;
+            searchResultChecked2 = false;
+
+            pthread_create(&scanListThread, NULL, scanForGamesFromSavedList, &savedServerInfo);
             freeText(pCheckLocal);
             pCheckLocal = createText(pGame->pRenderer, 0, 0, 0, pLocalFont, "Checking Local network...", areaCenterX, buttons[2].y + buttons[2].h / 2);
         }
@@ -795,6 +861,36 @@ int serverSelectMenu(Game *pGame)
                 }
             }
 
+            if (savedServerInfo.searchDone && !searchResultChecked2)
+            {
+                freeText(pCheckLocal);
+                char buffer[100];
+                searchResultChecked2 = true;
+                pthread_join(scanListThread, NULL);
+                if (savedServerInfo.foundServer)
+                {
+
+                    for (int i = 0; i < savedServerInfo.nrOfServersFound; i++)
+                    {
+                        printf("IP: %s\n", savedServerInfo.ppIpStringList[i]);
+                        if (i < firstInButtonRow)
+                        {
+                            pIpText2[i] = createText(pGame->pRenderer, 0, 0, 0, pLocalFont, savedServerInfo.ppIpStringList[i], buttons[5 * 2 + i].x + (buttons[5 * 2 + i].w / 2), buttons[5 * 2 + i].y + (fontSize / 2) + (fontSize / 4));
+                            sprintf(buffer, "%d players", savedServerInfo.pPlayersOnline[i]);
+                            pAmountOfPlayersText2[i] = createText(pGame->pRenderer, 0, 0, 0, pLocalFont, buffer, buttons[5 * 2 + i].x + (buttons[5 * 2 + i].w / 2), buttons[5 * 2 + i].y + (buttons[5 * 2 + i].h / 2));
+                        }
+                    }
+
+                    sprintf(buffer, "Found %d servers!", savedServerInfo.nrOfServersFound);
+                    pCheckLocal = createText(pGame->pRenderer, 0, 255, 0, pLocalFont, buffer, areaCenterX, buttons[2].y + buttons[2].h / 2);
+                }
+                else
+                {
+                    strcpy(buffer, "No servers found :(");
+                    pCheckLocal = createText(pGame->pRenderer, 255, 0, 0, pLocalFont, buffer, areaCenterX, buttons[2].y + buttons[2].h / 2);
+                }
+            }
+
             SDL_SetRenderDrawColor(pGame->pRenderer, 255, 255, 255, 255);
             SDL_RenderClear(pGame->pRenderer);
             SDL_SetRenderDrawColor(pGame->pRenderer, 200, 200, 200, 255);
@@ -817,12 +913,25 @@ int serverSelectMenu(Game *pGame)
                     }
                 }
             }
+            if (savedServerInfo.searchDone)
+            {
+                for (int i = 0; i < savedServerInfo.nrOfServersFound; i++)
+                {
+                    if (i < firstInButtonRow)
+                    {
+                        drawText(pIpText2[i], pGame->pRenderer);
+                        drawText(pAmountOfPlayersText2[i], pGame->pRenderer);
+                    }
+                }
+            }
 
             drawText(pCheckLocal, pGame->pRenderer);
             drawText(pExitText, pGame->pRenderer);
             drawText(pSearchText, pGame->pRenderer);
             if (localServerInfo.searchDone)
                 drawText(pStartScanText, pGame->pRenderer);
+            if (savedServerInfo.searchDone)
+                drawText(pStartListScanText, pGame->pRenderer);
 
             SDL_RenderPresent(pGame->pRenderer);
         }
@@ -844,7 +953,24 @@ int serverSelectMenu(Game *pGame)
     free(localServerInfo.pPlayersOnline);
     localServerInfo.pPlayersOnline = NULL;
 
+    for (int i = 0; i < savedServerInfo.nrOfServersFound; i++)
+    {
+        if (i < firstInButtonRow)
+        {
+            freeText(pIpText2[i]);
+            freeText(pAmountOfPlayersText2[i]);
+        }
+
+        free(savedServerInfo.ppIpStringList[i]);
+    }
+    free(savedServerInfo.ppIpStringList);
+    savedServerInfo.ppIpStringList = NULL;
+
+    free(savedServerInfo.pPlayersOnline);
+    savedServerInfo.pPlayersOnline = NULL;
+
     freeText(pStartScanText);
+    freeText(pStartListScanText);
     freeText(pExitText);
     freeText(pSearchText);
     freeText(pCheckLocal);
@@ -979,11 +1105,10 @@ int serverLobby(Game *pGame)
             drawText(pNrOfPlayersText, pGame->pRenderer);
             drawText(pInfoText, pGame->pRenderer);
 
-            
             for (int i = 0; i < pGame->nrOfPlayers + 1; i++)
             {
-                
-                if(i<pGame->nrOfPlayers)
+
+                if (i < pGame->nrOfPlayers)
                 {
                     SDL_SetRenderDrawColor(pGame->pRenderer, 255, 255, 255, 255);
                     SDL_RenderDrawRect(pGame->pRenderer, &pIcons[i]);
@@ -995,7 +1120,6 @@ int serverLobby(Game *pGame)
                     SDL_RenderDrawRect(pGame->pRenderer, &pIcons[i]);
                     SDL_RenderCopy(pGame->pRenderer, pGame->pPlayerTexture, &pGame->gSpriteClips[pGame->pPlayer->id][0], &pIcons[i]);
                 }
-                    
             }
 
             SDL_RenderPresent(pGame->pRenderer);
