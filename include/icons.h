@@ -13,3 +13,5 @@ Icon *createIcons(Icon *pIcon, Uint32 size, int x, int y, int w, int h, Uint8 r,
 void removeIcon(Icon icon);
 
 void destroyIcons(Icon *pIcon, Uint32 size);
+
+void drawIcons(Icon *pIcons, Uint32 size, SDL_Renderer *pRenderer);

@@ -853,40 +853,6 @@ int serverSelectMenu(Game *pGame)
     return returnValue;
 }
 
-void render_rounded_rect(SDL_Renderer *pRenderer, SDL_Rect rect, int radius)
-{
-    // Make sure the radius is not too large
-    radius = (radius > rect.w / 2) ? rect.w / 2 : radius;
-    radius = (radius > rect.h / 2) ? rect.h / 2 : radius;
-
-    // Draw the rounded corners
-    for (int i = 0; i < radius; i++)
-    {
-        // Calculate the positions of the corner circles
-        int x = rect.x + radius - i;
-        int y = rect.y + radius - i;
-        int w = i * 2;
-        int h = i * 2;
-
-        // Draw the corner arcs
-        SDL_RenderDrawLine(pRenderer, x + radius, y, x + rect.w - radius, y);                   // top
-        SDL_RenderDrawLine(pRenderer, x + rect.w, y + radius, x + rect.w, y + rect.h - radius); // right
-        SDL_RenderDrawLine(pRenderer, x + rect.w - radius, y + rect.h, x + radius, y + rect.h); // bottom
-        SDL_RenderDrawLine(pRenderer, x, y + rect.h - radius, x, y + radius);                   // left
-
-        SDL_RenderDrawLine(pRenderer, x + w - radius, y, x + w - radius, y + radius);                   // top-right
-        SDL_RenderDrawLine(pRenderer, x + rect.w - radius, y + h - radius, x + rect.w - radius, y + h); // bottom-right
-        SDL_RenderDrawLine(pRenderer, x + radius, y + h - radius, x + radius, y + h);                   // bottom-left
-        SDL_RenderDrawLine(pRenderer, x, y + radius, x + radius, y + radius);                           // top-left
-    }
-
-    // Draw the straight edges
-    SDL_RenderDrawLine(pRenderer, rect.x + radius, rect.y, rect.x + rect.w - radius, rect.y);
-    SDL_RenderDrawLine(pRenderer, rect.x + radius, rect.y + rect.h, rect.x + rect.w - radius, rect.y + rect.h);
-    SDL_RenderDrawLine(pRenderer, rect.x, rect.y + radius, rect.x, rect.y + rect.h - radius);
-    SDL_RenderDrawLine(pRenderer, rect.x + rect.w, rect.y + radius, rect.x + rect.w, rect.y + rect.h - radius);
-}
-
 int serverLobby(Game *pGame)
 {
     bool playerWasConnected = false, exit = false;
