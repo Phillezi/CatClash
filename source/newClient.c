@@ -507,13 +507,13 @@ void *scanForGamesOnLocalNetwork(void *arg)
 void *scanForGamesFromSavedList(void *arg)
 {
     LocalServer *pLocalServer = (LocalServer *)arg;
-    char pIpS[5][16];
+    char pIpS[100][16];
     int nrOfIps = 0;
     FILE *pFile;
     pFile = fopen("resources/network/saved_ips.txt", "r");
     if(pFile)
     {
-        while(!feof(pFile) && nrOfIps<5)
+        while(!feof(pFile) && nrOfIps<100)
         {
             fscanf(pFile, "%16s", pIpS[nrOfIps]);
             printf("LIST IP: %s\n", pIpS[nrOfIps]);
