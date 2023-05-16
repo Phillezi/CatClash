@@ -147,7 +147,6 @@ void *handleInput(void *pGameIn) // Game *pGame)
                 }
                 break;
             }
-            printf("i: %d\n", i);
         }
         pGame->pPlayer->hp -= damage;
         if (pGame->pPlayer->charge > 0) pGame->pPlayer->charge -= 2;
