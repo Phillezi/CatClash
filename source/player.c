@@ -117,11 +117,14 @@ void *handleInput(void *pGameIn) // Game *pGame)
     else if (pGame->pPlayer->charge > 0)
     {
         srand(time(NULL));
-        int damage = 0, id = 0;
+        int damage = 0, id = 0, maxLoops = 0;
         static int flag = 0;
         pGame->pPlayer->charging = 1;
 
-        for (int i = 0; i < pGame->pPlayer->charge/3; i++)
+        if (pGame->pPlayer->charge >= pGame->world.tileSize) maxLoops = pGame->world.tileSize - 1;
+        else maxLoops = pGame->pPlayer->charge;
+
+        for (int i = 0; i < maxLoops; i++)
         {
             if (checkCollision(*pGame->pPlayer, pGame->map, pGame->pPlayer->prevKeyPressed, pGame->world.tileSize) == 1)
             {
@@ -144,9 +147,10 @@ void *handleInput(void *pGameIn) // Game *pGame)
                 }
                 break;
             }
+            printf("i: %d\n", i);
         }
         pGame->pPlayer->hp -= damage;
-        if (pGame->pPlayer->charge > 0) pGame->pPlayer->charge -= 5;
+        if (pGame->pPlayer->charge > 0) pGame->pPlayer->charge -= 2;
         if (pGame->pPlayer->charge < 0) pGame->pPlayer->charge = 0;
     }
     else
