@@ -7,7 +7,6 @@ int main(int argc, char **args)
         run(pApp);
     else
         printf("Failed To create application\n");
-
     destroyApplication(pApp);
     return 0;
 }
@@ -26,6 +25,7 @@ App *createApplication()
     pNew_app->pNetwork = createNetwork();
     pNew_app->pGame = createGame();
     pNew_app->exit = false;
+    pNew_app->state = MENU;
 
     return pNew_app;
 }

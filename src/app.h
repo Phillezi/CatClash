@@ -18,6 +18,11 @@
 #include "input.h"
 #include "client.h"
 
+typedef enum {
+    MENU,
+    JOIN,
+    PLAY
+} State;
 typedef struct {
     sem_t updateWindow;
     sem_t updateInput;
@@ -29,6 +34,7 @@ typedef struct {
     Network *pNetwork;
     Game *pGame;
     bool exit;
+    State state;
     Semaphores semaphore;
 } App;
 
