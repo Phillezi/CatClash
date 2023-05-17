@@ -18,8 +18,12 @@ Game *createGame()
 
 void destroyGame(Game *pGame)
 {
+    if(pGame->pMap)
+        destroyTiles(pGame->pMap);
+
     if(pGame->pPlayers)
         destroyPlayer(pGame->pPlayers);
+        
     if(pGame)
         free(pGame);
 }
@@ -33,6 +37,8 @@ int initalizegame(Game *pNew_game)
         printf("Error: could not create players\n");
         return 1;
     }
+
+    pNew_game->pMap = createTiles(1024);
 
     return 0;
 }

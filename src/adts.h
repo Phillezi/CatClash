@@ -24,6 +24,8 @@ typedef struct {
     Uint32 width, height;
     SDL_Window *pWindow;
     SDL_Renderer *pRenderer;
+    Uint32 frameCounter;
+    Uint32 fps;
     
 } Window;
 
