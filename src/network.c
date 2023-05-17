@@ -18,11 +18,19 @@ Network *createNetwork()
 
 void destroyNetwork(Network *pNetwork)
 {
+    SDLNet_Quit();
+    
     if(pNetwork)
         free(pNetwork);
 }
 
 int initalizenetwork(Network *pNew_network)
 {
+    if(SDLNet_Init())
+    {
+        printf("ERROR: %s\n", SDLNet_GetError());
+        return 1;
+    }
 
+    return 0;
 }

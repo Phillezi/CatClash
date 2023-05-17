@@ -23,7 +23,11 @@ App *createApplication()
     if (!pNew_app->pWindow)
         return NULL;
     pNew_app->pNetwork = createNetwork();
+    if (!pNew_app->pNetwork)
+        return NULL;
     pNew_app->pGame = createGame();
+    if (!pNew_app->pGame)
+        return NULL;
     pNew_app->exit = false;
     pNew_app->state = MENU;
 
