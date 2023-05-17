@@ -16,7 +16,9 @@ void *renderUpdate(void *pAppIn)
             timeout.tv_sec += 1;
             pApp->pWindow->fps = pApp->pWindow->frameCounter;
             pApp->pWindow->frameCounter = 0;
-            printf("FPS: %d\n", pApp->pWindow->fps);
+            char buffer[31];
+            sprintf(buffer, "FPS: %d\n", pApp->pWindow->fps);
+            SDL_SetWindowTitle(pApp->pWindow->pWindow, buffer);
         }
 
         render((void *)pApp);
