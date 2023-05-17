@@ -109,8 +109,8 @@ int init(Game *pGame)
         return 1;
     }
 
-    pGame->windowWidth = (float)displayMode.w * 0.3; // 70% of avaliable space
-    pGame->windowHeight = (float)displayMode.h * 0.3;
+    // pGame->windowWidth = (float)displayMode.w * 0.3; // 70% of avaliable space
+    // pGame->windowHeight = (float)displayMode.h * 0.3;
 
     pGame->windowWidth = 1920; // 70% of avaliable space
     pGame->windowHeight = 1080;
@@ -240,7 +240,10 @@ int init(Game *pGame)
     SDL_SetWindowIcon(pGame->pWindow, pSurface);
     SDL_FreeSurface(pSurface);
 
-    loadMedia(pGame->pRenderer, &pGame->pPlayerTexture, pGame->gSpriteClips, pGame->pPlayer->id);
+    for (int i = 0; i < MAX_PLAYERS; i++) {
+        loadMedia(pGame->pRenderer, &pGame->pPlayerTexture, pGame->gSpriteClips, i);
+    }
+
     pGame->pPlayer->idle = 1;
     pGame->pPlayer->charging = 0;
 
@@ -538,21 +541,6 @@ void *updateScreen(void *pGameIn)
     SDL_Rect temp;
 
     translatePositionToScreen(pGame);
-    static int k = 0;
-    if (k < MAX_PLAYERS)
-    {
-        if (k == pGame->pPlayer->id)
-        {
-            loadMedia(pGame->pRenderer, &pGame->pPlayerTexture, pGame->gSpriteClips, pGame->pPlayer->id);
-            k++;
-        }
-        for (int i = 0; i < pGame->nrOfPlayers; i++)
-            if (k == pGame->pMultiPlayer[i].id)
-            {
-                loadMedia(pGame->pRenderer, &pGame->pPlayerTexture, pGame->gSpriteClips, pGame->pMultiPlayer[i].id);
-                k++;
-            }
-    }
 
     pGame->isDrawing = true; // temporary fix to screen-tearing?
     int darkness = 0;

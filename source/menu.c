@@ -1085,22 +1085,6 @@ int serverLobby(Game *pGame)
             SDL_SetRenderDrawColor(pGame->pRenderer, 200, 200, 200, 255);
             SDL_RenderClear(pGame->pRenderer);
 
-            static int k = 0;
-            if (k < MAX_PLAYERS)
-            {
-                if (k == pGame->pPlayer->id)
-                {
-                    loadMedia(pGame->pRenderer, &pGame->pPlayerTexture, pGame->gSpriteClips, pGame->pPlayer->id);
-                    k++;
-                }
-                for (int i = 0; i < pGame->nrOfPlayers; i++)
-                    if (k == pGame->pMultiPlayer[i].id)
-                    {
-                        loadMedia(pGame->pRenderer, &pGame->pPlayerTexture, pGame->gSpriteClips, pGame->pMultiPlayer[i].id);
-                        k++;
-                    }
-            }
-
             drawText(pTitleText, pGame->pRenderer);
             drawText(pNrOfPlayersText, pGame->pRenderer);
             drawText(pInfoText, pGame->pRenderer);
