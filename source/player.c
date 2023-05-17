@@ -15,13 +15,13 @@ void centerPlayer(Game *pGame, Player *pPlayer)
 
     int screenShiftAmount = pGame->movementAmount;
 
-    bool playerIsInOneFifthOfScreenBorder       = (pPlayer->rect.x >= (4 * pGame->windowWidth) / 5 || pPlayer->rect.x <= pGame->windowWidth / 5) || (pPlayer->rect.y >= (4 * pGame->windowHeight) / 5 || pPlayer->rect.y <= pGame->windowHeight / 5);
-    bool playerIsOutsideScreen                  = (pPlayer->rect.x >= pGame->windowWidth || pPlayer->rect.x <= 0) || (pPlayer->rect.y >= pGame->windowHeight || pPlayer->rect.y <= 0);
+    bool playerIsInOneFifthOfScreenBorder = (pPlayer->rect.x >= (4 * pGame->windowWidth) / 5 || pPlayer->rect.x <= pGame->windowWidth / 5) || (pPlayer->rect.y >= (4 * pGame->windowHeight) / 5 || pPlayer->rect.y <= pGame->windowHeight / 5);
+    bool playerIsOutsideScreen = (pPlayer->rect.x >= pGame->windowWidth || pPlayer->rect.x <= 0) || (pPlayer->rect.y >= pGame->windowHeight || pPlayer->rect.y <= 0);
     bool playerIsMoreThanOneTileOutsideOfScreen = (pPlayer->rect.x >= pGame->windowWidth + pGame->world.tileSize || pPlayer->rect.x <= -pGame->world.tileSize) || (pPlayer->rect.y >= pGame->windowHeight + pGame->world.tileSize || pPlayer->rect.y <= -pGame->world.tileSize);
-    bool playerIsCloseToUpperBorder             = pPlayer->rect.y < (2 * pGame->windowHeight) / 5;
-    bool playerIsCloseToLowerBorder             = pPlayer->rect.y > (3 * pGame->windowHeight) / 5;
-    bool playerIsCloseToLeftBorder              = pPlayer->rect.x < (2 * pGame->windowWidth) / 5;
-    bool playerIsCloseToRigthBorder             = pPlayer->rect.x > (3 * pGame->windowWidth) / 5;
+    bool playerIsCloseToUpperBorder = pPlayer->rect.y < (2 * pGame->windowHeight) / 5;
+    bool playerIsCloseToLowerBorder = pPlayer->rect.y > (3 * pGame->windowHeight) / 5;
+    bool playerIsCloseToLeftBorder = pPlayer->rect.x < (2 * pGame->windowWidth) / 5;
+    bool playerIsCloseToRigthBorder = pPlayer->rect.x > (3 * pGame->windowWidth) / 5;
 
     if (playerIsMoreThanOneTileOutsideOfScreen)
         screenShiftAmount = pGame->movementAmount * 30;
@@ -121,8 +121,10 @@ void *handleInput(void *pGameIn) // Game *pGame)
         static int flag = 0;
         pGame->pPlayer->charging = 1;
 
-        if (pGame->pPlayer->charge >= pGame->world.tileSize) maxLoops = pGame->world.tileSize - 1;
-        else maxLoops = pGame->pPlayer->charge;
+        if (pGame->pPlayer->charge >= pGame->world.tileSize)
+            maxLoops = pGame->world.tileSize - 1;
+        else
+            maxLoops = pGame->pPlayer->charge;
 
         for (int i = 0; i < maxLoops; i++)
         {
@@ -138,10 +140,12 @@ void *handleInput(void *pGameIn) // Game *pGame)
             }
             else
             {
-                if (id != -1) {
+                if (id != -1)
+                {
                     continue;
                 }
-                else {
+                else
+                {
                     damage = pGame->pPlayer->charge * 2;
                     pGame->pPlayer->charge = 1;
                 }
@@ -149,8 +153,10 @@ void *handleInput(void *pGameIn) // Game *pGame)
             }
         }
         pGame->pPlayer->hp -= damage;
-        if (pGame->pPlayer->charge > 0) pGame->pPlayer->charge -= 2;
-        if (pGame->pPlayer->charge < 0) pGame->pPlayer->charge = 0;
+        if (pGame->pPlayer->charge > 0)
+            pGame->pPlayer->charge -= 2;
+        if (pGame->pPlayer->charge < 0)
+            pGame->pPlayer->charge = 0;
     }
     else
     {
@@ -163,11 +169,18 @@ void *handleInput(void *pGameIn) // Game *pGame)
                 if (checkCollision(*pGame->pPlayer, pGame->map, 'W', pGame->world.tileSize) == 1)
                 {
                     int temp = rand() % pGame->nrOfPortals;
-                    while ((pGame->portalList[temp].y / pGame->world.tileSize) - (pGame->pPlayer->y / pGame->world.tileSize) >= -1 && (pGame->portalList[temp].y / pGame->world.tileSize) - (pGame->pPlayer->y / pGame->world.tileSize) <= 1)
+                    if (((pGame->portalList[temp].x / pGame->world.tileSize) - (pGame->pPlayer->x / pGame->world.tileSize) >= -1 && (pGame->portalList[temp].x / pGame->world.tileSize) - (pGame->pPlayer->x / pGame->world.tileSize) <= 1))
                     {
-                        int temp = rand() % pGame->nrOfPortals;
-                        pGame->pPlayer->x = pGame->portalList[temp].x;
-                        pGame->pPlayer->y = pGame->portalList[temp].y;
+                        if (temp < pGame->nrOfPortals - 1)
+                        {
+                            pGame->pPlayer->x = pGame->portalList[temp + 1].x;
+                            pGame->pPlayer->y = pGame->portalList[temp + 1].y;
+                        }
+                        else
+                        {
+                            pGame->pPlayer->x = pGame->portalList[0].x;
+                            pGame->pPlayer->y = pGame->portalList[0].y;
+                        }
                     }
                 }
                 if ((checkCollision(*pGame->pPlayer, pGame->map, 'W', pGame->world.tileSize) < 1) && (playerCollision(*pGame->pPlayer, pGame->pMultiPlayer, pGame->nrOfPlayers, 'W', pGame->world.tileSize, 0) == -1))
@@ -180,11 +193,18 @@ void *handleInput(void *pGameIn) // Game *pGame)
                 if (checkCollision(*pGame->pPlayer, pGame->map, 'A', pGame->world.tileSize) == 1)
                 {
                     int temp = rand() % pGame->nrOfPortals;
-                    while ((pGame->portalList[temp].x / pGame->world.tileSize) - (pGame->pPlayer->x / pGame->world.tileSize) >= -1 && (pGame->portalList[temp].x / pGame->world.tileSize) - (pGame->pPlayer->x / pGame->world.tileSize) <= 1)
+                    if (((pGame->portalList[temp].x / pGame->world.tileSize) - (pGame->pPlayer->x / pGame->world.tileSize) >= -1 && (pGame->portalList[temp].x / pGame->world.tileSize) - (pGame->pPlayer->x / pGame->world.tileSize) <= 1))
                     {
-                        int temp = rand() % pGame->nrOfPortals;
-                        pGame->pPlayer->x = pGame->portalList[temp].x;
-                        pGame->pPlayer->y = pGame->portalList[temp].y;
+                        if (temp < pGame->nrOfPortals - 1)
+                        {
+                            pGame->pPlayer->x = pGame->portalList[temp + 1].x;
+                            pGame->pPlayer->y = pGame->portalList[temp + 1].y;
+                        }
+                        else
+                        {
+                            pGame->pPlayer->x = pGame->portalList[0].x;
+                            pGame->pPlayer->y = pGame->portalList[0].y;
+                        }
                     }
                 }
                 if ((checkCollision(*pGame->pPlayer, pGame->map, 'A', pGame->world.tileSize) < 1) && (playerCollision(*pGame->pPlayer, pGame->pMultiPlayer, pGame->nrOfPlayers, 'A', pGame->world.tileSize, 0) == -1))
@@ -197,11 +217,18 @@ void *handleInput(void *pGameIn) // Game *pGame)
                 if (checkCollision(*pGame->pPlayer, pGame->map, 'S', pGame->world.tileSize) == 1)
                 {
                     int temp = rand() % pGame->nrOfPortals;
-                    while ((pGame->portalList[temp].y / pGame->world.tileSize) - (pGame->pPlayer->y / pGame->world.tileSize) >= -1 && (pGame->portalList[temp].y / pGame->world.tileSize) - (pGame->pPlayer->y / pGame->world.tileSize) <= 1)
+                    if (((pGame->portalList[temp].x / pGame->world.tileSize) - (pGame->pPlayer->x / pGame->world.tileSize) >= -1 && (pGame->portalList[temp].x / pGame->world.tileSize) - (pGame->pPlayer->x / pGame->world.tileSize) <= 1))
                     {
-                        int temp = rand() % pGame->nrOfPortals;
-                        pGame->pPlayer->x = pGame->portalList[temp].x;
-                        pGame->pPlayer->y = pGame->portalList[temp].y;
+                        if (temp < pGame->nrOfPortals - 1)
+                        {
+                            pGame->pPlayer->x = pGame->portalList[temp + 1].x;
+                            pGame->pPlayer->y = pGame->portalList[temp + 1].y;
+                        }
+                        else
+                        {
+                            pGame->pPlayer->x = pGame->portalList[0].x;
+                            pGame->pPlayer->y = pGame->portalList[0].y;
+                        }
                     }
                 }
                 if ((checkCollision(*pGame->pPlayer, pGame->map, 'S', pGame->world.tileSize) < 1) && (playerCollision(*pGame->pPlayer, pGame->pMultiPlayer, pGame->nrOfPlayers, 'S', pGame->world.tileSize, 0) == -1))
@@ -214,11 +241,18 @@ void *handleInput(void *pGameIn) // Game *pGame)
                 if (checkCollision(*pGame->pPlayer, pGame->map, 'D', pGame->world.tileSize) == 1)
                 {
                     int temp = rand() % pGame->nrOfPortals;
-                    while ((pGame->portalList[temp].x / pGame->world.tileSize) - (pGame->pPlayer->x / pGame->world.tileSize) >= -1 && (pGame->portalList[temp].x / pGame->world.tileSize) - (pGame->pPlayer->x / pGame->world.tileSize) <= 1)
+                    if (((pGame->portalList[temp].x / pGame->world.tileSize) - (pGame->pPlayer->x / pGame->world.tileSize) >= -1 && (pGame->portalList[temp].x / pGame->world.tileSize) - (pGame->pPlayer->x / pGame->world.tileSize) <= 1))
                     {
-                        int temp = rand() % pGame->nrOfPortals;
-                        pGame->pPlayer->x = pGame->portalList[temp].x;
-                        pGame->pPlayer->y = pGame->portalList[temp].y;
+                        if (temp < pGame->nrOfPortals - 1)
+                        {
+                            pGame->pPlayer->x = pGame->portalList[temp + 1].x;
+                            pGame->pPlayer->y = pGame->portalList[temp + 1].y;
+                        }
+                        else
+                        {
+                            pGame->pPlayer->x = pGame->portalList[0].x;
+                            pGame->pPlayer->y = pGame->portalList[0].y;
+                        }
                     }
                 }
                 if ((checkCollision(*pGame->pPlayer, pGame->map, 'D', pGame->world.tileSize) < 1) && (playerCollision(*pGame->pPlayer, pGame->pMultiPlayer, pGame->nrOfPlayers, 'D', pGame->world.tileSize, 0) == -1))
@@ -284,8 +318,10 @@ int playerCollision(Player player, Player players[], int nrOfPlayers, char direc
         return -1;
     for (int i = 0; i < nrOfPlayers; i++)
     {
-        if (players[i].state == DEAD) continue;
-        if (players[i].id == player.id) continue;
+        if (players[i].state == DEAD)
+            continue;
+        if (players[i].id == player.id)
+            continue;
         switch (direction)
         {
         case 'W': // First checks if rows overlap then if columns overlap
@@ -719,8 +755,13 @@ void drawPlayer(Game *pGame, Player player, int i)
                 SDL_RenderCopyEx(pGame->pRenderer, pGame->pPlayerTexture, &pGame->gSpriteClips[i][frame[i] + 3 + 8 + 8], &player.rect, 0, NULL, flip);
             break;
         }
-        if (((SDL_GetTicks() - prevTime[i]) % 1000) / 95) { frame[i]++; prevTime[i] = SDL_GetTicks(); }
-        if (frame[i] >= 8) frame[i] = 0;
+        if (((SDL_GetTicks() - prevTime[i]) % 1000) / 95)
+        {
+            frame[i]++;
+            prevTime[i] = SDL_GetTicks();
+        }
+        if (frame[i] >= 8)
+            frame[i] = 0;
     }
     else if (player.state == DEAD)
         SDL_RenderCopyEx(pGame->pRenderer, pGame->pPlayerTexture, &pGame->gSpriteClips[i][27], &player.rect, 0, NULL, SDL_FLIP_NONE);
@@ -798,7 +839,8 @@ int getDeadPlayers(Game *pGame)
     return deadPlayers;
 }
 
-void chargingCollisions(Server *pServer, int originID) {
+void chargingCollisions(Server *pServer, int originID)
+{
     static int invincibilityTicks[MAX_PLAYERS] = {0}, prevTime[MAX_PLAYERS] = {0};
     static char dir;
     int id = -1;
@@ -808,20 +850,28 @@ void chargingCollisions(Server *pServer, int originID) {
     for (int i = 0; i < pServer->nrOfClients; i++)
         players[i] = pServer->clients[i].data;
 
-    if (players[originID].charging) {
-        if ((id = playerCollision(players[originID], players, pServer->nrOfClients, players[originID].prevKeyPressed, players[originID].rect.w, 5)) != -1) {
-            if ((SDL_GetTicks() - prevTime[id]) % 2000 >= invincibilityTicks[id]) {
+    if (players[originID].charging)
+    {
+        if ((id = playerCollision(players[originID], players, pServer->nrOfClients, players[originID].prevKeyPressed, players[originID].rect.w, 5)) != -1)
+        {
+            if ((SDL_GetTicks() - prevTime[id]) % 2000 >= invincibilityTicks[id])
+            {
                 int oldHealthOpp = players[id].hp;
                 int oldHealthMe = players[originID].hp;
 
-                if (players[originID].prevKeyPressed == 'W') dir = 'S';
-                if (players[originID].prevKeyPressed == 'A') dir = 'D';
-                if (players[originID].prevKeyPressed == 'S') dir = 'W';
-                if (players[originID].prevKeyPressed == 'D') dir = 'A';
-                
+                if (players[originID].prevKeyPressed == 'W')
+                    dir = 'S';
+                if (players[originID].prevKeyPressed == 'A')
+                    dir = 'D';
+                if (players[originID].prevKeyPressed == 'S')
+                    dir = 'W';
+                if (players[originID].prevKeyPressed == 'D')
+                    dir = 'A';
+
                 damagePlayer(players, id, originID, dir);
 
-                if (oldHealthOpp > players[id].hp || players[id].charge == 0) {
+                if (oldHealthOpp > players[id].hp || players[id].charge == 0)
+                {
                     prevTime[id] = SDL_GetTicks();
                     invincibilityTicks[id] = 1000;
                     pkg.id = id;
@@ -836,19 +886,21 @@ void chargingCollisions(Server *pServer, int originID) {
 
                     if (!SDLNet_UDP_Send(pServer->socketUDP, -1, pServer->pSent))
                         printf("Error: Could not send package\n");
-
-                } else if (oldHealthMe > players[originID].hp) {
+                }
+                else if (oldHealthMe > players[originID].hp)
+                {
                     prevTime[originID] = SDL_GetTicks();
                     invincibilityTicks[originID] = 1000;
-                }  
-            }        
+                }
+            }
         }
     }
 
-    for (int i = 0; i < pServer->nrOfClients; i++) 
-        if ((SDL_GetTicks() - prevTime[i]) >= invincibilityTicks[i]) {
+    for (int i = 0; i < pServer->nrOfClients; i++)
+        if ((SDL_GetTicks() - prevTime[i]) >= invincibilityTicks[i])
+        {
             invincibilityTicks[i] = 0;
-            prevTime[i] = 0; 
+            prevTime[i] = 0;
         }
 
     pServer->clients[originID].data.hp = players[originID].hp;
@@ -856,20 +908,30 @@ void chargingCollisions(Server *pServer, int originID) {
     pServer->clients[originID].data.charging = id != -1 ? 0 : players[originID].charging;
 }
 
-void damagePlayer(Player players[], int personalID, int id, char direction) {
+void damagePlayer(Player players[], int personalID, int id, char direction)
+{
     int tmp;
 
-    if (players[personalID].prevKeyPressed != direction) {        // Charging into the side of another player
+    if (players[personalID].prevKeyPressed != direction)
+    { // Charging into the side of another player
         players[personalID].hp -= players[id].charge * 2;
-    } else if (players[personalID].charging == 0) {               // If player is charging up but yet to pounce
+    }
+    else if (players[personalID].charging == 0)
+    { // If player is charging up but yet to pounce
         players[personalID].hp -= players[id].charge * 2;
-    } else if (players[personalID].charge < players[id].charge) { // Head on collision first player takes damage
+    }
+    else if (players[personalID].charge < players[id].charge)
+    { // Head on collision first player takes damage
         players[personalID].hp -= (players[id].charge - players[personalID].charge) * 2;
         players[personalID].charge = 0;
-    } else if (players[personalID].charge > players[id].charge) { // Head on collision second player takes damage
+    }
+    else if (players[personalID].charge > players[id].charge)
+    { // Head on collision second player takes damage
         players[id].hp -= (players[personalID].charge - players[id].charge) * 2;
         players[personalID].charge = 0;
     }
-    if (players[personalID].hp < 0) players[personalID].hp = 0;
-    if (players[id].hp < 0) players[id].hp = 0;
+    if (players[personalID].hp < 0)
+        players[personalID].hp = 0;
+    if (players[id].hp < 0)
+        players[id].hp = 0;
 }
