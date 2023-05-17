@@ -27,7 +27,9 @@ all2:
 	$(CC) $(CFLAGS) ./src/network.c
 	$(CC) $(CFLAGS) ./src/game.c
 	$(CC) $(CFLAGS) ./src/render.c
-	$(CC) app.o window.o network.o game.o render.o -o application.exe $(LDFLAGS)
+	$(CC) $(CFLAGS) ./src/input.c
+	$(CC) $(CFLAGS) ./src/client.c
+	$(CC) app.o window.o network.o game.o render.o input.o client.o -o application.exe $(LDFLAGS)
 	
 
 debug:

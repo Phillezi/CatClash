@@ -13,7 +13,6 @@ void *renderUpdate(void *pAppIn)
         clock_gettime(CLOCK_REALTIME, &timeout);
         timeout.tv_sec += 1;
 
-        printf("Updating renderer\n");
         SDL_SetRenderDrawColor(pApp->pWindow->pRenderer, 0, 0, 0, 255);
         SDL_RenderClear(pApp->pWindow->pRenderer);
         SDL_SetRenderDrawColor(pApp->pWindow->pRenderer, 255, 255, 255, 255);

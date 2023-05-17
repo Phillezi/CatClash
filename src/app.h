@@ -15,6 +15,8 @@
 #include "network.h"
 #include "game.h"
 #include "render.h"
+#include "input.h"
+#include "client.h"
 
 typedef struct {
     sem_t updateWindow;
