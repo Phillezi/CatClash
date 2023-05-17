@@ -5,5 +5,11 @@
 
 void *inputUpdate(void *pAppIn);
 
+void handleInput(void *pAppIn);
+
+void handleMenuInput(void *pAppIn);
+
+void handleGameInput(void *pAppIn);
+
 
 #endif

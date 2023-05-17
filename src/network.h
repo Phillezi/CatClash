@@ -4,10 +4,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <SDL2/SDL_net.h>
-
-typedef struct {
-    
-} Network;
+#include "adts.h"
 
 Network *createNetwork();
 

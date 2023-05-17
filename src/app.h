@@ -1,42 +1,15 @@
 #ifndef APP_H
 #define APP_H
 
-#include <SDL2/SDL.h>
-#include <SDL2/SDL_image.h>
-#include <SDL2/SDL_net.h>
-#include <semaphore.h>
-#include <pthread.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <stdbool.h>
-#include <time.h>
+#include "adts.h"
 
 #include "window.h"
 #include "network.h"
 #include "game.h"
+#include "menu.h"
 #include "render.h"
 #include "input.h"
 #include "client.h"
-
-typedef enum {
-    MENU,
-    JOIN,
-    PLAY
-} State;
-typedef struct {
-    sem_t updateWindow;
-    sem_t updateInput;
-    sem_t updateNetwork;
-} Semaphores;
-
-typedef struct {
-    Window *pWindow;
-    Network *pNetwork;
-    Game *pGame;
-    bool exit;
-    State state;
-    Semaphores semaphore;
-} App;
 
 
 App *createApplication();

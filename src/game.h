@@ -4,9 +4,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 
-typedef struct {
-    
-} Game;
+#include "adts.h"
 
 Game *createGame();
 

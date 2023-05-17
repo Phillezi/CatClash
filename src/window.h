@@ -4,13 +4,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <SDL2/SDL.h>
-
-typedef struct {
-    Uint32 width, height;
-    SDL_Window *pWindow;
-    SDL_Renderer *pRenderer;
-    
-} Window;
+#include "adts.h"
 
 Window *createWindow();
 

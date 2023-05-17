@@ -13,7 +13,7 @@ void *renderUpdate(void *pAppIn)
         clock_gettime(CLOCK_REALTIME, &timeout);
         timeout.tv_sec += 1;
 
-        render(pApp);
+        render((void *)pApp);
     }
 
     printf("Exiting RenderThread\n");
@@ -32,8 +32,8 @@ void render(void *pAppIn)
     
     switch(pApp->state)
     {
-        case MENU: renderMenu(pApp); break;
-        case PLAY: renderGame(pApp); break;
+        case MENU: renderMenu(pAppIn); break;
+        case PLAY: renderGame(pAppIn); break;
     }
 
     SDL_RenderPresent(pRenderer);
@@ -45,6 +45,11 @@ void renderMenu(void *pAppIn)
     SDL_Renderer *pRenderer = pApp->pWindow->pRenderer;
 
     SDL_Rect rect = {100, 100, 100, 100};
+
+    drawText(pApp->pMenu->pPlayText, pRenderer);
+    drawText(pApp->pMenu->pEditText, pRenderer);
+    drawText(pApp->pMenu->pJoinText, pRenderer);
+    drawText(pApp->pMenu->pQuitText, pRenderer);
 
     SDL_SetRenderDrawColor(pRenderer, 255, 0, 0, 255);
     SDL_RenderFillRect(pRenderer, &rect);

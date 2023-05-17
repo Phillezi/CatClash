@@ -28,6 +28,9 @@ App *createApplication()
     pNew_app->pGame = createGame();
     if (!pNew_app->pGame)
         return NULL;
+    pNew_app->pMenu = createMenu(pNew_app);
+    if (!pNew_app->pMenu)
+        return NULL;
     pNew_app->exit = false;
     pNew_app->state = MENU;
 
@@ -36,6 +39,8 @@ App *createApplication()
 
 void destroyApplication(App *pApp)
 {
+    if (pApp->pMenu)
+        destroyMenu(pApp->pMenu);
     if (pApp->pGame)
         destroyGame(pApp->pGame);
     if (pApp->pNetwork)
