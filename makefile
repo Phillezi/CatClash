@@ -31,7 +31,9 @@ all2:
 	$(CC) $(CFLAGS) ./src/client.c
 	$(CC) $(CFLAGS) ./src/menu.c
 	$(CC) $(CFLAGS) ./src/text.c
-	$(CC) app.o window.o network.o game.o render.o input.o client.o menu.o text.o -o application.exe $(LDFLAGS)
+	$(CC) $(CFLAGS) ./src/player.c
+	$(CC) $(CFLAGS) ./src/tile.c
+	$(CC) app.o window.o network.o game.o render.o input.o client.o menu.o text.o player.o tile.o -o application.exe $(LDFLAGS)
 	
 
 debug:

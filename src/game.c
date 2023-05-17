@@ -18,12 +18,21 @@ Game *createGame()
 
 void destroyGame(Game *pGame)
 {
+    if(pGame->pPlayers)
+        destroyPlayer(pGame->pPlayers);
     if(pGame)
         free(pGame);
 }
 
 int initalizegame(Game *pNew_game)
 {
+    pNew_game->pPlayers = NULL;
+    pNew_game->pPlayers = createNewPlayer(pNew_game, 0);
+    if(!pNew_game->pPlayers)
+    {
+        printf("Error: could not create players\n");
+        return 1;
+    }
 
     return 0;
 }

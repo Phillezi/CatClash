@@ -5,6 +5,8 @@
 #include <stdio.h>
 
 #include "adts.h"
+#include "player.h"
+#include "tile.h"
 
 Game *createGame();
 

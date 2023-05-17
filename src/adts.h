@@ -45,7 +45,23 @@ typedef struct {
 } Menu;
 
 typedef struct {
-    
+    int x;
+    int y;
+    SDL_Rect rect;
+
+} Player;
+
+typedef struct {
+    int x;
+    int y;
+    int type;
+    SDL_Rect rect;
+
+} Tile;
+
+typedef struct {
+    Player *pPlayers;
+    Tile *pMap;
 } Game;
 
 typedef struct {
