@@ -14,6 +14,8 @@ void *inputUpdate(void *pAppIn)
         timeout.tv_sec += 1;
 
         handleInput((void *)pApp);
+
+        sem_post(&pApp->semaphore.updateWindow);
     }
 
     printf("Exiting InputThread\n");
@@ -31,6 +33,9 @@ void handleInput(void *pAppIn)
         handleMenuInput(pAppIn);
         break;
     case PLAY:
+        handleGameInput(pAppIn);
+        break;
+    default:
         handleGameInput(pAppIn);
         break;
     }
@@ -71,26 +76,49 @@ void handleMenuInput(void *pAppIn)
     }
     if (keys[SDL_SCANCODE_RETURN2] || keys[SDL_SCANCODE_RETURN])
     {
+        pApp->state = pApp->pMenu->selection;
     }
     if (pApp->pMenu->selection != previousMenuSelection)
     {
         switch (previousMenuSelection)
         {
-            case MENU_PLAY: freeText(pApp->pMenu->pPlayText); pApp->pMenu->pPlayText = createText(pApp->pWindow->pRenderer, 0, 0, 0, pApp->pMenu->pfont, "Play", pApp->pWindow->width/2, pApp->pMenu->fontSize); break;
-            case MENU_EDIT: freeText(pApp->pMenu->pEditText); pApp->pMenu->pEditText = createText(pApp->pWindow->pRenderer, 0, 0, 0, pApp->pMenu->pfont, "Edit", pApp->pWindow->width/2, 2*pApp->pMenu->fontSize); break;
-            case MENU_JOIN: freeText(pApp->pMenu->pJoinText); pApp->pMenu->pJoinText = createText(pApp->pWindow->pRenderer, 0, 0, 0, pApp->pMenu->pfont, "Join", pApp->pWindow->width/2, 3*pApp->pMenu->fontSize); break;
-            case MENU_QUIT: freeText(pApp->pMenu->pQuitText); pApp->pMenu->pQuitText = createText(pApp->pWindow->pRenderer, 0, 0, 0, pApp->pMenu->pfont, "Quit", pApp->pWindow->width/2, 4*pApp->pMenu->fontSize); break;
+        case MENU_PLAY:
+            freeText(pApp->pMenu->pPlayText);
+            pApp->pMenu->pPlayText = createText(pApp->pWindow->pRenderer, 0, 0, 0, pApp->pMenu->pfont, "Play", pApp->pWindow->width / 2, pApp->pMenu->fontSize);
+            break;
+        case MENU_EDIT:
+            freeText(pApp->pMenu->pEditText);
+            pApp->pMenu->pEditText = createText(pApp->pWindow->pRenderer, 0, 0, 0, pApp->pMenu->pfont, "Edit", pApp->pWindow->width / 2, 2 * pApp->pMenu->fontSize);
+            break;
+        case MENU_JOIN:
+            freeText(pApp->pMenu->pJoinText);
+            pApp->pMenu->pJoinText = createText(pApp->pWindow->pRenderer, 0, 0, 0, pApp->pMenu->pfont, "Join", pApp->pWindow->width / 2, 3 * pApp->pMenu->fontSize);
+            break;
+        case MENU_QUIT:
+            freeText(pApp->pMenu->pQuitText);
+            pApp->pMenu->pQuitText = createText(pApp->pWindow->pRenderer, 0, 0, 0, pApp->pMenu->pfont, "Quit", pApp->pWindow->width / 2, 4 * pApp->pMenu->fontSize);
+            break;
         }
 
         switch (pApp->pMenu->selection)
         {
-            case MENU_PLAY: freeText(pApp->pMenu->pPlayText); pApp->pMenu->pPlayText = createText(pApp->pWindow->pRenderer, 255, 0, 0, pApp->pMenu->pfont, "PLAY", pApp->pWindow->width/2, pApp->pMenu->fontSize); break;
-            case MENU_EDIT: freeText(pApp->pMenu->pEditText); pApp->pMenu->pEditText = createText(pApp->pWindow->pRenderer, 255, 0, 0, pApp->pMenu->pfont, "EDIT", pApp->pWindow->width/2, 2*pApp->pMenu->fontSize); break;
-            case MENU_JOIN: freeText(pApp->pMenu->pJoinText); pApp->pMenu->pJoinText = createText(pApp->pWindow->pRenderer, 255, 0, 0, pApp->pMenu->pfont, "JOIN", pApp->pWindow->width/2, 3*pApp->pMenu->fontSize); break;
-            case MENU_QUIT: freeText(pApp->pMenu->pQuitText); pApp->pMenu->pQuitText = createText(pApp->pWindow->pRenderer, 255, 0, 0, pApp->pMenu->pfont, "QUIT", pApp->pWindow->width/2, 4*pApp->pMenu->fontSize); break;
+        case MENU_PLAY:
+            freeText(pApp->pMenu->pPlayText);
+            pApp->pMenu->pPlayText = createText(pApp->pWindow->pRenderer, 255, 0, 0, pApp->pMenu->pfont, "PLAY", pApp->pWindow->width / 2, pApp->pMenu->fontSize);
+            break;
+        case MENU_EDIT:
+            freeText(pApp->pMenu->pEditText);
+            pApp->pMenu->pEditText = createText(pApp->pWindow->pRenderer, 255, 0, 0, pApp->pMenu->pfont, "EDIT", pApp->pWindow->width / 2, 2 * pApp->pMenu->fontSize);
+            break;
+        case MENU_JOIN:
+            freeText(pApp->pMenu->pJoinText);
+            pApp->pMenu->pJoinText = createText(pApp->pWindow->pRenderer, 255, 0, 0, pApp->pMenu->pfont, "JOIN", pApp->pWindow->width / 2, 3 * pApp->pMenu->fontSize);
+            break;
+        case MENU_QUIT:
+            freeText(pApp->pMenu->pQuitText);
+            pApp->pMenu->pQuitText = createText(pApp->pWindow->pRenderer, 255, 0, 0, pApp->pMenu->pfont, "QUIT", pApp->pWindow->width / 2, 4 * pApp->pMenu->fontSize);
+            break;
         }
-
-        sem_post(&pApp->semaphore.updateWindow);
     }
 }
 
@@ -113,6 +141,7 @@ void handleGameInput(void *pAppIn)
     }
     if (keys[SDL_SCANCODE_ESCAPE])
     {
+        pApp->state = MENU;
     }
     if (keys[SDL_SCANCODE_RETURN2] || keys[SDL_SCANCODE_RETURN])
     {

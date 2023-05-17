@@ -34,6 +34,9 @@ void render(void *pAppIn)
     {
         case MENU: renderMenu(pAppIn); break;
         case PLAY: renderGame(pAppIn); break;
+        case EDIT: renderGame(pAppIn); break;
+        case JOIN: renderGame(pAppIn); break;
+        case QUIT: break;
     }
 
     SDL_RenderPresent(pRenderer);

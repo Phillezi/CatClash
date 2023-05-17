@@ -53,9 +53,11 @@ typedef struct {
 } Network;
 
 typedef enum {
-    MENU,
+    PLAY,
+    EDIT,
     JOIN,
-    PLAY
+    QUIT,
+    MENU
 } State;
 
 typedef struct {
