@@ -20,6 +20,16 @@ all:
 	$(CC) $(CFLAGS) $(SRCDIR)/betterServer.c 
 	$(CC) betterServer.o init.o text.o ioHandler.o player.o -o betterServer.exe $(LDFLAGS)
 
+all2:
+	@echo "Building Application"
+	$(CC) $(CFLAGS) ./src/app.c
+	$(CC) $(CFLAGS) ./src/window.c
+	$(CC) $(CFLAGS) ./src/network.c
+	$(CC) $(CFLAGS) ./src/game.c
+	$(CC) $(CFLAGS) ./src/render.c
+	$(CC) app.o window.o network.o game.o render.o -o application.exe $(LDFLAGS)
+	
+
 debug:
 	@echo "Building main debug"
 	$(CC) $(CFLAGS) $(SRCDIR)/main.c 
