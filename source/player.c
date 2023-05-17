@@ -182,6 +182,11 @@ void *handleInput(void *pGameIn) // Game *pGame)
                             pGame->pPlayer->y = pGame->portalList[0].y;
                         }
                     }
+                    else
+                    {
+                        pGame->pPlayer->x = pGame->portalList[temp].x;
+                        pGame->pPlayer->y = pGame->portalList[temp].y;
+                    }
                 }
                 if ((checkCollision(*pGame->pPlayer, pGame->map, 'W', pGame->world.tileSize) < 1) && (playerCollision(*pGame->pPlayer, pGame->pMultiPlayer, pGame->nrOfPlayers, 'W', pGame->world.tileSize, 0) == -1))
                 {
@@ -205,6 +210,11 @@ void *handleInput(void *pGameIn) // Game *pGame)
                             pGame->pPlayer->x = pGame->portalList[0].x;
                             pGame->pPlayer->y = pGame->portalList[0].y;
                         }
+                    }
+                    else
+                    {
+                        pGame->pPlayer->x = pGame->portalList[temp].x;
+                        pGame->pPlayer->y = pGame->portalList[temp].y;
                     }
                 }
                 if ((checkCollision(*pGame->pPlayer, pGame->map, 'A', pGame->world.tileSize) < 1) && (playerCollision(*pGame->pPlayer, pGame->pMultiPlayer, pGame->nrOfPlayers, 'A', pGame->world.tileSize, 0) == -1))
@@ -230,6 +240,11 @@ void *handleInput(void *pGameIn) // Game *pGame)
                             pGame->pPlayer->y = pGame->portalList[0].y;
                         }
                     }
+                    else
+                    {
+                        pGame->pPlayer->x = pGame->portalList[temp].x;
+                        pGame->pPlayer->y = pGame->portalList[temp].y;
+                    }
                 }
                 if ((checkCollision(*pGame->pPlayer, pGame->map, 'S', pGame->world.tileSize) < 1) && (playerCollision(*pGame->pPlayer, pGame->pMultiPlayer, pGame->nrOfPlayers, 'S', pGame->world.tileSize, 0) == -1))
                 {
@@ -253,6 +268,11 @@ void *handleInput(void *pGameIn) // Game *pGame)
                             pGame->pPlayer->x = pGame->portalList[0].x;
                             pGame->pPlayer->y = pGame->portalList[0].y;
                         }
+                    }
+                    else
+                    {
+                        pGame->pPlayer->x = pGame->portalList[temp].x;
+                        pGame->pPlayer->y = pGame->portalList[temp].y;
                     }
                 }
                 if ((checkCollision(*pGame->pPlayer, pGame->map, 'D', pGame->world.tileSize) < 1) && (playerCollision(*pGame->pPlayer, pGame->pMultiPlayer, pGame->nrOfPlayers, 'D', pGame->world.tileSize, 0) == -1))
