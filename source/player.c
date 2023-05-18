@@ -167,27 +167,7 @@ void *handleInput(void *pGameIn) // Game *pGame)
             if (currentKeyStates[SDL_SCANCODE_W] || currentKeyStates[SDL_SCANCODE_UP])
             {
                 if (checkCollision(*pGame->pPlayer, pGame->map, 'W', pGame->world.tileSize) == 1)
-                {
-                    int temp = rand() % pGame->nrOfPortals;
-                    if (((pGame->portalList[temp].x / pGame->world.tileSize) - (pGame->pPlayer->x / pGame->world.tileSize) >= -1 && (pGame->portalList[temp].x / pGame->world.tileSize) - (pGame->pPlayer->x / pGame->world.tileSize) <= 1))
-                    {
-                        if (temp < pGame->nrOfPortals - 1)
-                        {
-                            pGame->pPlayer->x = pGame->portalList[temp + 1].x;
-                            pGame->pPlayer->y = pGame->portalList[temp + 1].y;
-                        }
-                        else
-                        {
-                            pGame->pPlayer->x = pGame->portalList[0].x;
-                            pGame->pPlayer->y = pGame->portalList[0].y;
-                        }
-                    }
-                    else
-                    {
-                        pGame->pPlayer->x = pGame->portalList[temp].x;
-                        pGame->pPlayer->y = pGame->portalList[temp].y;
-                    }
-                }
+                    findPortalAndTeleport(pGame, 'W');
                 if ((checkCollision(*pGame->pPlayer, pGame->map, 'W', pGame->world.tileSize) < 1) && (playerCollision(*pGame->pPlayer, pGame->pMultiPlayer, pGame->nrOfPlayers, 'W', pGame->world.tileSize, 0) == -1))
                 {
                     movePlayer(pGame->pPlayer, 'W');
@@ -196,27 +176,7 @@ void *handleInput(void *pGameIn) // Game *pGame)
             if (currentKeyStates[SDL_SCANCODE_A] || currentKeyStates[SDL_SCANCODE_LEFT])
             {
                 if (checkCollision(*pGame->pPlayer, pGame->map, 'A', pGame->world.tileSize) == 1)
-                {
-                    int temp = rand() % pGame->nrOfPortals;
-                    if (((pGame->portalList[temp].x / pGame->world.tileSize) - (pGame->pPlayer->x / pGame->world.tileSize) >= -1 && (pGame->portalList[temp].x / pGame->world.tileSize) - (pGame->pPlayer->x / pGame->world.tileSize) <= 1))
-                    {
-                        if (temp < pGame->nrOfPortals - 1)
-                        {
-                            pGame->pPlayer->x = pGame->portalList[temp + 1].x;
-                            pGame->pPlayer->y = pGame->portalList[temp + 1].y;
-                        }
-                        else
-                        {
-                            pGame->pPlayer->x = pGame->portalList[0].x;
-                            pGame->pPlayer->y = pGame->portalList[0].y;
-                        }
-                    }
-                    else
-                    {
-                        pGame->pPlayer->x = pGame->portalList[temp].x;
-                        pGame->pPlayer->y = pGame->portalList[temp].y;
-                    }
-                }
+                    findPortalAndTeleport(pGame, 'A');
                 if ((checkCollision(*pGame->pPlayer, pGame->map, 'A', pGame->world.tileSize) < 1) && (playerCollision(*pGame->pPlayer, pGame->pMultiPlayer, pGame->nrOfPlayers, 'A', pGame->world.tileSize, 0) == -1))
                 {
                     movePlayer(pGame->pPlayer, 'A');
@@ -225,27 +185,7 @@ void *handleInput(void *pGameIn) // Game *pGame)
             if (currentKeyStates[SDL_SCANCODE_S] || currentKeyStates[SDL_SCANCODE_DOWN])
             {
                 if (checkCollision(*pGame->pPlayer, pGame->map, 'S', pGame->world.tileSize) == 1)
-                {
-                    int temp = rand() % pGame->nrOfPortals;
-                    if (((pGame->portalList[temp].x / pGame->world.tileSize) - (pGame->pPlayer->x / pGame->world.tileSize) >= -1 && (pGame->portalList[temp].x / pGame->world.tileSize) - (pGame->pPlayer->x / pGame->world.tileSize) <= 1))
-                    {
-                        if (temp < pGame->nrOfPortals - 1)
-                        {
-                            pGame->pPlayer->x = pGame->portalList[temp + 1].x;
-                            pGame->pPlayer->y = pGame->portalList[temp + 1].y;
-                        }
-                        else
-                        {
-                            pGame->pPlayer->x = pGame->portalList[0].x;
-                            pGame->pPlayer->y = pGame->portalList[0].y;
-                        }
-                    }
-                    else
-                    {
-                        pGame->pPlayer->x = pGame->portalList[temp].x;
-                        pGame->pPlayer->y = pGame->portalList[temp].y;
-                    }
-                }
+                    findPortalAndTeleport(pGame, 'S');
                 if ((checkCollision(*pGame->pPlayer, pGame->map, 'S', pGame->world.tileSize) < 1) && (playerCollision(*pGame->pPlayer, pGame->pMultiPlayer, pGame->nrOfPlayers, 'S', pGame->world.tileSize, 0) == -1))
                 {
                     movePlayer(pGame->pPlayer, 'S');
@@ -254,27 +194,7 @@ void *handleInput(void *pGameIn) // Game *pGame)
             if (currentKeyStates[SDL_SCANCODE_D] || currentKeyStates[SDL_SCANCODE_RIGHT])
             {
                 if (checkCollision(*pGame->pPlayer, pGame->map, 'D', pGame->world.tileSize) == 1)
-                {
-                    int temp = rand() % pGame->nrOfPortals;
-                    if (((pGame->portalList[temp].x / pGame->world.tileSize) - (pGame->pPlayer->x / pGame->world.tileSize) >= -1 && (pGame->portalList[temp].x / pGame->world.tileSize) - (pGame->pPlayer->x / pGame->world.tileSize) <= 1))
-                    {
-                        if (temp < pGame->nrOfPortals - 1)
-                        {
-                            pGame->pPlayer->x = pGame->portalList[temp + 1].x;
-                            pGame->pPlayer->y = pGame->portalList[temp + 1].y;
-                        }
-                        else
-                        {
-                            pGame->pPlayer->x = pGame->portalList[0].x;
-                            pGame->pPlayer->y = pGame->portalList[0].y;
-                        }
-                    }
-                    else
-                    {
-                        pGame->pPlayer->x = pGame->portalList[temp].x;
-                        pGame->pPlayer->y = pGame->portalList[temp].y;
-                    }
-                }
+                    findPortalAndTeleport(pGame, 'D');
                 if ((checkCollision(*pGame->pPlayer, pGame->map, 'D', pGame->world.tileSize) < 1) && (playerCollision(*pGame->pPlayer, pGame->pMultiPlayer, pGame->nrOfPlayers, 'D', pGame->world.tileSize, 0) == -1))
                 {
                     movePlayer(pGame->pPlayer, 'D');
@@ -955,3 +875,33 @@ void damagePlayer(Player players[], int personalID, int id, char direction)
     if (players[id].hp < 0)
         players[id].hp = 0;
 }
+
+void findPortalAndTeleport(Game *pGame, char direction) {
+    int temp = rand() % pGame->nrOfPortals;
+    int new = 0;
+    switch (direction)
+    {
+    case 'W':
+    case 'S':
+        if (((pGame->portalList[temp].x / pGame->world.tileSize) - (pGame->pPlayer->x / pGame->world.tileSize) >= -1 && (pGame->portalList[temp].x / pGame->world.tileSize) - (pGame->pPlayer->x / pGame->world.tileSize) <= 1))
+            new = 1;
+        break;
+    case 'A':
+    case 'D':
+        if (((pGame->portalList[temp].x / pGame->world.tileSize) - (pGame->pPlayer->x / pGame->world.tileSize) >= -1 && (pGame->portalList[temp].x / pGame->world.tileSize) - (pGame->pPlayer->x / pGame->world.tileSize) <= 1))
+            new = 1;
+    }
+
+    if (new) {
+        if (temp < pGame->nrOfPortals - 1) {
+            pGame->pPlayer->x = pGame->portalList[temp + 1].x;
+            pGame->pPlayer->y = pGame->portalList[temp + 1].y;
+        } else {
+            pGame->pPlayer->x = pGame->portalList[0].x;
+            pGame->pPlayer->y = pGame->portalList[0].y;
+        }
+    } else {
+        pGame->pPlayer->x = pGame->portalList[temp].x;
+        pGame->pPlayer->y = pGame->portalList[temp].y;
+    }
+} 

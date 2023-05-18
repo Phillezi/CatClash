@@ -24,5 +24,6 @@ void chargingCollisions(Server *pServer, int originID);
 void damagePlayer(Player players[], int personalID, int id, char direction);
 int headOnCollision(Player players[], int personalID, int id);
 int chargingIntoMe(Player players[], int id, char direction);
+void findPortalAndTeleport(Game *pGame, char direction);
 
 #endif
