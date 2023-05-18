@@ -1,6 +1,6 @@
 #include "game.h"
 
-Game *createGame()
+Game *createGame(App *pApp)
 {
     Game *pNew_game = (Game *)malloc(sizeof(Game));
     if (!pNew_game)
@@ -8,7 +8,7 @@ Game *createGame()
         printf("Failed to allocate memory for game\n");
         return NULL;
     }
-    if (initalizegame(pNew_game))
+    if (initalizegame(pNew_game, pApp))
     {
         printf("Failed to initialize game\n");
         return NULL;
@@ -18,6 +18,9 @@ Game *createGame()
 
 void destroyGame(Game *pGame)
 {
+    if(pGame->ppTileTextures)
+        destroyTileTextures(pGame->ppTileTextures);
+
     if(pGame->pMap)
         destroyTiles(pGame->pMap);
 
@@ -28,7 +31,7 @@ void destroyGame(Game *pGame)
         free(pGame);
 }
 
-int initalizegame(Game *pNew_game)
+int initalizegame(Game *pNew_game, App *pApp)
 {
     pNew_game->pPlayers = NULL;
     pNew_game->pPlayers = createNewPlayer(pNew_game, 0);
@@ -38,7 +41,21 @@ int initalizegame(Game *pNew_game)
         return 1;
     }
 
-    pNew_game->pMap = createTiles(1024);
+    pNew_game->pMap = createTiles((MAPSIZE*MAPSIZE));
+    if(!pNew_game->pMap)
+    {
+        printf("Error: could not create map\n");
+        return 1;
+    }
+
+    pNew_game->ppTileTextures = createTileTextures(pApp, TILES);
+    if(!pNew_game->ppTileTextures)
+    {
+        printf("Error: could not create textures\n");
+        return 1;
+    }
+
+    initMap(pNew_game->pMap, "map", 16);
 
     return 0;
 }

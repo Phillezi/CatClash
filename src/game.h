@@ -8,10 +8,10 @@
 #include "player.h"
 #include "tile.h"
 
-Game *createGame();
+Game *createGame(App *pApp);
 
 void destroyGame(Game *pGame);
 
-int initalizegame(Game *pNew_game);
+int initalizegame(Game *pNew_game, App *pApp);
 
 #endif

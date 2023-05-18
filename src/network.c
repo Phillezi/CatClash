@@ -18,6 +18,9 @@ Network *createNetwork()
 
 void destroyNetwork(Network *pNetwork)
 {
+    if(pNetwork->pPacket)
+        SDLNet_FreePacket(pNetwork->pPacket);
+
     SDLNet_Quit();
     
     if(pNetwork)
@@ -31,6 +34,8 @@ int initalizenetwork(Network *pNew_network)
         printf("ERROR: %s\n", SDLNet_GetError());
         return 1;
     }
+
+    pNew_network->pPacket = SDLNet_AllocPacket(sizeof(Player));
 
     return 0;
 }

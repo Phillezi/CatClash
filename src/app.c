@@ -25,7 +25,7 @@ App *createApplication()
     pNew_app->pNetwork = createNetwork();
     if (!pNew_app->pNetwork)
         return NULL;
-    pNew_app->pGame = createGame();
+    pNew_app->pGame = createGame(pNew_app);
     if (!pNew_app->pGame)
         return NULL;
     pNew_app->pMenu = createMenu(pNew_app);

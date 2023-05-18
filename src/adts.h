@@ -12,14 +12,20 @@
 #include <stdbool.h>
 #include <time.h>
 
+#define TILES 19
+#define TILE_WIDTH 32
+#define TILE_HEIGHT 32
+#define MAPSIZE 32
 
+
+/* ADT for Text*/
 typedef struct {
     SDL_Rect rect;
     SDL_Texture *pTexture;
     SDL_Renderer *pRenderer;
 } Text;
 
-
+/* ADT for Window*/
 typedef struct {
     Uint32 width, height;
     SDL_Window *pWindow;
@@ -29,6 +35,7 @@ typedef struct {
     
 } Window;
 
+/* Enum for menu selection*/
 typedef enum {
     MENU_PLAY,
     MENU_EDIT,
@@ -36,6 +43,7 @@ typedef enum {
     MENU_QUIT
 } Selection;
 
+/* ADT for Menu*/
 typedef struct {
     Selection selection;
     Uint32 fontSize;
@@ -46,6 +54,7 @@ typedef struct {
     Text *pQuitText;
 } Menu;
 
+/* ADT for Player*/
 typedef struct {
     int x;
     int y;
@@ -53,6 +62,7 @@ typedef struct {
 
 } Player;
 
+/* ADT for Tile*/
 typedef struct {
     int x;
     int y;
@@ -61,15 +71,26 @@ typedef struct {
 
 } Tile;
 
+/* ADT for Game*/
 typedef struct {
     Player *pPlayers;
     Tile *pMap;
+    SDL_Texture **ppTileTextures;
 } Game;
 
+/* ADT for Network*/
 typedef struct {
+    // TCP
+    TCPsocket socketTCP;
+    SDLNet_SocketSet sockets;
+
+    // UDP
+    UDPsocket socketUDP;
+    UDPpacket *pPacket;
     
 } Network;
 
+/* Enum for application states*/
 typedef enum {
     PLAY,
     EDIT,
@@ -78,12 +99,14 @@ typedef enum {
     MENU
 } State;
 
+/* Struct for Semaphores*/
 typedef struct {
     sem_t updateWindow;
     sem_t updateInput;
     sem_t updateNetwork;
 } Semaphores;
 
+/* ADT for Application*/
 typedef struct {
     Window *pWindow;
     Network *pNetwork;
