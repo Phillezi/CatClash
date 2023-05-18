@@ -33,7 +33,7 @@ void destroyGame(Game *pGame)
 
 int initalizegame(Game *pNew_game, App *pApp)
 {
-    pNew_game->tileSize = pApp->pWindow->width / 32;
+    pNew_game->tileSize = pApp->pWindow->width / 16;
     pNew_game->movementAmount = pNew_game->tileSize / 32;
     pNew_game->pPlayers = NULL;
     pNew_game->pPlayers = createNewPlayer(pNew_game, 0);
