@@ -82,10 +82,15 @@ void renderGame(void *pAppIn)
     SDL_Renderer *pRenderer = pApp->pWindow->pRenderer;
     Game *pGame = pApp->pGame;
 
-    for (int i = 0; i < 1024; i++)
+    for (int i = 0; i < MAPSIZE*MAPSIZE; i++)
     {
         if (pApp->pGame->pMap[i].type > 0 && pApp->pGame->pMap[i].type < TILES)
             SDL_RenderCopy(pRenderer, pApp->pGame->ppTileTextures[pApp->pGame->pMap[i].type], NULL, &pApp->pGame->pMap[i].rect);
     }
 
+    centerPlayer(pApp, &pApp->pGame->pPlayers[0]);
+    translatePositionToScreen(pApp->pGame);
+
+    SDL_SetRenderDrawColor(pRenderer, 255, 0, 0, 255);
+    SDL_RenderFillRect(pRenderer, &pApp->pGame->pPlayers[0].rect);
 }

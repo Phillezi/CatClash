@@ -76,6 +76,8 @@ typedef struct {
     Player *pPlayers;
     Tile *pMap;
     SDL_Texture **ppTileTextures;
+    int tileSize;
+    int movementAmount;
 } Game;
 
 /* ADT for Network*/

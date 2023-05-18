@@ -126,24 +126,34 @@ void handleGameInput(void *pAppIn)
 {
     App *pApp = (App *)pAppIn;
     const Uint8 *keys = SDL_GetKeyboardState(NULL);
-
-    if (keys[SDL_SCANCODE_UP] || keys[SDL_SCANCODE_W])
+    for (int i = 0; i < pApp->pGame->movementAmount; i++)
     {
-    }
-    if (keys[SDL_SCANCODE_DOWN] || keys[SDL_SCANCODE_S])
-    {
-    }
-    if (keys[SDL_SCANCODE_LEFT] || keys[SDL_SCANCODE_A])
-    {
-    }
-    if (keys[SDL_SCANCODE_RIGHT] || keys[SDL_SCANCODE_D])
-    {
-    }
-    if (keys[SDL_SCANCODE_ESCAPE])
-    {
-        pApp->state = MENU;
-    }
-    if (keys[SDL_SCANCODE_RETURN2] || keys[SDL_SCANCODE_RETURN])
-    {
+        if (keys[SDL_SCANCODE_UP] || keys[SDL_SCANCODE_W])
+        {
+            if (checkCollision(pApp->pGame->pPlayers[0], pApp->pGame->pMap, 'W', pApp->pGame->tileSize) < 1)
+                movePlayer(&pApp->pGame->pPlayers[0], 'W');
+        }
+        if (keys[SDL_SCANCODE_DOWN] || keys[SDL_SCANCODE_S])
+        {
+            if (checkCollision(pApp->pGame->pPlayers[0], pApp->pGame->pMap, 'S', pApp->pGame->tileSize) < 1)
+                movePlayer(&pApp->pGame->pPlayers[0], 'S');
+        }
+        if (keys[SDL_SCANCODE_LEFT] || keys[SDL_SCANCODE_A])
+        {
+            if (checkCollision(pApp->pGame->pPlayers[0], pApp->pGame->pMap, 'A', pApp->pGame->tileSize) < 1)
+                movePlayer(&pApp->pGame->pPlayers[0], 'A');
+        }
+        if (keys[SDL_SCANCODE_RIGHT] || keys[SDL_SCANCODE_D])
+        {
+            if (checkCollision(pApp->pGame->pPlayers[0], pApp->pGame->pMap, 'D', pApp->pGame->tileSize) < 1)
+                movePlayer(&pApp->pGame->pPlayers[0], 'D');
+        }
+        if (keys[SDL_SCANCODE_ESCAPE])
+        {
+            pApp->state = MENU;
+        }
+        if (keys[SDL_SCANCODE_RETURN2] || keys[SDL_SCANCODE_RETURN])
+        {
+        }
     }
 }

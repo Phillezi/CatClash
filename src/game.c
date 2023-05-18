@@ -33,6 +33,8 @@ void destroyGame(Game *pGame)
 
 int initalizegame(Game *pNew_game, App *pApp)
 {
+    pNew_game->tileSize = pApp->pWindow->width / 32;
+    pNew_game->movementAmount = pNew_game->tileSize / 32;
     pNew_game->pPlayers = NULL;
     pNew_game->pPlayers = createNewPlayer(pNew_game, 0);
     if(!pNew_game->pPlayers)
@@ -40,6 +42,10 @@ int initalizegame(Game *pNew_game, App *pApp)
         printf("Error: could not create players\n");
         return 1;
     }
+
+    pNew_game->pPlayers[0].rect.w = pNew_game->tileSize;
+    pNew_game->pPlayers[0].rect.h = pNew_game->tileSize;
+
 
     pNew_game->pMap = createTiles((MAPSIZE*MAPSIZE));
     if(!pNew_game->pMap)
@@ -55,7 +61,9 @@ int initalizegame(Game *pNew_game, App *pApp)
         return 1;
     }
 
-    initMap(pNew_game->pMap, "map", 16);
+    initMap(pNew_game->pMap, "map", pNew_game->tileSize);
+
+    getPlayerSpawnPos(pNew_game);
 
     return 0;
 }
