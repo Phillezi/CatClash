@@ -80,7 +80,12 @@ void run(App *pApp)
             }
             else
             {
-                sem_post(&pApp->semaphore.updateInput);
+                int val = 0;
+                sem_getvalue(&pApp->semaphore.updateInput, &val);
+                if(val < 120)
+                    sem_post_multiple(&pApp->semaphore.updateInput, 120-val);
+                else
+                    sem_post(&pApp->semaphore.updateInput);
             }
         }
     }

@@ -95,8 +95,10 @@ typedef struct {
 /* Enum for application states*/
 typedef enum {
     PLAY,
+    SELECT_MAP,
     EDIT,
     JOIN,
+    SELECT_SERVER,
     QUIT,
     MENU
 } State;

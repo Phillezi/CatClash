@@ -4,16 +4,35 @@ void *inputUpdate(void *pAppIn)
 {
     App *pApp = (App *)pAppIn;
     struct timespec timeout;
+    struct timespec movementtimer;
     clock_gettime(CLOCK_REALTIME, &timeout);
+    clock_gettime(CLOCK_REALTIME, &movementtimer);
     timeout.tv_sec += 1;
+
+    sem_t movementUpdate;
+    sem_init(&movementUpdate, 0, 1);
 
     while (!pApp->exit)
     {
-        sem_timedwait(&pApp->semaphore.updateInput, &timeout);
-        clock_gettime(CLOCK_REALTIME, &timeout);
-        timeout.tv_sec += 1;
+        if (!sem_timedwait(&pApp->semaphore.updateInput, &timeout))
+        {
+            clock_gettime(CLOCK_REALTIME, &timeout);
+            timeout.tv_nsec += 1000000000 / 165;
+        }
+        else
+        {
+            clock_gettime(CLOCK_REALTIME, &timeout);
+            timeout.tv_sec += 1;
+        }
 
-        handleInput((void *)pApp);
+        
+
+        if (sem_timedwait(&movementUpdate, &movementtimer))
+        {
+            clock_gettime(CLOCK_REALTIME, &movementtimer);
+            timeout.tv_nsec += 1000000000 / 165;
+            handleInput((void *)pApp);
+        }
 
         sem_post(&pApp->semaphore.updateWindow);
     }
@@ -34,6 +53,12 @@ void handleInput(void *pAppIn)
         break;
     case PLAY:
         handleGameInput(pAppIn);
+        break;
+    case SELECT_MAP:
+        handleMenuInput(pAppIn);
+        break;
+    case SELECT_SERVER:
+        handleMenuInput(pAppIn);
         break;
     default:
         handleGameInput(pAppIn);

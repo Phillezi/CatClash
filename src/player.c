@@ -73,7 +73,6 @@ void centerPlayer(App *pApp, Player *pPlayer)
         {
             pApp->pGame->pMap[i].rect.y += screenShiftAmount;
         }
-        sem_post(&pApp->semaphore.updateWindow);
     }
     if (playerIsCloseToLowerBorder)
     {
@@ -81,7 +80,6 @@ void centerPlayer(App *pApp, Player *pPlayer)
         {
             pApp->pGame->pMap[i].rect.y -= screenShiftAmount;
         }
-        sem_post(&pApp->semaphore.updateWindow);
     }
     if (playerIsCloseToLeftBorder)
     {
@@ -89,7 +87,6 @@ void centerPlayer(App *pApp, Player *pPlayer)
         {
             pApp->pGame->pMap[i].rect.x += screenShiftAmount;
         }
-        sem_post(&pApp->semaphore.updateWindow);
     }
     if (playerIsCloseToRigthBorder)
     {
@@ -97,7 +94,6 @@ void centerPlayer(App *pApp, Player *pPlayer)
         {
             pApp->pGame->pMap[i].rect.x -= screenShiftAmount;
         }
-        sem_post(&pApp->semaphore.updateWindow);
     }
 }
 
