@@ -455,7 +455,6 @@ void *sendPlayerData(void *pServerIn)
         SDL_Delay(500); // wait for 500ms
         for (int i = 0; i < pServer->nrOfClients - 1; i++)
         {
-            pServer->clients[i].timeout = SDL_GetTicks();
             SDLNet_TCP_Send(pServer->clients[pServer->nrOfClients - 1].tcpSocket, &pServer->clients[i].data, sizeof(Player));
             printf("Sent Playerdata of id: %d to new player\n", pServer->clients[i].data.id);
             SDLNet_TCP_Send(pServer->clients[i].tcpSocket, &pServer->clients[pServer->nrOfClients - 1].data, sizeof(Player));
