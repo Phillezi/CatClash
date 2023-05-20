@@ -27,7 +27,7 @@ void occupySpawntile(Server *pServer);
 int getFreeClientId(Server *pServer);
 void sendPlayerId(Server *pServer);
 void getPlayerData(Server *pServer, int clientIndex);
-void sendPlayerData(Server *pServer);
+void *sendPlayerData(void *pServerIn);
 void updateTCPStateText(Server *pServer);
 
 void checkIncommingUDP(Server *pServer);
@@ -137,6 +137,7 @@ int setupText(Server *pServer)
 int tcpSetup(Server *pServer)
 {
     pServer->nrOfClients = 0;
+    pServer->doneSendingPlayerdata = 0;
 
     if (SDLNet_ResolveHost(&pServer->TCPip, NULL, PORT))
     {
@@ -341,9 +342,7 @@ void checkTCPForNewConnections(Server *pServer)
             packet = pServer->nrOfClients;
             SDLNet_TCP_Send(tmpClient, &packet, sizeof(packet));
             printf("Sent player amount\n");
-
         }
-            
     }
 }
 
@@ -448,17 +447,23 @@ void getPlayerData(Server *pServer, int clientIndex)
     pServer->tcpState++;
 }
 
-void sendPlayerData(Server *pServer)
+void *sendPlayerData(void *pServerIn)
 {
-    int prev = SDL_GetTicks();
-    while (((SDL_GetTicks() - prev) % 1000) < 500);
-    for (int i = 0; i < pServer->nrOfClients - 1; i++)
+    Server *pServer = (Server *)pServerIn;
+    if (pServer->nrOfClients - 1)
     {
-        pServer->clients[i].timeout = SDL_GetTicks();
-        SDLNet_TCP_Send(pServer->clients[pServer->nrOfClients - 1].tcpSocket, &pServer->clients[i].data, sizeof(Player));
-        printf("Sent Playerdata of id: %d to new player\n", pServer->clients[i].data.id);
-        SDLNet_TCP_Send(pServer->clients[i].tcpSocket, &pServer->clients[pServer->nrOfClients - 1].data, sizeof(Player));
-    } 
+        SDL_Delay(500); // wait for 500ms
+        for (int i = 0; i < pServer->nrOfClients - 1; i++)
+        {
+            pServer->clients[i].timeout = SDL_GetTicks();
+            SDLNet_TCP_Send(pServer->clients[pServer->nrOfClients - 1].tcpSocket, &pServer->clients[i].data, sizeof(Player));
+            printf("Sent Playerdata of id: %d to new player\n", pServer->clients[i].data.id);
+            SDLNet_TCP_Send(pServer->clients[i].tcpSocket, &pServer->clients[pServer->nrOfClients - 1].data, sizeof(Player));
+        }
+    }
+
+    pServer->doneSendingPlayerdata = 1;
+    pthread_exit(NULL);
 }
 
 void updateTCPStateText(Server *pServer)
@@ -497,7 +502,6 @@ void updateTCPStateText(Server *pServer)
 
 void checkIncommingTCP(Server *pServer)
 {
-    pthread_t mapThread;
     int bytesSent, bytesRecv, prevState = pServer->tcpState;
 
     checkTCPTimeout(pServer);
@@ -508,12 +512,12 @@ void checkIncommingTCP(Server *pServer)
         checkTCPForNewConnections(pServer);
         break;
     case CLIENT_JOINING:
-        pthread_create(&mapThread, NULL, sendMapToPlayer, pServer); // start sending map
+        pthread_create(&pServer->mapThread, NULL, sendMapToPlayer, pServer); // start sending map
         pServer->tcpState++;
     case SENDING_MAP:
         if (pServer->mapPos == MAPSIZE * MAPSIZE) // check if server is done sending map
         {
-            pthread_join(mapThread, NULL);
+            pthread_join(pServer->mapThread, NULL);
             occupySpawntile(pServer);
             pServer->tcpState++;
         }
@@ -535,9 +539,14 @@ void checkIncommingTCP(Server *pServer)
         break;
 
     case SEND_NEW_PLATER_DATA:
-        sendPlayerData(pServer);
-        pServer->tcpState = IDLE;
-        printf("DONE: Player joining complete!\n");
+        pthread_create(&pServer->sendPlayerdataThread, NULL, sendPlayerData, pServer);
+        if (pServer->doneSendingPlayerdata)
+        {
+            pthread_join(pServer->sendPlayerdataThread, NULL);
+            pServer->tcpState = IDLE;
+            printf("DONE: Player joining complete!\n");
+        }
+
         break;
     }
     if (prevState != pServer->tcpState)
@@ -559,7 +568,8 @@ void checkIncommingUDP(Server *pServer)
         checkUDPClient(pServer, data);
 
         for (int i = 0; i < pServer->nrOfClients; i++)
-            if (data.id == pServer->clients[i].id) {
+            if (data.id == pServer->clients[i].id)
+            {
                 pServer->clients[i].timeout = SDL_GetTicks();
                 pServer->clients[i].data.x = data.x;
                 pServer->clients[i].data.y = data.y;
@@ -573,15 +583,30 @@ void checkIncommingUDP(Server *pServer)
                 break;
             }
 
-        chargingCollisions(pServer, id);    
-        if (data.hp != pServer->clients[id].data.hp) { data.hp = pServer->clients[id].data.hp < 0 ? 0 : pServer->clients[id].data.hp; resend = 1; }
-        if (data.charge != pServer->clients[id].data.charge) { data.charge = pServer->clients[id].data.charge; resend = 1; }
-        if (data.charging != pServer->clients[id].data.charging) { data.charging = data.charge > 0 ? 1 : 0; resend = 1; }
+        chargingCollisions(pServer, id);
+        if (data.hp != pServer->clients[id].data.hp)
+        {
+            data.hp = pServer->clients[id].data.hp < 0 ? 0 : pServer->clients[id].data.hp;
+            resend = 1;
+        }
+        if (data.charge != pServer->clients[id].data.charge)
+        {
+            data.charge = pServer->clients[id].data.charge;
+            resend = 1;
+        }
+        if (data.charging != pServer->clients[id].data.charging)
+        {
+            data.charging = data.charge > 0 ? 1 : 0;
+            resend = 1;
+        }
 
-        for (int i = 0; i < pServer->nrOfClients; i++) {
-            if (pServer->clients[i].address.port != 8888) {
+        for (int i = 0; i < pServer->nrOfClients; i++)
+        {
+            if (pServer->clients[i].address.port != 8888)
+            {
                 // Don't resend packets to original player with unchanged data
-                if (data.id == pServer->clients[i].id && resend == 0) continue;
+                if (data.id == pServer->clients[i].id && resend == 0)
+                    continue;
                 /*
                 Skicka mindre(i bytes) structar som innehåller bara x y riktning och id
                 */

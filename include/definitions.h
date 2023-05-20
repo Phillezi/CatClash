@@ -191,6 +191,9 @@ typedef struct info Info;
 
 struct server
 {
+    pthread_t mapThread;
+    pthread_t sendPlayerdataThread;
+    Uint8 doneSendingPlayerdata;
     Uint8 updateScreenFlag;
     int mapPos;
     TcpState tcpState;
