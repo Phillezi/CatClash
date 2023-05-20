@@ -116,20 +116,8 @@ int setupSDL(Server *pServer)
 
 int setupText(Server *pServer)
 {
-    if (TTF_Init())
-    {
-        dbgPrint();
-        return 1;
-    }
-
     pServer->pFont = TTF_OpenFont("resources/fonts/RetroGaming.ttf", pServer->fontSize);
     if (!pServer->pFont)
-    {
-        dbgPrint();
-        return 1;
-    }
-
-    if (SDLNet_Init())
     {
         dbgPrint();
         return 1;
@@ -462,12 +450,15 @@ void getPlayerData(Server *pServer, int clientIndex)
 
 void sendPlayerData(Server *pServer)
 {
+    int prev = SDL_GetTicks();
+    while (((SDL_GetTicks() - prev) % 1000) < 500);
     for (int i = 0; i < pServer->nrOfClients - 1; i++)
     {
+        pServer->clients[i].timeout = SDL_GetTicks();
         SDLNet_TCP_Send(pServer->clients[pServer->nrOfClients - 1].tcpSocket, &pServer->clients[i].data, sizeof(Player));
         printf("Sent Playerdata of id: %d to new player\n", pServer->clients[i].data.id);
         SDLNet_TCP_Send(pServer->clients[i].tcpSocket, &pServer->clients[pServer->nrOfClients - 1].data, sizeof(Player));
-    }
+    } 
 }
 
 void updateTCPStateText(Server *pServer)
