@@ -82,6 +82,7 @@ int main(int argv, char **args)
 
 int init(Game *pGame)
 {
+
     pGame->isConnected = false;
     char windowTitle[100] = "CatClash   |";
     if (SDL_Init(SDL_INIT_EVERYTHING) != 0)
@@ -100,20 +101,21 @@ int init(Game *pGame)
         return 1;
     }
 
-    pGame->config.vSync = false; // Hårdkodad
-
-    SDL_DisplayMode displayMode;
-    if (SDL_GetDesktopDisplayMode(0, &displayMode) < 0)
+    if (readConfig(pGame)) // couldnt read config
     {
-        printf("SDL_GetDesktopDisplayMode failed: %s\n", SDL_GetError());
-        return 1;
+        pGame->config.vSync = false; // Hårdkodad
+        pGame->config.multiThreading = true;
+
+        SDL_DisplayMode displayMode;
+        if (SDL_GetDesktopDisplayMode(0, &displayMode) < 0)
+        {
+            printf("SDL_GetDesktopDisplayMode failed: %s\n", SDL_GetError());
+            return 1;
+        }
+
+        pGame->windowWidth = (float)displayMode.w * 0.3; // 70% of avaliable space
+        pGame->windowHeight = (float)displayMode.h * 0.3;
     }
-
-    // pGame->windowWidth = (float)displayMode.w * 0.3; // 70% of avaliable space
-    // pGame->windowHeight = (float)displayMode.h * 0.3;
-
-    pGame->windowWidth = 1920; // 70% of avaliable space
-    pGame->windowHeight = 1080;
 
     pGame->world.tileSize = (pGame->windowHeight / MAPSIZE) * 4;
 
@@ -218,8 +220,6 @@ int init(Game *pGame)
 
     pGame->movementAmount = (float)pGame->world.tileSize / TILESIZE;
 
-    pGame->config.multiThreading = true;
-
     if (pGame->config.multiThreading)
     {
         printf("Multithreading is enabled\n");
@@ -240,7 +240,8 @@ int init(Game *pGame)
     SDL_SetWindowIcon(pGame->pWindow, pSurface);
     SDL_FreeSurface(pSurface);
 
-    for (int i = 0; i < MAX_PLAYERS; i++) {
+    for (int i = 0; i < MAX_PLAYERS; i++)
+    {
         loadMedia(pGame->pRenderer, &pGame->pPlayerTexture, pGame->gSpriteClips, i);
     }
 

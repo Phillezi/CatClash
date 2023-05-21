@@ -17,7 +17,7 @@
 #define MAPSIZE 32
 #define TILESIZE 16
 #define TILES 20
-#define MAX_NAME_LEN 21
+#define MAX_NAME_LEN 31
 #define MAX_CHARGE 100
 #define TILE_WIDTH 32
 #define TILE_HEIGHT 32

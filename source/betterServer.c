@@ -689,6 +689,7 @@ void closeS(Server *pServer)
     // CLOSE NET
     if (pServer->socketSetTCP)
         SDLNet_FreeSocketSet(pServer->socketSetTCP);
+        
     if (pServer->socketTCP)
         SDLNet_TCP_Close(pServer->socketTCP);
 

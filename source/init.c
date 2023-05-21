@@ -1,4 +1,5 @@
 #include <string.h>
+#include <stdio.h>
 #include "../include/init.h"
 
 /*
@@ -38,8 +39,8 @@ int initTextureTiles(SDL_Renderer *pRenderer, SDL_Window *pWindow, SDL_Texture *
 int initTexturePlayer(SDL_Renderer *pRenderer, SDL_Window *pWindow, SDL_Texture **pTexturePlayer)
 {
     SDL_Rect srcRect;
-    srcRect.x = 611;    // test img X starting point
-    srcRect.y = 485;    // test img Y starting point
+    srcRect.x = 611; // test img X starting point
+    srcRect.y = 485; // test img Y starting point
     srcRect.w = 24;
     srcRect.h = 24;
 
@@ -64,7 +65,6 @@ int initTexturePlayer(SDL_Renderer *pRenderer, SDL_Window *pWindow, SDL_Texture 
     }
     return 0;
 }
-
 
 /*
     loadTileAtlas:
@@ -221,11 +221,16 @@ int readConfig(Game *pGame)
 
     if (fp != NULL)
     {
-        // kod som kollar igenom config.txt och uppdaterar config structen därefter
-        fscanf(fp,"FPS=%d", pGame->config.fps);
-        fscanf(fp,"RES=%dx%d", pGame->windowWidth, pGame->windowHeight);
-        fscanf(fp,"NAME=%31s", pGame->pPlayer->name);
+        int temp = 0, temp2 = 0;
+        if(fscanf(fp, "FPS:%d RES:%dx%d VSYNC:%d MULTITHREADING:%d", &pGame->config.fps, &pGame->windowWidth, &pGame->windowHeight, &temp, &temp2) < 5)
+        {
+            fclose(fp);
+            return -1;
+        }
         fclose(fp);
+        pGame->config.vSync = temp;
+        pGame->config.multiThreading = temp2;
+        printf("%d, %d x %d\n", pGame->config.fps, pGame->windowWidth, pGame->windowHeight);
     }
     else
     {
