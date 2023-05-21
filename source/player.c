@@ -643,8 +643,8 @@ void loadMedia(SDL_Renderer *pRenderer, SDL_Texture **pPlayerTexture, SDL_Rect g
 
 void drawPlayer(Game *pGame, Player player, int i)
 {
-    SDL_SetRenderDrawColor(pGame->pRenderer, 0, 0, 255, 255);
-    SDL_RenderDrawRect(pGame->pRenderer, &player.rect);
+    //SDL_SetRenderDrawColor(pGame->pRenderer, 0, 0, 255, 255);
+    //SDL_RenderDrawRect(pGame->pRenderer, &player.rect);
     SDL_RendererFlip flip = SDL_FLIP_HORIZONTAL;
 
     static int frame[MAX_PLAYERS] = {0};
