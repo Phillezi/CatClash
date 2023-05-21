@@ -50,9 +50,17 @@ Cat Clash is a multiplayer game developed as part of the HI1038 "Projektkurs ino
    ```
 
 3. Build the game:
-   ### Windows/Linux/MacOS:
+   ### Windows:
    ```
    mingw32-make.exe all
+   ```
+   ### Linux:
+   ```
+   make all
+   ```
+   ### MacOS:
+   ```
+   make all
    ```
 
 ## Usage
