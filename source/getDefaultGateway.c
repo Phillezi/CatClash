@@ -7,6 +7,7 @@
 #ifdef _WIN32
 #define INET_ADDRSTRLEN 16
 #include <winsock2.h>
+#include <ws2tcpip.h>
 #include <windows.h>
 #include <iphlpapi.h>
 #pragma comment(lib, "iphlpapi.lib")
@@ -59,13 +60,13 @@ int getDefaultGateway(char *gateway_ip, char *subnet)
             // Default gateway found
             struct in_addr gateway_addr;
             gateway_addr.S_un.S_addr = (u_long)pIpForwardTable->table[i].dwForwardNextHop;
-            inet_ntop(AF_INET, &gateway_addr, gateway_ip, INET_ADDRSTRLEN);
+            InetNtop(AF_INET, &gateway_addr, gateway_ip, INET_ADDRSTRLEN);
 
             // Subnet mask found
             struct in_addr subnet_addr;
             subnet_addr.S_un.S_addr = (u_long)pIpForwardTable->table[i].dwForwardMask;
             //sprintf(subnet, "%lu", subnet_addr.S_un.S_addr);
-            inet_ntop(AF_INET, &subnet_addr, subnet, INET_ADDRSTRLEN);
+            InetNtop(AF_INET, &subnet_addr, subnet, INET_ADDRSTRLEN);
 
             break;
         }
