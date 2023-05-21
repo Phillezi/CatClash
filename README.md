@@ -31,7 +31,7 @@ Cat Clash is a multiplayer game developed as part of the HI1038 "Projektkurs ino
 ## Installation
 1. Clone the repository:
 
-   ```
+   ```bash
    git clone https://github.com/Phillezi/Grupp-4-KittenFork.git
    ```
 
