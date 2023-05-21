@@ -17,6 +17,7 @@ Cat Crashers is a multiplayer game developed as part of the HI1038 "Projektkurs 
 ## Features
 - Multiplayer functionality: Play with your friends and crash into each other's cats.
 - Cute cat characters: Choose from a variety of cute cat characters to crash around the game world.
+- Create your own maps!: Using the built in level-editor you can create fun and unique maps to play with your friends.
 - Collision physics: Experience realistic collision physics as the cats bump into each other.
 - Scoring system: The last cat alive wins.
 
