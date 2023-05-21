@@ -39,7 +39,7 @@ Cat Crashers is a multiplayer game developed as part of the HI1038 "Projektkurs 
 
 2. Install the necessary libraries:
    ### Windows: Using the Msys2 terminal
-   ```
+   ``` MSYS2 MSYS
    pacman -S mingw64/mingw-w64-x86_64-SDL2 mingw64/mingw-w64-x86_64-SDL2_image mingw64/mingw-w64-x86_64-SDL2_ttf mingw64/mingw-w64-x86_64-SDL2_mixer mingw64/mingw-w64-x86_64- SDL2_net
    ```
    ### Linux:
