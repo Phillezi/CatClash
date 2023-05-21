@@ -26,7 +26,7 @@ Cat Clash is a multiplayer game developed as part of the HI1038 "Projektkurs ino
 - SDL2_ttf library
 - SDL2_net library
 - dirent library
-- pthreads library
+- pthread library
 
 ## Installation
 1. Clone the repository:
