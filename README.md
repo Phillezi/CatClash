@@ -1,4 +1,4 @@
-# Project Name: Cat Clash - Multiplayer Game
+# Grupp 4 HI1038, Cat Clash - Multiplayer Game
 
 ![Cat Clash](cat_clash_banner.png)
 
