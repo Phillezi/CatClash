@@ -12,7 +12,7 @@
 - [License](#license)
 
 ## Description
-Cat Crashers is a multiplayer game developed as part of the HI1038 "Projektkurs inom data- och nätverksteknik" course. The game revolves around adorable cats crashing into each other, and it is built using the SDL2 library in the C programming language.
+Cat Clash is a multiplayer game developed as part of the HI1038 "Projektkurs inom data- och nätverksteknik" course. The game revolves around adorable cats crashing into each other, and it is built using the SDL2 library in the C programming language.
 
 ## Features
 - Multiplayer functionality: Play with your friends and crash into each other's cats.
