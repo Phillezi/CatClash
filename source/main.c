@@ -288,7 +288,7 @@ int init(Game *pGame)
 
 bool loadMusic(Game *pGame) {
     // Load background music
-    pGame->pMusic = Mix_LoadMUS( "resources/music/background3.wav" );
+    pGame->pMusic = Mix_LoadMUS( "resources/music/catTheme.wav" );
     if (pGame->pMusic == NULL) {
         printf("Failed to load background music: %s\n", Mix_GetError());
         return 0;
