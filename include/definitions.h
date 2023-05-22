@@ -3,6 +3,7 @@
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_net.h>
 #include <SDL2/SDL_ttf.h>
+#include <SDL2/SDL_mixer.h>
 #include <stdlib.h>
 #include <stdbool.h>
 #include <pthread.h>
@@ -139,6 +140,12 @@ struct game
     UiE ui;
     SDL_Window *pWindow;
     SDL_Renderer *pRenderer;
+
+    Mix_Music *pMusic;
+
+    Mix_Chunk *pCharge;
+    Mix_Chunk *pHit;
+    Mix_Chunk *pWin;
 
     SDL_Texture *pTileTextures[TILES];
     SDL_Texture *pPlayerTexture;
