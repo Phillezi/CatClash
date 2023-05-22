@@ -348,6 +348,14 @@ int mainMenu(Game *pGame)
             }
             else if (event.type == SDL_KEYDOWN)
             {
+                if (event.key.keysym.sym == SDLK_SPACE) {
+                    if (Mix_PausedMusic() == 1) {
+                        Mix_ResumeMusic();
+                    } else {
+                        Mix_PauseMusic();
+                    }
+                }
+
                 if (event.key.keysym.sym == SDLK_UP)
                 {
                     if (mode > 0)

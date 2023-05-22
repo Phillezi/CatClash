@@ -103,6 +103,10 @@ void *handleInput(void *pGameIn) // Game *pGame)
     }
     if (currentKeyStates[SDL_SCANCODE_SPACE] && pGame->pPlayer->charging == 0)
     {
+        if (pGame->pPlayer->charge == 0) {
+            if (Mix_PlayChannel(-1, pGame->pCharge, 0) == -1)
+                printf("Failed to play charge sound effect\n");
+        }
         pGame->pPlayer->idle = 1;
         pGame->state = START;
         if (pGame->pPlayer->charge < MAX_CHARGE)
@@ -116,6 +120,7 @@ void *handleInput(void *pGameIn) // Game *pGame)
     }
     else if (pGame->pPlayer->charge > 0)
     {
+        Mix_HaltChannel(-1);
         srand(time(NULL));
         int damage = 0, id = 0, maxLoops = 0;
         static int flag = 0;
@@ -148,6 +153,8 @@ void *handleInput(void *pGameIn) // Game *pGame)
                 {
                     damage = pGame->pPlayer->charge * 2;
                     pGame->pPlayer->charge = 1;
+                    if (Mix_PlayChannel(-1, pGame->pHit, 0) == -1)
+                        printf("Failed to play hit sound effect\n");
                 }
                 break;
             }
@@ -160,6 +167,7 @@ void *handleInput(void *pGameIn) // Game *pGame)
     }
     else
     {
+        int id = -1;
         srand(time(NULL));
         for (int i = 0; i < pGame->movementAmount; i++)
         {
@@ -168,37 +176,49 @@ void *handleInput(void *pGameIn) // Game *pGame)
             {
                 if (checkCollision(*pGame->pPlayer, pGame->map, 'W', pGame->world.tileSize) == 1)
                     findPortalAndTeleport(pGame, 'W');
-                if ((checkCollision(*pGame->pPlayer, pGame->map, 'W', pGame->world.tileSize) < 1) && (playerCollision(*pGame->pPlayer, pGame->pMultiPlayer, pGame->nrOfPlayers, 'W', pGame->world.tileSize, 0) == -1))
+                if ((checkCollision(*pGame->pPlayer, pGame->map, 'W', pGame->world.tileSize) < 1) && ((id = playerCollision(*pGame->pPlayer, pGame->pMultiPlayer, pGame->nrOfPlayers, 'W', pGame->world.tileSize, 0)) == -1))
                 {
                     movePlayer(pGame->pPlayer, 'W');
                 }
+                if (id != -1)
+                    pGame->pPlayer->prevKeyPressed = 'W';
+                printf("id: %d\n", id);
             }
             if (currentKeyStates[SDL_SCANCODE_A] || currentKeyStates[SDL_SCANCODE_LEFT])
             {
                 if (checkCollision(*pGame->pPlayer, pGame->map, 'A', pGame->world.tileSize) == 1)
                     findPortalAndTeleport(pGame, 'A');
-                if ((checkCollision(*pGame->pPlayer, pGame->map, 'A', pGame->world.tileSize) < 1) && (playerCollision(*pGame->pPlayer, pGame->pMultiPlayer, pGame->nrOfPlayers, 'A', pGame->world.tileSize, 0) == -1))
+                if ((checkCollision(*pGame->pPlayer, pGame->map, 'A', pGame->world.tileSize) < 1) && ((id = playerCollision(*pGame->pPlayer, pGame->pMultiPlayer, pGame->nrOfPlayers, 'A', pGame->world.tileSize, 0)) == -1))
                 {
                     movePlayer(pGame->pPlayer, 'A');
                 }
+                if (id != -1)
+                    pGame->pPlayer->prevKeyPressed = 'A';
+                printf("id: %d\n", id);
             }
             if (currentKeyStates[SDL_SCANCODE_S] || currentKeyStates[SDL_SCANCODE_DOWN])
             {
                 if (checkCollision(*pGame->pPlayer, pGame->map, 'S', pGame->world.tileSize) == 1)
                     findPortalAndTeleport(pGame, 'S');
-                if ((checkCollision(*pGame->pPlayer, pGame->map, 'S', pGame->world.tileSize) < 1) && (playerCollision(*pGame->pPlayer, pGame->pMultiPlayer, pGame->nrOfPlayers, 'S', pGame->world.tileSize, 0) == -1))
+                if ((checkCollision(*pGame->pPlayer, pGame->map, 'S', pGame->world.tileSize) < 1) && ((id = playerCollision(*pGame->pPlayer, pGame->pMultiPlayer, pGame->nrOfPlayers, 'S', pGame->world.tileSize, 0)) == -1))
                 {
                     movePlayer(pGame->pPlayer, 'S');
                 }
+                if (id != -1)
+                    pGame->pPlayer->prevKeyPressed = 'S';
+                printf("id: %d\n", id);
             }
             if (currentKeyStates[SDL_SCANCODE_D] || currentKeyStates[SDL_SCANCODE_RIGHT])
             {
                 if (checkCollision(*pGame->pPlayer, pGame->map, 'D', pGame->world.tileSize) == 1)
                     findPortalAndTeleport(pGame, 'D');
-                if ((checkCollision(*pGame->pPlayer, pGame->map, 'D', pGame->world.tileSize) < 1) && (playerCollision(*pGame->pPlayer, pGame->pMultiPlayer, pGame->nrOfPlayers, 'D', pGame->world.tileSize, 0) == -1))
+                if ((checkCollision(*pGame->pPlayer, pGame->map, 'D', pGame->world.tileSize) < 1) && ((id = playerCollision(*pGame->pPlayer, pGame->pMultiPlayer, pGame->nrOfPlayers, 'D', pGame->world.tileSize, 0)) == -1))
                 {
                     movePlayer(pGame->pPlayer, 'D');
                 }
+                if (id != -1)
+                    pGame->pPlayer->prevKeyPressed = 'D';
+                printf("id: %d\n", id);
             }
         }
     }
