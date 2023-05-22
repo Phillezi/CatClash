@@ -2,7 +2,7 @@
 SRCDIR=./source
 CC=gcc
 CFLAGS = -g -c 
-LDFLAGS = -Wall -lmingw32 -lSDL2main -lSDL2_image -lSDL2 -lSDL2_net -lSDL2_ttf -pthread #-liphlpapi -lws2_32 #-mwindows -lm
+LDFLAGS = -Wall -lmingw32 -lSDL2main -lSDL2_image -lSDL2 -lSDL2_net -lSDL2_ttf -pthread#-liphlpapi -lws2_32 #-mwindows -lm
 
 # Determine the operating system
 ifeq ($(OS),Windows_NT)
