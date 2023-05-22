@@ -63,8 +63,9 @@ int main(int argv, char **args)
                 if (joinServerMenu(&game))
                     break;
             case 2:
-                while (!serverLobby(&game))
+                while (!serverLobby(&game)) {
                     run(&game);
+                }
                 break;
             }
             break;
@@ -127,9 +128,10 @@ int init(Game *pGame)
         }
     }
     Mix_VolumeMusic(15);
-    Mix_VolumeChunk(pGame->pCharge, 30);
-    Mix_VolumeChunk(pGame->pHit, 30);
-    Mix_VolumeChunk(pGame->pWin, 30);
+    Mix_VolumeChunk(pGame->pCharge, 15);
+    Mix_VolumeChunk(pGame->pHit, 20);
+    Mix_VolumeChunk(pGame->pBonk, 40);
+    Mix_VolumeChunk(pGame->pWin, 60);
 
     if (readConfig(pGame)) // couldnt read config
     {
@@ -287,7 +289,7 @@ int init(Game *pGame)
 
 bool loadMusic(Game *pGame) {
     // Load background music
-    pGame->pMusic = Mix_LoadMUS( "resources/music/background.wav" );
+    pGame->pMusic = Mix_LoadMUS( "resources/music/background3.wav" );
     if (pGame->pMusic == NULL) {
         printf("Failed to load background music: %s\n", Mix_GetError());
         return 0;
@@ -296,8 +298,9 @@ bool loadMusic(Game *pGame) {
     // Load sound effects
     pGame->pCharge = Mix_LoadWAV( "resources/music/charging.wav" );
     pGame->pHit = Mix_LoadWAV( "resources/music/hit.wav" );
+    pGame->pBonk = Mix_LoadWAV( "resources/music/bonk.wav" );
     pGame->pWin = Mix_LoadWAV( "resources/music/win.wav" );
-    if ( (pGame->pCharge == NULL) || (pGame->pHit == NULL) || (pGame->pWin == NULL) ) {
+    if ( (pGame->pCharge == NULL) || (pGame->pHit == NULL) || (pGame->pBonk == NULL) || (pGame->pWin == NULL) ) {
         printf("Failed to load sound effects: %s\n", Mix_GetError());
         return 0;
     }
@@ -391,6 +394,9 @@ void run(Game *pGame)
                     }
                     if (pGame->isConnected)
                         getPlayerData(pGame);
+                    if (oldCharge != 0 && pGame->pPlayer->charge == 0) {
+                        Mix_PlayChannel( -1, pGame->pBonk, 0 );
+                    }
 
                     pthread_create(&movementThread, NULL, handleInput, (void *)pGame);
                 }
