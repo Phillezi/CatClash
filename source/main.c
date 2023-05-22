@@ -154,12 +154,8 @@ int init(Game *pGame)
         return 1;
     }
 
-    Mix_VolumeMusic(pGame->config.volumeMusic*pGame->config.volumeMaster);
-    Mix_VolumeChunk(pGame->pCharge, 15*pGame->config.volumeMaster);
-    Mix_VolumeChunk(pGame->pHit, 20*pGame->config.volumeMaster);
-    Mix_VolumeChunk(pGame->pBonk, 40*pGame->config.volumeMaster);
-    Mix_VolumeChunk(pGame->pWin, 60*pGame->config.volumeMaster);
-
+    setVolume(pGame);
+    
     pGame->pWindow = SDL_CreateWindow(WINDOW_NAME, SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, pGame->windowWidth, pGame->windowHeight, 0);
     if (!pGame->pWindow)
     {

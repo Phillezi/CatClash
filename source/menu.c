@@ -348,15 +348,32 @@ int mainMenu(Game *pGame)
             }
             else if (event.type == SDL_KEYDOWN)
             {
-                if (event.key.keysym.sym == SDLK_SPACE) {
-                    if (Mix_PausedMusic() == 1) {
+                /*if (event.key.keysym.sym == SDLK_VOLUMEUP)
+                {
+                    if (pGame->config.volumeMaster < 999)
+                        pGame->config.volumeMaster += 0.01;
+                    printf("VOL: %f", pGame->config.volumeMaster);
+                    setVolume(pGame);
+                }
+                else if (event.key.keysym.sym == SDLK_VOLUMEDOWN)
+                {
+                    if (pGame->config.volumeMaster > 0.00)
+                        pGame->config.volumeMaster -= 0.01;
+                    printf("VOL: %f", pGame->config.volumeMaster);
+                    setVolume(pGame);
+                }
+                else*/ if (event.key.keysym.sym == SDLK_SPACE)
+                {
+                    if (Mix_PausedMusic() == 1)
+                    {
                         Mix_ResumeMusic();
-                    } else {
+                    }
+                    else
+                    {
                         Mix_PauseMusic();
                     }
                 }
-
-                if (event.key.keysym.sym == SDLK_UP)
+                else if (event.key.keysym.sym == SDLK_UP)
                 {
                     if (mode > 0)
                         mode--;
@@ -750,9 +767,8 @@ int serverSelectMenu(Game *pGame)
                                         exit = true;
                                         returnValue = 2;
                                     }
-                                    
                                 }
-                                else if (selected >= firstInButtonRow*2 && selected < firstInButtonRow * 3)
+                                else if (selected >= firstInButtonRow * 2 && selected < firstInButtonRow * 3)
                                 {
                                     if (savedServerInfo.nrOfServersFound > selected - firstInButtonRow * 2)
                                     {

@@ -223,7 +223,7 @@ int readConfig(Game *pGame)
     {
         int temp = 0, temp2 = 0;
         char tempMasterVolume[4] = {0};
-        if(fscanf(fp, "FPS:%d RES:%dx%d VSYNC:%d MULTITHREADING:%d VOLUME:%d ", &pGame->config.fps, &pGame->windowWidth, &pGame->windowHeight, &temp, &temp2, &pGame->config.volumeMusic) < 6)
+        if (fscanf(fp, "FPS:%d RES:%dx%d VSYNC:%d MULTITHREADING:%d VOLUME:%d ", &pGame->config.fps, &pGame->windowWidth, &pGame->windowHeight, &temp, &temp2, &pGame->config.volumeMusic) < 6)
         {
             fclose(fp);
             return -1;
@@ -231,12 +231,12 @@ int readConfig(Game *pGame)
         fscanf(fp, "VOL_MASTER: %3[^%]%*c", tempMasterVolume);
         printf("%s\n", tempMasterVolume);
         float tmp = 0;
-        for(int i = 0; i < strlen(tempMasterVolume); i++)
+        for (int i = 0; i < strlen(tempMasterVolume); i++)
         {
             tmp *= 10;
             tmp += tempMasterVolume[i] - '0';
         }
-        pGame->config.volumeMaster = (tmp)/100;
+        pGame->config.volumeMaster = (tmp) / 100;
         fclose(fp);
         pGame->config.vSync = temp;
         pGame->config.multiThreading = temp2;
@@ -263,4 +263,13 @@ void findPortal(Game *pGame)
             pGame->nrOfPortals++;
         }
     }
+}
+
+void setVolume(Game *pGame)
+{
+    Mix_VolumeMusic(pGame->config.volumeMusic * pGame->config.volumeMaster);
+    Mix_VolumeChunk(pGame->pCharge, 15 * pGame->config.volumeMaster);
+    Mix_VolumeChunk(pGame->pHit, 20 * pGame->config.volumeMaster);
+    Mix_VolumeChunk(pGame->pBonk, 40 * pGame->config.volumeMaster);
+    Mix_VolumeChunk(pGame->pWin, 60 * pGame->config.volumeMaster);
 }

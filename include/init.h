@@ -19,5 +19,6 @@ int readConfig(Game *pGame);
 void loadTileAtlas(SDL_Renderer *pRenderer, SDL_Texture *pTiles[], const char imagePath[]);
 SDL_Texture *loadTexture(SDL_Renderer *pRenderer, const char imagePath[]);
 void findPortal(Game *pGame);
+void setVolume(Game *pGame);
 
 #endif
