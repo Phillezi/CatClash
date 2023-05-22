@@ -272,4 +272,5 @@ void setVolume(Game *pGame)
     Mix_VolumeChunk(pGame->pHit, 20 * pGame->config.volumeMaster);
     Mix_VolumeChunk(pGame->pBonk, 40 * pGame->config.volumeMaster);
     Mix_VolumeChunk(pGame->pWin, 60 * pGame->config.volumeMaster);
+    Mix_VolumeChunk(pGame->pMenuSwitch, 20 * pGame->config.volumeMaster);
 }

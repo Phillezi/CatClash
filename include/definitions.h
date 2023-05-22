@@ -149,6 +149,7 @@ struct game
     Mix_Chunk *pHit;
     Mix_Chunk *pBonk;
     Mix_Chunk *pWin;
+    Mix_Chunk *pMenuSwitch;
 
     SDL_Texture *pTileTextures[TILES];
     SDL_Texture *pPlayerTexture;

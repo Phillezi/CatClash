@@ -109,6 +109,7 @@ int init(Game *pGame)
     pGame->pCharge = NULL;
     pGame->pHit = NULL;
     pGame->pWin = NULL;
+    pGame->pMenuSwitch = NULL;
 
     if ( Mix_OpenAudio( 22050, MIX_DEFAULT_FORMAT, 2, 4096) == -1 )
     { 
@@ -127,6 +128,7 @@ int init(Game *pGame)
             return 1;
         }
     }
+    
     
     if (readConfig(pGame)) // couldnt read config
     {
@@ -155,7 +157,7 @@ int init(Game *pGame)
     }
 
     setVolume(pGame);
-    
+
     pGame->pWindow = SDL_CreateWindow(WINDOW_NAME, SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, pGame->windowWidth, pGame->windowHeight, 0);
     if (!pGame->pWindow)
     {
@@ -297,7 +299,8 @@ bool loadMusic(Game *pGame) {
     pGame->pHit = Mix_LoadWAV( "resources/music/hit.wav" );
     pGame->pBonk = Mix_LoadWAV( "resources/music/bonk.wav" );
     pGame->pWin = Mix_LoadWAV( "resources/music/win.wav" );
-    if ( (pGame->pCharge == NULL) || (pGame->pHit == NULL) || (pGame->pBonk == NULL) || (pGame->pWin == NULL) ) {
+    pGame->pMenuSwitch = Mix_LoadWAV( "resources/music/menuSwitch.wav" );
+    if ( (pGame->pCharge == NULL) || (pGame->pHit == NULL) || (pGame->pBonk == NULL) || (pGame->pWin == NULL) || (pGame->pMenuSwitch == NULL) ) {
         printf("Failed to load sound effects: %s\n", Mix_GetError());
         return 0;
     }
@@ -581,6 +584,7 @@ void close(Game *pGame)
     Mix_FreeChunk( pGame->pCharge );
     Mix_FreeChunk( pGame->pHit );
     Mix_FreeChunk( pGame->pWin );
+    Mix_FreeChunk( pGame->pMenuSwitch );
     
     Mix_FreeMusic( pGame->pMusic );
 

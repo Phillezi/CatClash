@@ -525,6 +525,7 @@ int mainMenu(Game *pGame)
             default:
                 break;
             }
+            Mix_PlayChannel( -1, pGame->pMenuSwitch, 0 );
         }
 
         deltaTime = SDL_GetTicks() - previousTime;
