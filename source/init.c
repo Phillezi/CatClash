@@ -222,15 +222,25 @@ int readConfig(Game *pGame)
     if (fp != NULL)
     {
         int temp = 0, temp2 = 0;
-        if(fscanf(fp, "FPS:%d RES:%dx%d VSYNC:%d MULTITHREADING:%d VOLUME:%d", &pGame->config.fps, &pGame->windowWidth, &pGame->windowHeight, &temp, &temp2, &pGame->config.volume) < 6)
+        char tempMasterVolume[4] = {0};
+        if(fscanf(fp, "FPS:%d RES:%dx%d VSYNC:%d MULTITHREADING:%d VOLUME:%d ", &pGame->config.fps, &pGame->windowWidth, &pGame->windowHeight, &temp, &temp2, &pGame->config.volumeMusic) < 6)
         {
             fclose(fp);
             return -1;
         }
+        fscanf(fp, "VOL_MASTER: %3[^%]%*c", tempMasterVolume);
+        printf("%s\n", tempMasterVolume);
+        float tmp = 0;
+        for(int i = 0; i < strlen(tempMasterVolume); i++)
+        {
+            tmp *= 10;
+            tmp += tempMasterVolume[i] - '0';
+        }
+        pGame->config.volumeMaster = (tmp)/100;
         fclose(fp);
         pGame->config.vSync = temp;
         pGame->config.multiThreading = temp2;
-        printf("%d, %d x %d, %d\n", pGame->config.fps, pGame->windowWidth, pGame->windowHeight, pGame->config.volume);
+        printf("%d, %d x %d, %d, %f\n", pGame->config.fps, pGame->windowWidth, pGame->windowHeight, pGame->config.volumeMusic, pGame->config.volumeMaster);
     }
     else
     {

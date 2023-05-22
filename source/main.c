@@ -132,7 +132,7 @@ int init(Game *pGame)
     {
         pGame->config.vSync = false;
         pGame->config.multiThreading = true;
-        pGame->config.volume = 15;
+        pGame->config.volumeMusic = 15;
 
         SDL_DisplayMode displayMode;
         if (SDL_GetDesktopDisplayMode(0, &displayMode) < 0)
@@ -154,11 +154,11 @@ int init(Game *pGame)
         return 1;
     }
 
-    Mix_VolumeMusic(pGame->config.volume);
-    Mix_VolumeChunk(pGame->pCharge, 15);
-    Mix_VolumeChunk(pGame->pHit, 20);
-    Mix_VolumeChunk(pGame->pBonk, 40);
-    Mix_VolumeChunk(pGame->pWin, 60);
+    Mix_VolumeMusic(pGame->config.volumeMusic*pGame->config.volumeMaster);
+    Mix_VolumeChunk(pGame->pCharge, 15*pGame->config.volumeMaster);
+    Mix_VolumeChunk(pGame->pHit, 20*pGame->config.volumeMaster);
+    Mix_VolumeChunk(pGame->pBonk, 40*pGame->config.volumeMaster);
+    Mix_VolumeChunk(pGame->pWin, 60*pGame->config.volumeMaster);
 
     pGame->pWindow = SDL_CreateWindow(WINDOW_NAME, SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, pGame->windowWidth, pGame->windowHeight, 0);
     if (!pGame->pWindow)
