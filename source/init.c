@@ -222,7 +222,7 @@ int readConfig(Game *pGame)
     if (fp != NULL)
     {
         int temp = 0, temp2 = 0;
-        if(fscanf(fp, "FPS:%d RES:%dx%d VSYNC:%d MULTITHREADING:%d", &pGame->config.fps, &pGame->windowWidth, &pGame->windowHeight, &temp, &temp2) < 5)
+        if(fscanf(fp, "FPS:%d RES:%dx%d VSYNC:%d MULTITHREADING:%d VOLUME:%d", &pGame->config.fps, &pGame->windowWidth, &pGame->windowHeight, &temp, &temp2, &pGame->config.volume) < 6)
         {
             fclose(fp);
             return -1;
@@ -230,7 +230,7 @@ int readConfig(Game *pGame)
         fclose(fp);
         pGame->config.vSync = temp;
         pGame->config.multiThreading = temp2;
-        printf("%d, %d x %d\n", pGame->config.fps, pGame->windowWidth, pGame->windowHeight);
+        printf("%d, %d x %d, %d\n", pGame->config.fps, pGame->windowWidth, pGame->windowHeight, pGame->config.volume);
     }
     else
     {

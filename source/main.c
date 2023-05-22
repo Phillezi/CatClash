@@ -127,16 +127,12 @@ int init(Game *pGame)
             return 1;
         }
     }
-    Mix_VolumeMusic(15);
-    Mix_VolumeChunk(pGame->pCharge, 15);
-    Mix_VolumeChunk(pGame->pHit, 20);
-    Mix_VolumeChunk(pGame->pBonk, 40);
-    Mix_VolumeChunk(pGame->pWin, 60);
-
+    
     if (readConfig(pGame)) // couldnt read config
     {
-        pGame->config.vSync = false; // Hårdkodad
+        pGame->config.vSync = false;
         pGame->config.multiThreading = true;
+        pGame->config.volume = 15;
 
         SDL_DisplayMode displayMode;
         if (SDL_GetDesktopDisplayMode(0, &displayMode) < 0)
@@ -152,12 +148,17 @@ int init(Game *pGame)
     pGame->world.tileSize = (pGame->windowHeight / MAPSIZE) * 4;
 
     pGame->pPlayer = createPlayer(0, "Name", pGame->world.tileSize);
-
     if (!pGame->pPlayer)
     {
         printf("Error: Failed to create player\n");
         return 1;
     }
+
+    Mix_VolumeMusic(pGame->config.volume);
+    Mix_VolumeChunk(pGame->pCharge, 15);
+    Mix_VolumeChunk(pGame->pHit, 20);
+    Mix_VolumeChunk(pGame->pBonk, 40);
+    Mix_VolumeChunk(pGame->pWin, 60);
 
     pGame->pWindow = SDL_CreateWindow(WINDOW_NAME, SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, pGame->windowWidth, pGame->windowHeight, 0);
     if (!pGame->pWindow)

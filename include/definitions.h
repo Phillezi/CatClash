@@ -86,6 +86,7 @@ struct config
     bool vSync;
     int fps;
     bool multiThreading;
+    int volume;
 };
 typedef struct config Config;
 
