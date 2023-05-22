@@ -182,7 +182,6 @@ void *handleInput(void *pGameIn) // Game *pGame)
                 }
                 if (id != -1)
                     pGame->pPlayer->prevKeyPressed = 'W';
-                printf("id: %d\n", id);
             }
             if (currentKeyStates[SDL_SCANCODE_A] || currentKeyStates[SDL_SCANCODE_LEFT])
             {
@@ -194,7 +193,6 @@ void *handleInput(void *pGameIn) // Game *pGame)
                 }
                 if (id != -1)
                     pGame->pPlayer->prevKeyPressed = 'A';
-                printf("id: %d\n", id);
             }
             if (currentKeyStates[SDL_SCANCODE_S] || currentKeyStates[SDL_SCANCODE_DOWN])
             {
@@ -206,7 +204,6 @@ void *handleInput(void *pGameIn) // Game *pGame)
                 }
                 if (id != -1)
                     pGame->pPlayer->prevKeyPressed = 'S';
-                printf("id: %d\n", id);
             }
             if (currentKeyStates[SDL_SCANCODE_D] || currentKeyStates[SDL_SCANCODE_RIGHT])
             {
@@ -218,7 +215,6 @@ void *handleInput(void *pGameIn) // Game *pGame)
                 }
                 if (id != -1)
                     pGame->pPlayer->prevKeyPressed = 'D';
-                printf("id: %d\n", id);
             }
         }
     }
