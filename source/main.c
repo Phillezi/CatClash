@@ -2,7 +2,7 @@
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_image.h>
 #include <SDL2/SDL_ttf.h>
-//#include <SDL2/SDL_mixer.h>
+// #include <SDL2/SDL_mixer.h>
 #include <time.h>
 #include "pthread.h"
 #include "../include/definitions.h"
@@ -91,7 +91,7 @@ int init(Game *pGame)
 
     pGame->isConnected = false;
     char windowTitle[100] = "CatClash   |";
-    if (SDL_Init(SDL_INIT_EVERYTHING) != 0)
+    if (SDL_Init(SDL_INIT_VIDEO|SDL_INIT_AUDIO) != 0)
     {
         printf("Error: %s\n", SDL_GetError());
         return 1;
@@ -115,8 +115,13 @@ int init(Game *pGame)
     pGame->pWin = NULL;
     pGame->pMenuSwitch = NULL;
 
-
-    if (Mix_OpenAudio(22050, MIX_DEFAULT_FORMAT, 2, 4096) == -1)
+    if (Mix_Init(MIX_INIT_OGG|MIX_INIT_FLAC|MIX_INIT_MID|MIX_INIT_MOD|MIX_INIT_MP3) == 0)
+    {
+        printf("Mix_Init: %s\n", Mix_GetError());
+        return 1;
+    }
+    
+    if (Mix_OpenAudioDevice(22050, MIX_DEFAULT_FORMAT, 2, 4096, NULL, SDL_AUDIO_ALLOW_FORMAT_CHANGE|SDL_AUDIO_ALLOW_SAMPLES_CHANGE) == -1)
     {
         printf("Mix_OpenAudio: %s\n", Mix_GetError());
         return 1;
@@ -410,11 +415,11 @@ void run(Game *pGame)
                         getPlayerData(pGame);
                     if (oldCharge != 0 && pGame->pPlayer->charge == 0)
                     {
-                        #ifdef SDL_MIXER_H_
+#ifdef SDL_MIXER_H_
                         Mix_PlayChannel(-1, pGame->pBonk, 0);
-                        #else 
+#else
                         ;
-                        #endif
+#endif
                     }
 
                     pthread_create(&movementThread, NULL, handleInput, (void *)pGame);
@@ -449,9 +454,9 @@ void run(Game *pGame)
                     if (pGame->pPlayer->state == ALIVE)
                     {
                         pGame->pPlayer->state = WIN;
-                        #ifdef SDL_MIXER_H_
+#ifdef SDL_MIXER_H_
                         Mix_PlayChannel(-1, pGame->pWin, 0);
-                        #endif
+#endif
                     }
                 }
 
@@ -601,7 +606,7 @@ void close(Game *pGame)
         printf("Freeing memory of: pWindow\n");
         SDL_DestroyWindow(pGame->pWindow);
     }
-    #ifdef SDL_MIXER_H_
+#ifdef SDL_MIXER_H_
     Mix_FreeChunk(pGame->pCharge);
     Mix_FreeChunk(pGame->pHit);
     Mix_FreeChunk(pGame->pWin);
@@ -610,7 +615,9 @@ void close(Game *pGame)
     Mix_FreeMusic(pGame->pMusic);
 
     Mix_CloseAudio();
-    #endif
+
+    Mix_Quit();
+#endif
     SDL_Quit();
 }
 
