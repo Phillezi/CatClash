@@ -364,6 +364,7 @@ int mainMenu(Game *pGame)
                 }
                 else*/ if (event.key.keysym.sym == SDLK_SPACE)
                 {
+                    #ifdef SDL_MIXER_H_
                     if (Mix_PausedMusic() == 1)
                     {
                         Mix_ResumeMusic();
@@ -372,6 +373,9 @@ int mainMenu(Game *pGame)
                     {
                         Mix_PauseMusic();
                     }
+                    #else
+                    ;
+                    #endif
                 }
                 else if (event.key.keysym.sym == SDLK_UP)
                 {
@@ -525,7 +529,9 @@ int mainMenu(Game *pGame)
             default:
                 break;
             }
+            #ifdef SDL_MIXER_H_
             Mix_PlayChannel( -1, pGame->pMenuSwitch, 0 );
+            #endif
         }
 
         deltaTime = SDL_GetTicks() - previousTime;

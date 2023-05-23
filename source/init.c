@@ -265,6 +265,7 @@ void findPortal(Game *pGame)
     }
 }
 
+#ifdef SDL_MIXER_H_
 void setVolume(Game *pGame)
 {
     Mix_VolumeMusic(pGame->config.volumeMusic * pGame->config.volumeMaster);
@@ -274,3 +275,4 @@ void setVolume(Game *pGame)
     Mix_VolumeChunk(pGame->pWin, 60 * pGame->config.volumeMaster);
     Mix_VolumeChunk(pGame->pMenuSwitch, 20 * pGame->config.volumeMaster);
 }
+#endif

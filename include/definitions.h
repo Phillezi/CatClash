@@ -143,6 +143,8 @@ struct game
     SDL_Window *pWindow;
     SDL_Renderer *pRenderer;
 
+    #ifdef SDL_MIXER_H_
+
     Mix_Music *pMusic;
 
     Mix_Chunk *pCharge;
@@ -150,6 +152,8 @@ struct game
     Mix_Chunk *pBonk;
     Mix_Chunk *pWin;
     Mix_Chunk *pMenuSwitch;
+
+    #endif
 
     SDL_Texture *pTileTextures[TILES];
     SDL_Texture *pPlayerTexture;

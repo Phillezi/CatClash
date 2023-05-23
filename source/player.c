@@ -104,8 +104,12 @@ void *handleInput(void *pGameIn) // Game *pGame)
     if (currentKeyStates[SDL_SCANCODE_SPACE] && pGame->pPlayer->charging == 0)
     {
         if (pGame->pPlayer->charge == 0) {
+            #ifdef SDL_MIXER_H_
             if (Mix_PlayChannel(-1, pGame->pCharge, 0) == -1)
                 printf("Failed to play charge sound effect\n");
+            #else
+            ;
+            #endif
         }
         pGame->pPlayer->idle = 1;
         pGame->state = START;
@@ -120,7 +124,9 @@ void *handleInput(void *pGameIn) // Game *pGame)
     }
     else if (pGame->pPlayer->charge > 0)
     {
+        #ifdef SDL_MIXER_H_
         Mix_HaltChannel(-1);
+        #endif
         srand(time(NULL));
         int damage = 0, id = 0, maxLoops = 0;
         static int flag = 0;
@@ -153,8 +159,10 @@ void *handleInput(void *pGameIn) // Game *pGame)
                 {
                     damage = pGame->pPlayer->charge * 2;
                     pGame->pPlayer->charge = 1;
+                    #ifdef SDL_MIXER_H_
                     if (Mix_PlayChannel(-1, pGame->pHit, 0) == -1)
                         printf("Failed to play hit sound effect\n");
+                    #endif
                 }
                 break;
             }

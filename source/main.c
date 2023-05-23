@@ -2,7 +2,7 @@
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_image.h>
 #include <SDL2/SDL_ttf.h>
-#include <SDL2/SDL_mixer.h>
+//#include <SDL2/SDL_mixer.h>
 #include <time.h>
 #include "pthread.h"
 #include "../include/definitions.h"
@@ -14,7 +14,9 @@
 #include "../include/newClient.h"
 
 int init(Game *pGame);
+#ifdef SDL_MIXER_H_
 bool loadMusic(Game *pGame);
+#endif
 void run(Game *pGame);
 void close(Game *pGame);
 void *updateScreen(void *pGameIn);
@@ -63,7 +65,8 @@ int main(int argv, char **args)
                 if (joinServerMenu(&game))
                     break;
             case 2:
-                while (!serverLobby(&game)) {
+                while (!serverLobby(&game))
+                {
                     run(&game);
                 }
                 break;
@@ -103,33 +106,38 @@ int init(Game *pGame)
         printf("SDLNet_Init: %s\n", SDLNet_GetError());
         return 1;
     }
-    //Initialize SDL_mixer
 
+#ifdef SDL_MIXER_H_
+    // Initialize SDL_mixer
     pGame->pMusic = NULL;
     pGame->pCharge = NULL;
     pGame->pHit = NULL;
     pGame->pWin = NULL;
     pGame->pMenuSwitch = NULL;
 
-    if ( Mix_OpenAudio( 22050, MIX_DEFAULT_FORMAT, 2, 4096) == -1 )
-    { 
-        printf("Mix_OpenAudio: %s\n", Mix_GetError());
-        return 1;    
-    }    
 
-    if ( !loadMusic(pGame) ) {
+    if (Mix_OpenAudio(22050, MIX_DEFAULT_FORMAT, 2, 4096) == -1)
+    {
+        printf("Mix_OpenAudio: %s\n", Mix_GetError());
+        return 1;
+    }
+
+    if (!loadMusic(pGame))
+    {
         printf("Failed to load music\n");
         return 1;
-    } 
+    }
 
-    if ( Mix_PlayingMusic() == 0 ) {
-        if ( Mix_PlayMusic(pGame->pMusic,-1) == -1 ) {
+    if (Mix_PlayingMusic() == 0)
+    {
+        if (Mix_PlayMusic(pGame->pMusic, -1) == -1)
+        {
             printf("Failed to play music\n");
             return 1;
         }
     }
-    
-    
+#endif
+
     if (readConfig(pGame)) // couldnt read config
     {
         pGame->config.vSync = false;
@@ -155,8 +163,9 @@ int init(Game *pGame)
         printf("Error: Failed to create player\n");
         return 1;
     }
-
+#ifdef SDL_MIXER_H_
     setVolume(pGame);
+#endif
 
     pGame->pWindow = SDL_CreateWindow(WINDOW_NAME, SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, pGame->windowWidth, pGame->windowHeight, 0);
     if (!pGame->pWindow)
@@ -286,21 +295,25 @@ int init(Game *pGame)
     return 0;
 }
 
-bool loadMusic(Game *pGame) {
+#ifdef SDL_MIXER_H_
+bool loadMusic(Game *pGame)
+{
     // Load background music
-    pGame->pMusic = Mix_LoadMUS( "resources/music/catTheme.wav" );
-    if (pGame->pMusic == NULL) {
+    pGame->pMusic = Mix_LoadMUS("resources/music/catTheme.wav");
+    if (pGame->pMusic == NULL)
+    {
         printf("Failed to load background music: %s\n", Mix_GetError());
         return 0;
     }
 
     // Load sound effects
-    pGame->pCharge = Mix_LoadWAV( "resources/music/charging.wav" );
-    pGame->pHit = Mix_LoadWAV( "resources/music/hit.wav" );
-    pGame->pBonk = Mix_LoadWAV( "resources/music/bonk.wav" );
-    pGame->pWin = Mix_LoadWAV( "resources/music/win.wav" );
-    pGame->pMenuSwitch = Mix_LoadWAV( "resources/music/menuSwitch.wav" );
-    if ( (pGame->pCharge == NULL) || (pGame->pHit == NULL) || (pGame->pBonk == NULL) || (pGame->pWin == NULL) || (pGame->pMenuSwitch == NULL) ) {
+    pGame->pCharge = Mix_LoadWAV("resources/music/charging.wav");
+    pGame->pHit = Mix_LoadWAV("resources/music/hit.wav");
+    pGame->pBonk = Mix_LoadWAV("resources/music/bonk.wav");
+    pGame->pWin = Mix_LoadWAV("resources/music/win.wav");
+    pGame->pMenuSwitch = Mix_LoadWAV("resources/music/menuSwitch.wav");
+    if ((pGame->pCharge == NULL) || (pGame->pHit == NULL) || (pGame->pBonk == NULL) || (pGame->pWin == NULL) || (pGame->pMenuSwitch == NULL))
+    {
         printf("Failed to load sound effects: %s\n", Mix_GetError());
         return 0;
     }
@@ -308,6 +321,7 @@ bool loadMusic(Game *pGame) {
     // Successfully loaded music
     return 1;
 }
+#endif
 
 /*
 TODO: Uppdateringar styrda av semaforer för att göra spelet mer effektivt
@@ -394,8 +408,13 @@ void run(Game *pGame)
                     }
                     if (pGame->isConnected)
                         getPlayerData(pGame);
-                    if (oldCharge != 0 && pGame->pPlayer->charge == 0) {
-                        Mix_PlayChannel( -1, pGame->pBonk, 0 );
+                    if (oldCharge != 0 && pGame->pPlayer->charge == 0)
+                    {
+                        #ifdef SDL_MIXER_H_
+                        Mix_PlayChannel(-1, pGame->pBonk, 0);
+                        #else 
+                        ;
+                        #endif
                     }
 
                     pthread_create(&movementThread, NULL, handleInput, (void *)pGame);
@@ -430,7 +449,9 @@ void run(Game *pGame)
                     if (pGame->pPlayer->state == ALIVE)
                     {
                         pGame->pPlayer->state = WIN;
-                        Mix_PlayChannel( -1, pGame->pWin, 0 );
+                        #ifdef SDL_MIXER_H_
+                        Mix_PlayChannel(-1, pGame->pWin, 0);
+                        #endif
                     }
                 }
 
@@ -580,16 +601,16 @@ void close(Game *pGame)
         printf("Freeing memory of: pWindow\n");
         SDL_DestroyWindow(pGame->pWindow);
     }
+    #ifdef SDL_MIXER_H_
+    Mix_FreeChunk(pGame->pCharge);
+    Mix_FreeChunk(pGame->pHit);
+    Mix_FreeChunk(pGame->pWin);
+    Mix_FreeChunk(pGame->pMenuSwitch);
 
-    Mix_FreeChunk( pGame->pCharge );
-    Mix_FreeChunk( pGame->pHit );
-    Mix_FreeChunk( pGame->pWin );
-    Mix_FreeChunk( pGame->pMenuSwitch );
-    
-    Mix_FreeMusic( pGame->pMusic );
+    Mix_FreeMusic(pGame->pMusic);
 
     Mix_CloseAudio();
-
+    #endif
     SDL_Quit();
 }
 
