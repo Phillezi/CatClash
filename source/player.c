@@ -295,22 +295,22 @@ int playerCollision(Player player, Player players[], int nrOfPlayers, char direc
         case 'W': // First checks if rows overlap then if columns overlap
             if ((player.y > players[i].y) && (player.y - 1 - extraLength < players[i].y + tileSize - 1))
                 if (((player.x == players[i].x) || ((players[i].x + (tileSize - 1) > player.x) && (players[i].x < player.x)) || ((players[i].x > player.x) && (players[i].x < player.x + (tileSize - 1)))))
-                    return players[i].id;
+                    return i;
             break;
         case 'A': // First checks if columns overlap then if rows overlap
             if ((player.x > players[i].x) && (player.x - 1 - extraLength < players[i].x + tileSize - 1))
                 if (((player.y == players[i].y) || ((players[i].y + (tileSize - 1) > player.y) && (players[i].y < player.y)) || ((players[i].y > player.y) && (players[i].y < player.y + (tileSize - 1)))))
-                    return players[i].id;
+                    return i;
             break;
         case 'S': // First checks if rows overlap then if columns overlap
             if ((player.y < players[i].y) && (player.y + tileSize + extraLength > players[i].y))
                 if (((player.x == players[i].x) || ((players[i].x + (tileSize - 1) > player.x) && (players[i].x < player.x)) || ((players[i].x > player.x) && (players[i].x < player.x + (tileSize - 1)))))
-                    return players[i].id;
+                    return i;
             break;
         case 'D': // First checks if columns overlap then if rows overlap
             if ((player.x < players[i].x) && (player.x + tileSize + extraLength > players[i].x))
                 if (((player.y == players[i].y) || ((players[i].y + (tileSize - 1) > player.y) && (players[i].y < player.y)) || ((players[i].y > player.y) && (players[i].y < player.y + (tileSize - 1)))))
-                    return players[i].id;
+                    return i;
             break;
         }
     }
@@ -842,7 +842,7 @@ void chargingCollisions(Server *pServer, int originID)
                 {
                     prevTime[id] = SDL_GetTicks();
                     invincibilityTicks[id] = 1000;
-                    pkg.id = id;
+                    pkg.id = players[id].id;
                     pkg.hp = players[id].hp;
                     pkg.charge = players[id].charge;
                     pkg.charging = pkg.charge > 0 ? 1 : 0;
