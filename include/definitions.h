@@ -3,10 +3,12 @@
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_net.h>
 #include <SDL2/SDL_ttf.h>
-#include <SDL2/SDL_mixer.h>
+//#include <SDL2/SDL_mixer.h>
 #include <stdlib.h>
+#include <stdio.h>
 #include <stdbool.h>
 #include <pthread.h>
+#include <semaphore.h>
 
 // DEFINITIONS
 #define MAP_FILEPATH "resources/map.txt"
@@ -132,6 +134,7 @@ typedef struct playerNet
 
 struct game
 {
+    sem_t pGameSemaphore;
     bool packetAllocatedFlag;
     volatile bool isConnected;
     bool isDrawing;

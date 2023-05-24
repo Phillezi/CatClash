@@ -219,14 +219,10 @@ void getPlayerData(Game *pGame)
                 pGame->pMultiPlayer[j].charging = tmp.charging;
                 pGame->pMultiPlayer[j].state = tmp.state;
             }
-            else if (pGame->pPlayer->id == tmp.id)
-            {
-                if (tmp.hp <= pGame->pPlayer->hp)
-                    pGame->pPlayer->hp = tmp.hp;
-                if (tmp.charge == 0)
-                    pGame->pPlayer->charge = tmp.charge;
-                if (tmp.charging == 0)
-                    pGame->pPlayer->charging = tmp.charging;
+            else if (pGame->pPlayer->id == tmp.id) {
+                if (tmp.hp <= pGame->pPlayer->hp) pGame->pPlayer->hp = tmp.hp;
+                if (tmp.charge == 0) pGame->pPlayer->charge = tmp.charge;
+                if (tmp.charging == 0 ) pGame->pPlayer->charging = tmp.charging;
             }
         }
     }
@@ -303,23 +299,22 @@ void *timeoutIpThread(void *pNetScanIn)
     if (sem_timedwait(&pNet->waitingForMsg, &ts))
     {
         printf("Semaphore timed out\n");
-#ifdef _WIN32
+        #ifdef _WIN32
         if (_pthread_tryjoin(pNet->threadId, NULL) != 0)
         {
-
             if (pthread_cancel(pNet->threadId) != 0)
             {
                 pthread_join(pNet->threadId, NULL);
                 // SDL_Delay(2000); //printf("Could not cancel thread\n");
             }
         }
-#else
+        #else
         if (pthread_cancel(pNet->threadId) != 0)
-        {
-            pthread_join(pNet->threadId, NULL);
-            // SDL_Delay(2000); //printf("Could not cancel thread\n");
-        }
-#endif
+            {
+                pthread_join(pNet->threadId, NULL);
+                // SDL_Delay(2000); //printf("Could not cancel thread\n");
+            }
+        #endif
     }
     else
     {
@@ -327,23 +322,22 @@ void *timeoutIpThread(void *pNetScanIn)
         if (sem_timedwait(&pNet->doneWaitingForMsg, &ts))
         {
             printf("Semaphore timed out\n");
-#ifdef _WIN32
-            if (_pthread_tryjoin(pNet->threadId, NULL) != 0)
-            {
-
-                if (pthread_cancel(pNet->threadId) != 0)
-                {
-                    pthread_join(pNet->threadId, NULL);
-                    // SDL_Delay(2000); //printf("Could not cancel thread\n");
-                }
-            }
-#else
+            #ifdef _WIN32
+        if (_pthread_tryjoin(pNet->threadId, NULL) != 0)
+        {
             if (pthread_cancel(pNet->threadId) != 0)
             {
                 pthread_join(pNet->threadId, NULL);
                 // SDL_Delay(2000); //printf("Could not cancel thread\n");
             }
-#endif
+        }
+        #else
+        if (pthread_cancel(pNet->threadId) != 0)
+            {
+                pthread_join(pNet->threadId, NULL);
+                // SDL_Delay(2000); //printf("Could not cancel thread\n");
+            }
+        #endif
         }
     }
 
@@ -383,12 +377,12 @@ void *scanForGamesOnLocalNetwork(void *arg)
 
     char ipStr[16], defaultGateway[16], subnetmask[16];
 
-#ifdef _WIN32
+    #ifdef _WIN32
     getDefaultGateway(defaultGateway, subnetmask);
-#else
-    strcpy(defaultGateway, "192.168.1.1");
+    #else
+    strcpy(defaultGateway,"192.168.1.1");
     printf("Could not get default gateway of your OS, setting default-gateway to: 192.168.1.1\n");
-#endif
+    #endif
 
     printf("Default Gateway: %s\n", defaultGateway);
     printf("Subnet-mask: %s\n", subnetmask);
@@ -442,12 +436,15 @@ void *scanForGamesOnLocalNetwork(void *arg)
     for (int i = 0; i < 255; i++)
     {
         sem_wait(&net[i].done);
-#ifdef _WIN32
+        #ifdef _WIN32
         if (_pthread_tryjoin(tryOpenThread[i], NULL) != 0)
             pthread_cancel(tryOpenThread[i]);
-#else
-        pthread_join(tryOpenThread[i], NULL);
-#endif
+        #else
+            if (pthread_cancel(tryOpenThread[i]) != 0)
+            {
+                pthread_join(tryOpenThread[i], NULL);
+            }
+        #endif
 
         Uint8 errFlag = 0;
 
@@ -519,21 +516,20 @@ void *scanForGamesOnLocalNetwork(void *arg)
                 }
             }
         }
-#ifdef _WIN32
+        #ifdef _WIN32
         if (_pthread_tryjoin(timeoutThread[i], NULL) != 0)
         {
             printf("Trying to cancel timeout Thread\n");
             pthread_cancel(timeoutThread[i]);
         }
-#else
-        pthread_join(timeoutThread[i], NULL);
-#endif
+        #else
+            if (pthread_cancel(timeoutThread[i]) != 0)
+            {
+                pthread_join(timeoutThread[i], NULL);
+            }
+        #endif
 
-        // sem_destroy(&net[i].started);
-        // sem_destroy(&net[i].done);
     }
-    //    printf("%d\n",k);
-    //}
 
     pLocalServer->searchDone = true; // set done with scan flag to true
 
@@ -547,9 +543,9 @@ void *scanForGamesFromSavedList(void *arg)
     int nrOfIps = 0;
     FILE *pFile;
     pFile = fopen("resources/network/saved_ips.txt", "r");
-    if (pFile)
+    if(pFile)
     {
-        while (!feof(pFile) && nrOfIps < 100)
+        while(!feof(pFile) && nrOfIps<100)
         {
             fscanf(pFile, "%16s", pIpS[nrOfIps]);
             printf("LIST IP: %s\n", pIpS[nrOfIps]);
@@ -566,10 +562,10 @@ void *scanForGamesFromSavedList(void *arg)
 
     NetScanTcp net[nrOfIps];
     pthread_t tryOpenThread[nrOfIps], timeoutThread[nrOfIps];
-
+    
     for (int i = 0; i < nrOfIps; i++)
     {
-
+        
         if (SDLNet_ResolveHost(&net[i].ip, pIpS[i], 1234) != 0)
             printf("Could not resolve host\n");
         else
@@ -592,12 +588,15 @@ void *scanForGamesFromSavedList(void *arg)
     for (int i = 0; i < nrOfIps; i++)
     {
         sem_wait(&net[i].done);
-#ifdef _WIN32
+        #ifdef _WIN32
         if (_pthread_tryjoin(tryOpenThread[i], NULL) != 0)
             pthread_cancel(tryOpenThread[i]);
-#else
-        pthread_join(tryOpenThread[i], NULL);
-#endif
+        #else
+            if (pthread_cancel(tryOpenThread[i]) != 0)
+            {
+                pthread_join(tryOpenThread[i], NULL);
+            }
+        #endif
 
         Uint8 errFlag = 0;
 
@@ -670,18 +669,23 @@ void *scanForGamesFromSavedList(void *arg)
             }
         }
 
-#ifdef _WIN32
+        #ifdef _WIN32
         if (_pthread_tryjoin(timeoutThread[i], NULL) != 0)
         {
             printf("Trying to cancel timeout Thread\n");
             pthread_cancel(timeoutThread[i]);
         }
-#else
-        pthread_join(timeoutThread[i], NULL);
-#endif
+        #else
+        if (pthread_cancel(timeoutThread[i]) != 0)
+            {
+                pthread_join(timeoutThread[i], NULL);
+            }
+        #endif
     }
 
     pLocalServer->searchDone = true; // set done with scan flag to true
 
     return NULL;
+
+
 }

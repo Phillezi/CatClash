@@ -10,8 +10,8 @@
 
 void centerPlayer(Game *pGame, Player *pPlayer)
 {
-    while (pGame->isDrawing)
-        ; // temporary fix to screenTearing?
+    /*while (pGame->isDrawing)
+        ; // temporary fix to screenTearing?*/
 
     int screenShiftAmount = pGame->movementAmount;
 
@@ -66,6 +66,7 @@ void *handleInput(void *pGameIn) // Game *pGame)
     const Uint8 *currentKeyStates = SDL_GetKeyboardState(NULL);
     float scaleY = (float)pGame->map[0].wall.h / pGame->world.tileSize;
     float scaleX = (float)pGame->map[0].wall.w / pGame->world.tileSize;
+    sem_wait(&pGame->pGameSemaphore);
     if (pGame->pPlayer->charge == 0)
         pGame->pPlayer->charging = 0;
 
@@ -247,7 +248,9 @@ void *handleInput(void *pGameIn) // Game *pGame)
             centerPlayer(pGame, &pGame->pMultiPlayer[pGame->tempID]);
         break;
     }
-    return 0;
+    sem_post(&pGame->pGameSemaphore);
+    
+    return NULL;
 }
 
 void movePlayer(Player *pPlayer, char direction)
@@ -498,9 +501,24 @@ void loadMedia(SDL_Renderer *pRenderer, SDL_Texture **pPlayerTexture, SDL_Rect g
 
     if (!textureLoaded)
     {
-        SDL_Surface *gCatSurface = IMG_Load("resources/cat3.PNG");
-        *pPlayerTexture = SDL_CreateTextureFromSurface(pRenderer, gCatSurface);
-        textureLoaded = true;
+        printf("Loading texture\n");
+        SDL_Surface *gCatSurface = IMG_Load("resources/cat3.png");
+        if(gCatSurface)
+        {
+            *pPlayerTexture = SDL_CreateTextureFromSurface(pRenderer, gCatSurface);
+            if(!*pPlayerTexture)
+            {
+                printf("failed to load texture\n");
+            }
+            else
+                textureLoaded = true;
+            SDL_FreeSurface(gCatSurface);
+        }
+        else
+        {
+            printf("Failed to load surface\n");
+        }
+        
     }
 
     int w = 26, h = 26;

@@ -282,6 +282,7 @@ int catSelMenu(Game *pGame)
 
 int mainMenu(Game *pGame)
 {
+    pGame->isConnected = false;
     SelectedMode mode = PLAY;
 
     bool quit = false;
@@ -671,8 +672,13 @@ int serverSelectMenu(Game *pGame)
     Text *pCheckLocal = createText(pGame->pRenderer, 0, 0, 0, pLocalFont, "Press \"Scan network\" to start a scan", areaCenterX, buttons[2].y + buttons[2].h / 2);
     Text *pExitText = createText(pGame->pRenderer, 0, 0, 0, pLocalFont, "Back", buttons[firstInButtonRow * 4].x + (buttons[firstInButtonRow * 4].w / 2), buttons[firstInButtonRow * 4].y + (buttons[firstInButtonRow * 4].h / 2));
     Text *pSearchText = createText(pGame->pRenderer, 0, 0, 0, pLocalFont, "Search", buttons[lastButton].x + (buttons[lastButton].w / 2), buttons[lastButton].y + (buttons[lastButton].h / 2));
+    #ifdef _WIN32
     Text *pStartScanText = createText(pGame->pRenderer, 0, 0, 0, pLocalFont, "Scan network", buttons[lastButton - 1].x + (buttons[lastButton - 1].w / 2), buttons[lastButton - 1].y + (buttons[lastButton - 1].h / 2));
     Text *pStartListScanText = createText(pGame->pRenderer, 0, 0, 0, pLocalFont, "Scan saved", buttons[lastButton - 2].x + (buttons[lastButton - 2].w / 2), buttons[lastButton - 2].y + (buttons[lastButton - 2].h / 2));
+    #else
+    Text *pStartScanText = createText(pGame->pRenderer, 255, 0, 0, pLocalFont, "Unsupp OS", buttons[lastButton - 1].x + (buttons[lastButton - 1].w / 2), buttons[lastButton - 1].y + (buttons[lastButton - 1].h / 2));
+    Text *pStartListScanText = createText(pGame->pRenderer, 255, 0, 0, pLocalFont, "Unsupp OS", buttons[lastButton - 2].x + (buttons[lastButton - 2].w / 2), buttons[lastButton - 2].y + (buttons[lastButton - 2].h / 2));
+    #endif
 
     Text *pIpText[firstInButtonRow];
     Text *pAmountOfPlayersText[firstInButtonRow];

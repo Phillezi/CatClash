@@ -17,63 +17,114 @@ int init(Game *pGame);
 bool loadMusic(Game *pGame);
 #endif
 void run(Game *pGame);
-void close(Game *pGame);
+void closeG(Game *pGame);
 void *updateScreen(void *pGameIn);
+
+Game *createGame()
+{
+    Game *pNew_game = (Game *)malloc(sizeof(Game));
+    pNew_game->pPlayer = NULL;
+    pNew_game->pMultiPlayer = NULL;
+    pNew_game->pWindow = NULL;
+    pNew_game->pRenderer= NULL;
+    pNew_game->pPlayerTexture = NULL;
+    pNew_game->pPacket = NULL;
+    pNew_game->pClient = NULL;
+    for(int i = 0; i < TILES; i++)
+        pNew_game->pTileTextures[i] = NULL;
+
+    // Set variables
+    pNew_game->isConnected = false;
+    pNew_game->packetAllocatedFlag = 0;
+    pNew_game->ui.playerTookDamage = false;
+    pNew_game->isDrawing = false;
+    pNew_game->nrOfPlayers = 0;
+    pNew_game->nrOfPlayersAlive = 0;
+    pNew_game->state = START;
+
+    // UI stuff
+    pNew_game->ui.playerTookDamage = false;
+    pNew_game->ui.damageRedChannel = 0;
+    pNew_game->ui.pMenuText = NULL;
+    pNew_game->ui.pOverText = NULL;
+    pNew_game->ui.pFpsText = NULL;
+    pNew_game->ui.pPlayerName = NULL;
+    pNew_game->ui.pWinText = NULL;
+    pNew_game->ui.pGameFont = NULL;
+    pNew_game->ui.pFpsFont = NULL;
+    pNew_game->ui.pNameTagFont = NULL;
+
+    #ifdef SDL_MIXER_H_
+    pNew_game->pMusic = NULL;
+    pNew_game->pCharge = NULL;
+    pNew_game->pHit = NULL;
+    pNew_game->pBonk = NULL;
+    pNew_game->pWin = NULL;
+    pNew_game->pMenuSwitch = NULL;
+    #endif
+
+    return pNew_game;
+}
 
 int main(int argv, char **args)
 {
     printf("If the game doesnt start, try again or comment out \"#include <SDL2/SDL_mixer.h>\" in \"\\include\\definitions.h\"\n");
-    Game game;
-    // game.serverThread;
-    char mapName[31];
+    Game *pGame = createGame();
+    char *mapName = (char *)malloc(31*sizeof(char));
 
-    // game.serverIsHosted = false;
-
-    if (init(&game))
+    if(!pGame)
     {
-        close(&game);
+        printf("Couldnt create Game\n");
+        free(mapName);
+        return 1;
+    }
+    if (init(pGame))
+    {
+        closeG(pGame);
+        free(pGame);
         return 1;
     }
     while (1)
     {
-        switch (mainMenu(&game))
+        switch (mainMenu(pGame))
         {
         case PLAY:
-            if (testSelectMenu(&game, mapName))
+            if (testSelectMenu(pGame, mapName))
                 break;
-            run(&game);
+            run(pGame);
             break;
         case EDIT:
-            if (testSelectMenu(&game, mapName))
+            if (testSelectMenu(pGame, mapName))
                 break;
-            levelEditor(&game);
+            levelEditor(pGame);
             break;
         case QUIT:
             printf("Closing...\n");
 
             printf("Closing game...\n");
-            close(&game);
+            closeG(pGame);
+            free(pGame);
             printf("Done closing!\n");
             return 0;
             break;
         case JOIN:
-            switch (serverSelectMenu(&game))
+            switch (serverSelectMenu(pGame))
             {
             case 0:
                 break;
             case 1:
-                if (joinServerMenu(&game))
+                if (joinServerMenu(pGame))
                     break;
             case 2:
-                while (!serverLobby(&game))
+                while (!serverLobby(pGame))
                 {
-                    run(&game);
+                    run(pGame);
                 }
                 break;
             }
             break;
         case CATSEL:
-            if (catSelMenu(&game))
+            if (catSelMenu(pGame))
                 break;
             break;
         case HOST:
@@ -84,12 +135,16 @@ int main(int argv, char **args)
             break;
         }
     }
+    closeG(pGame);
+    free(pGame);
+    free(mapName);
+    return 0;
 }
 
 int init(Game *pGame)
 {
+    sem_init(&pGame->pGameSemaphore, 0, 1);
     printf("\n\n\nLoading.");
-    pGame->isConnected = false;
     char windowTitle[100] = "CatClash   |";
     if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO) != 0)
     {
@@ -114,13 +169,6 @@ int init(Game *pGame)
     // Initialize SDL_mixer
     printf(".");
 
-    pGame->pMusic = NULL;
-    pGame->pCharge = NULL;
-    pGame->pHit = NULL;
-    pGame->pBonk = NULL;
-    pGame->pWin = NULL;
-    pGame->pMenuSwitch = NULL;
-
     printf(".");
     if (Mix_Init(MIX_INIT_OGG | MIX_INIT_FLAC | MIX_INIT_MID | MIX_INIT_MOD | MIX_INIT_MP3) == 0)
     {
@@ -140,9 +188,9 @@ int init(Game *pGame)
         printf("Failed to load music\n");
         return 1;
     }
-    printf(".");
-    if (Mix_PlayingMusic() == 0)
+    else if (Mix_PlayingMusic() == 0)
     {
+        printf(".");
         if (Mix_PlayMusic(pGame->pMusic, -1) == -1)
         {
             printf("Failed to play music\n");
@@ -150,6 +198,7 @@ int init(Game *pGame)
         }
     }
     printf(".");
+    
     #endif
     printf("\nDone Initializing Libs\n");
     if (readConfig(pGame)) // couldnt read config
@@ -176,6 +225,7 @@ int init(Game *pGame)
         printf("Error: Failed to create player\n");
         return 1;
     }
+
     #ifdef SDL_MIXER_H_
     setVolume(pGame);
     #endif
@@ -300,12 +350,7 @@ int init(Game *pGame)
 
     pGame->pPlayer->idle = 1;
     pGame->pPlayer->charging = 0;
-
     pGame->tempID = 0;
-
-    pGame->packetAllocatedFlag = 0;
-
-    pGame->ui.playerTookDamage = false;
 
     return 0;
 }
@@ -358,9 +403,6 @@ bool loadMusic(Game *pGame)
 }
 #endif
 
-/*
-TODO: Uppdateringar styrda av semaforer för att göra spelet mer effektivt
-*/
 void run(Game *pGame)
 {
     bool playerWasConnected = false;
@@ -369,8 +411,6 @@ void run(Game *pGame)
     sprintf(windowTitle, "CLIENT: %d", pGame->pPlayer->id);
     SDL_SetWindowTitle(pGame->pWindow, windowTitle);
 
-    // if(pGame->config.multiThreading)
-    // pthread_t renderThread;
     int oldX = 0;
     int oldY = 0;
     int oldCharge = 0;
@@ -380,6 +420,8 @@ void run(Game *pGame)
     bool exit = false;
     int frameCounter = 0, oneSecTimer = 0, previousTime = 0, movementPreviousTime = 0;
     int previousPlayerHP = pGame->pPlayer->hp;
+    if(pGame->config.multiThreading)
+        pthread_create(&movementThread, NULL, handleInput, (void *)pGame);
     while (!exit)
     {
         if (SDL_GetTicks() - oneSecTimer >= 1000) // Performance monitor
@@ -443,19 +485,22 @@ void run(Game *pGame)
                     }
                     if (pGame->isConnected)
                         getPlayerData(pGame);
+                    
                     if (oldCharge != 0 && pGame->pPlayer->charge == 0)
                     {
-#ifdef SDL_MIXER_H_
+                        #ifdef SDL_MIXER_H_
                         Mix_PlayChannel(-1, pGame->pBonk, 0);
-#else
+                        #else
                         ;
-#endif
+                        #endif
                     }
+                    
 
                     pthread_create(&movementThread, NULL, handleInput, (void *)pGame);
                 }
                 else
                 {
+                    static int idle = 0;
                     if (pGame->isConnected)
                         getPlayerData(pGame);
                     if (oldCharge != 0 && pGame->pPlayer->charge == 0)
@@ -476,7 +521,13 @@ void run(Game *pGame)
                             oldCharge = pGame->pPlayer->charge;
                             // printf("Trying to send data\n");
                             sendData(pGame);
+                            idle = 1;
                         }
+                        else if (idle)
+                        {
+                            sendData(pGame);
+                            idle = 0;
+                        } 
                     }
                 }
                 if (pGame->pPlayer->hp < previousPlayerHP)
@@ -554,7 +605,7 @@ void run(Game *pGame)
     }*/
 }
 
-void close(Game *pGame)
+void closeG(Game *pGame)
 {
 
     if (pGame->pMultiPlayer)
@@ -670,7 +721,7 @@ void close(Game *pGame)
 void *updateScreen(void *pGameIn)
 {
     Game *pGame = (Game *)pGameIn;
-
+    
     SDL_Rect backGround;
     backGround.x = pGame->map[0].wall.x;
     backGround.y = pGame->map[0].wall.y + (pGame->world.tileSize - pGame->map[0].wall.h);
@@ -680,7 +731,7 @@ void *updateScreen(void *pGameIn)
     SDL_RenderClear(pGame->pRenderer);
     SDL_RenderCopy(pGame->pRenderer, pGame->pTileTextures[19], NULL, &backGround);
     SDL_Rect temp;
-
+    sem_wait(&pGame->pGameSemaphore);
     translatePositionToScreen(pGame);
     if (pGame->ui.playerTookDamage)
     {
@@ -691,6 +742,7 @@ void *updateScreen(void *pGameIn)
     {
         pGame->ui.damageRedChannel--;
     }
+    
     pGame->isDrawing = true; // temporary fix to screen-tearing?
     int darkness = 0;
     for (int i = 0; i < MAPSIZE * MAPSIZE; i++)
@@ -784,6 +836,6 @@ void *updateScreen(void *pGameIn)
     }
 
     SDL_RenderPresent(pGame->pRenderer);
-
+    sem_post(&pGame->pGameSemaphore);
     return NULL;
 }

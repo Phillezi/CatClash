@@ -3,3 +3,5 @@
 *.exe
 .vscode/
 .vscode/c_cpp_properties.json
+main
+betterServer
