@@ -148,13 +148,6 @@ int init(Game *pGame)
     // Initialize SDL_mixer
     printf(".");
 
-    pGame->pMusic = NULL;
-    pGame->pCharge = NULL;
-    pGame->pHit = NULL;
-    pGame->pBonk = NULL;
-    pGame->pWin = NULL;
-    pGame->pMenuSwitch = NULL;
-
     printf(".");
     if (Mix_Init(MIX_INIT_OGG | MIX_INIT_FLAC | MIX_INIT_MID | MIX_INIT_MOD | MIX_INIT_MP3) == 0)
     {
@@ -172,11 +165,11 @@ int init(Game *pGame)
     if (!loadMusic(pGame))
     {
         printf("Failed to load music\n");
-        return 1;
+        //return 1;
     }
-    printf(".");
-    if (Mix_PlayingMusic() == 0)
+    else if (Mix_PlayingMusic() == 0)
     {
+        printf(".");
         if (Mix_PlayMusic(pGame->pMusic, -1) == -1)
         {
             printf("Failed to play music\n");
@@ -184,6 +177,7 @@ int init(Game *pGame)
         }
     }
     printf(".");
+    
     #endif
     printf("\nDone Initializing Libs\n");
     if (readConfig(pGame)) // couldnt read config
@@ -341,7 +335,7 @@ int init(Game *pGame)
 
     pGame->ui.playerTookDamage = false;
 
-    sem_init(&pGame->pGameSemaphore, 0, 1);
+    //sem_init(&pGame->pGameSemaphore, 0, 1);
 
     return 0;
 }
@@ -353,6 +347,7 @@ bool loadMusic(Game *pGame)
     pGame->pMusic = Mix_LoadMUS("resources/music/catTheme.wav");
     if (pGame->pMusic == NULL)
     {
+        #undef SDL_MIXER_H_
         printf("Failed to load background music: %s\n", Mix_GetError());
         return 0;
     }
@@ -361,30 +356,35 @@ bool loadMusic(Game *pGame)
     pGame->pCharge = Mix_LoadWAV("resources/music/charging.wav");
     if((pGame->pCharge == NULL))
     {
+        #undef SDL_MIXER_H_
         printf("Failed to load sound effects: %s\n", Mix_GetError());
         return 0;
     }
     pGame->pHit = Mix_LoadWAV("resources/music/hit.wav");
     if((pGame->pHit == NULL))
     {
+        #undef SDL_MIXER_H_
         printf("Failed to load sound effects: %s\n", Mix_GetError());
         return 0;
     }
     pGame->pBonk = Mix_LoadWAV("resources/music/bonk.wav");
     if((pGame->pBonk == NULL))
     {
+        #undef SDL_MIXER_H_
         printf("Failed to load sound effects: %s\n", Mix_GetError());
         return 0;
     }
     pGame->pWin = Mix_LoadWAV("resources/music/win.wav");
     if((pGame->pWin == NULL))
     {
+        #undef SDL_MIXER_H_
         printf("Failed to load sound effects: %s\n", Mix_GetError());
         return 0;
     }
     pGame->pMenuSwitch = Mix_LoadWAV("resources/music/menuSwitch.wav");
     if ((pGame->pMenuSwitch == NULL))
     {
+        #undef SDL_MIXER_H_
         printf("Failed to load sound effects: %s\n", Mix_GetError());
         return 0;
     }
@@ -716,7 +716,7 @@ void *updateScreen(void *pGameIn)
     SDL_RenderClear(pGame->pRenderer);
     SDL_RenderCopy(pGame->pRenderer, pGame->pTileTextures[19], NULL, &backGround);
     SDL_Rect temp;
-    sem_wait(&pGame->pGameSemaphore);
+    //sem_wait(&pGame->pGameSemaphore);
     translatePositionToScreen(pGame);
     if (pGame->ui.playerTookDamage)
     {
@@ -820,7 +820,7 @@ void *updateScreen(void *pGameIn)
     }
 
     SDL_RenderPresent(pGame->pRenderer);
-    sem_post(&pGame->pGameSemaphore);
+    //sem_post(&pGame->pGameSemaphore);
 
     return NULL;
 }
