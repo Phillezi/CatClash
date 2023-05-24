@@ -10,8 +10,8 @@
 
 void centerPlayer(Game *pGame, Player *pPlayer)
 {
-    while (pGame->isDrawing)
-        ; // temporary fix to screenTearing?
+    /*while (pGame->isDrawing)
+        ; // temporary fix to screenTearing?*/
 
     int screenShiftAmount = pGame->movementAmount;
 
@@ -63,7 +63,6 @@ void centerPlayer(Game *pGame, Player *pPlayer)
 void *handleInput(void *pGameIn) // Game *pGame)
 {
     Game *pGame = (Game *)pGameIn;
-    //sem_wait(&pGame->pGameSemaphore);
     const Uint8 *currentKeyStates = SDL_GetKeyboardState(NULL);
     float scaleY = (float)pGame->map[0].wall.h / pGame->world.tileSize;
     float scaleX = (float)pGame->map[0].wall.w / pGame->world.tileSize;
@@ -248,8 +247,9 @@ void *handleInput(void *pGameIn) // Game *pGame)
             centerPlayer(pGame, &pGame->pMultiPlayer[pGame->tempID]);
         break;
     }
-    //sem_post(&pGame->pGameSemaphore);
-    return 0;
+    sem_post(&pGame->pGameSemaphore);
+    
+    return NULL;
 }
 
 void movePlayer(Player *pPlayer, char direction)

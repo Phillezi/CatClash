@@ -134,7 +134,7 @@ typedef struct playerNet
 
 struct game
 {
-    //sem_t pGameSemaphore;
+    sem_t pGameSemaphore;
     bool packetAllocatedFlag;
     volatile bool isConnected;
     bool isDrawing;

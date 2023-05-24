@@ -143,6 +143,7 @@ int main(int argv, char **args)
 
 int init(Game *pGame)
 {
+    sem_init(&pGame->pGameSemaphore, 0, 1);
     printf("\n\n\nLoading.");
     char windowTitle[100] = "CatClash   |";
     if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO) != 0)
@@ -421,8 +422,6 @@ void run(Game *pGame)
     sprintf(windowTitle, "CLIENT: %d", pGame->pPlayer->id);
     SDL_SetWindowTitle(pGame->pWindow, windowTitle);
 
-    // if(pGame->config.multiThreading)
-    // pthread_t renderThread;
     int oldX = 0;
     int oldY = 0;
     int oldCharge = 0;
@@ -739,7 +738,7 @@ void *updateScreen(void *pGameIn)
     SDL_RenderClear(pGame->pRenderer);
     SDL_RenderCopy(pGame->pRenderer, pGame->pTileTextures[19], NULL, &backGround);
     SDL_Rect temp;
-    //sem_wait(&pGame->pGameSemaphore);
+    sem_wait(&pGame->pGameSemaphore);
     translatePositionToScreen(pGame);
     if (pGame->ui.playerTookDamage)
     {
@@ -843,7 +842,7 @@ void *updateScreen(void *pGameIn)
     }
 
     SDL_RenderPresent(pGame->pRenderer);
-    //sem_post(&pGame->pGameSemaphore);
+    sem_post(&pGame->pGameSemaphore);
 
     return NULL;
 }
