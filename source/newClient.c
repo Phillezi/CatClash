@@ -440,7 +440,10 @@ void *scanForGamesOnLocalNetwork(void *arg)
         if (_pthread_tryjoin(tryOpenThread[i], NULL) != 0)
             pthread_cancel(tryOpenThread[i]);
         #else
-            pthread_join(tryOpenThread[i], NULL);
+            if (pthread_cancel(tryOpenThread[i]) != 0)
+            {
+                pthread_join(tryOpenThread[i], NULL);
+            }
         #endif
 
         Uint8 errFlag = 0;
@@ -520,14 +523,13 @@ void *scanForGamesOnLocalNetwork(void *arg)
             pthread_cancel(timeoutThread[i]);
         }
         #else
-        pthread_join(timeoutThread[i], NULL);
+            if (pthread_cancel(timeoutThread[i]) != 0)
+            {
+                pthread_join(timeoutThread[i], NULL);
+            }
         #endif
 
-        // sem_destroy(&net[i].started);
-        // sem_destroy(&net[i].done);
     }
-    //    printf("%d\n",k);
-    //}
 
     pLocalServer->searchDone = true; // set done with scan flag to true
 
@@ -590,7 +592,10 @@ void *scanForGamesFromSavedList(void *arg)
         if (_pthread_tryjoin(tryOpenThread[i], NULL) != 0)
             pthread_cancel(tryOpenThread[i]);
         #else
-            pthread_join(tryOpenThread[i], NULL);
+            if (pthread_cancel(tryOpenThread[i]) != 0)
+            {
+                pthread_join(tryOpenThread[i], NULL);
+            }
         #endif
 
         Uint8 errFlag = 0;
@@ -671,7 +676,10 @@ void *scanForGamesFromSavedList(void *arg)
             pthread_cancel(timeoutThread[i]);
         }
         #else
-        pthread_join(timeoutThread[i], NULL);
+        if (pthread_cancel(timeoutThread[i]) != 0)
+            {
+                pthread_join(timeoutThread[i], NULL);
+            }
         #endif
     }
 
