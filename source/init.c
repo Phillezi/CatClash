@@ -223,13 +223,12 @@ int readConfig(Game *pGame)
     {
         int temp = 0, temp2 = 0;
         char tempMasterVolume[4] = {0};
-        if (fscanf(fp, "FPS:%d RES:%dx%d VSYNC:%d MULTITHREADING:%d VOLUME:%d ", &pGame->config.fps, &pGame->windowWidth, &pGame->windowHeight, &temp, &temp2, &pGame->config.volumeMusic) < 6)
+        if (fscanf(fp, "FPS:%d RES:%dx%d VSYNC:%d MULTITHREADING:%d MUSICVOLUME:%d ", &pGame->config.fps, &pGame->windowWidth, &pGame->windowHeight, &temp, &temp2, &pGame->config.volumeMusic) < 6)
         {
             fclose(fp);
             return -1;
         }
         fscanf(fp, "VOL_MASTER: %3[^%]%*c", tempMasterVolume);
-        printf("%s\n", tempMasterVolume);
         float tmp = 0;
         for (int i = 0; i < strlen(tempMasterVolume); i++)
         {
