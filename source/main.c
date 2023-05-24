@@ -145,6 +145,7 @@ int init(Game *pGame)
 
     if (readConfig(pGame)) // couldnt read config
     {
+        pGame->config.fps = 60;
         pGame->config.vSync = false;
         pGame->config.multiThreading = true;
         pGame->config.volumeMusic = 15;
@@ -348,7 +349,6 @@ void run(Game *pGame)
     int oldHealth = 0;
     pthread_t movementThread;
     bool exit = false;
-    pGame->config.fps = 60;
     int frameCounter = 0, oneSecTimer = 0, previousTime = 0, movementPreviousTime = 0;
     while (!exit)
     {
@@ -365,7 +365,7 @@ void run(Game *pGame)
         }
 
         int deltaTime = SDL_GetTicks() - previousTime;
-        if (deltaTime >= (1000 / FPS))
+        if (deltaTime >= (1000 / pGame->config.fps))
         {
             if (pGame->isConnected)
             {

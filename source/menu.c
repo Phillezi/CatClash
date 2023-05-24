@@ -24,7 +24,7 @@ int joinServerMenu(Game *pGame)
     while (!exit)
     {
         SDL_Event event;
-        while (SDL_PollEvent(&event))
+        while (SDL_WaitEventTimeout(&event, 1000/pGame->config.fps))
         {
             if (event.type == SDL_QUIT)
             {
@@ -64,8 +64,8 @@ int joinServerMenu(Game *pGame)
                 }
             }
         }
-        if (SDL_GetTicks() - previousTime >= 1000 / 60)
-        {
+        /*if (SDL_GetTicks() - previousTime >= 1000 / 60)
+        {*/
             previousTime = SDL_GetTicks();
 
             SDL_SetRenderDrawColor(pGame->pRenderer, 255, 255, 255, 255);
@@ -79,7 +79,7 @@ int joinServerMenu(Game *pGame)
             }
 
             SDL_RenderPresent(pGame->pRenderer);
-        }
+        //}
     }
     freeText(pIpText);
     freeText(pPrompt);
@@ -155,7 +155,7 @@ int testSelectMenu(Game *pGame, char *mapName)
     while (!exit)
     {
         SDL_Event event;
-        while (SDL_PollEvent(&event))
+        while (SDL_WaitEventTimeout(&event, 1000/pGame->config.fps))
         {
             if (event.type == SDL_QUIT)
             {
@@ -221,9 +221,9 @@ int testSelectMenu(Game *pGame, char *mapName)
                 }
             }
         }
-        if (SDL_GetTicks() - previousTime >= 1000 / 60)
+        /*if (SDL_GetTicks() - previousTime >= 1000 / 60)
         {
-            previousTime = SDL_GetTicks();
+            previousTime = SDL_GetTicks();*/
 
             SDL_SetRenderDrawColor(pGame->pRenderer, 255, 255, 255, 255);
             SDL_RenderClear(pGame->pRenderer);
@@ -240,7 +240,7 @@ int testSelectMenu(Game *pGame, char *mapName)
             drawText(pText[selected], pGame->pRenderer);
 
             SDL_RenderPresent(pGame->pRenderer);
-        }
+        //}
     }
     TTF_CloseFont(listFont);
     for (int i = 0; i < len; i++)
@@ -324,7 +324,8 @@ int mainMenu(Game *pGame)
     {
         int previousMode = mode;
         SDL_Event event;
-        while (SDL_PollEvent(&event))
+        
+        while (SDL_WaitEventTimeout(&event, 1000/pGame->config.fps))
         {
             if (event.type == SDL_QUIT)
             {
@@ -534,10 +535,10 @@ int mainMenu(Game *pGame)
             #endif
         }
 
-        deltaTime = SDL_GetTicks() - previousTime;
+        /*deltaTime = SDL_GetTicks() - previousTime;
         if (deltaTime >= 1000 / 60)
         {
-            previousTime = SDL_GetTicks();
+            previousTime = SDL_GetTicks();*/
             switch (rand() % 3 + 1)
             {
             case 1:
@@ -618,7 +619,7 @@ int mainMenu(Game *pGame)
             if (pName)
                 drawText(pName, pGame->pRenderer); // PLAYERNAME ADDITION TEST
             SDL_RenderPresent(pGame->pRenderer);
-        }
+        //}
     }
     freeText(pPlay);
     freeText(pLvlEdit);
@@ -710,7 +711,7 @@ int serverSelectMenu(Game *pGame)
     while (!exit || !localServerInfo.searchDone) // wait for search threads
     {
         SDL_Event event;
-        while (SDL_PollEvent(&event))
+        while (SDL_WaitEventTimeout(&event, 1000/pGame->config.fps))
         {
             if (event.type == SDL_QUIT)
             {
@@ -857,10 +858,10 @@ int serverSelectMenu(Game *pGame)
             freeText(pCheckLocal);
             pCheckLocal = createText(pGame->pRenderer, 0, 0, 0, pLocalFont, "Checking Local network...", areaCenterX, buttons[2].y + buttons[2].h / 2);
         }
-        Uint32 deltaTime = SDL_GetTicks() - prevUpdateTick;
+        /*Uint32 deltaTime = SDL_GetTicks() - prevUpdateTick;
         if (deltaTime >= 1000 / 60)
         {
-            prevUpdateTick = SDL_GetTicks();
+            prevUpdateTick = SDL_GetTicks();*/
 
             if (localServerInfo.searchDone && !searchResultChecked)
             {
@@ -965,7 +966,7 @@ int serverSelectMenu(Game *pGame)
                 drawText(pStartListScanText, pGame->pRenderer);
 
             SDL_RenderPresent(pGame->pRenderer);
-        }
+        //}
     }
     printf("Exiting server select menu...\n");
     for (int i = 0; i < localServerInfo.nrOfServersFound; i++)
@@ -1040,10 +1041,10 @@ int serverLobby(Game *pGame)
     }
     while (!exit)
     {
-        deltaTime = SDL_GetTicks() - prevUpdateTick;
+        /*deltaTime = SDL_GetTicks() - prevUpdateTick;
         if (deltaTime >= 1000 / 60)
         {
-            prevUpdateTick = SDL_GetTicks();
+            prevUpdateTick = SDL_GetTicks();*/
             if (pGame->isConnected)
             {
                 checkTCP(pGame);
@@ -1138,9 +1139,9 @@ int serverLobby(Game *pGame)
             }
 
             SDL_RenderPresent(pGame->pRenderer);
-        }
+        //}
         SDL_Event event;
-        while (SDL_PollEvent(&event))
+        while (SDL_WaitEventTimeout(&event, 1000/pGame->config.fps))
         {
             if (event.type == SDL_QUIT)
             {
