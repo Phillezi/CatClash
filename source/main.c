@@ -630,6 +630,7 @@ void close(Game *pGame)
 #ifdef SDL_MIXER_H_
     Mix_FreeChunk(pGame->pCharge);
     Mix_FreeChunk(pGame->pHit);
+    Mix_FreeChunk(pGame->pBonk);
     Mix_FreeChunk(pGame->pWin);
     Mix_FreeChunk(pGame->pMenuSwitch);
 
