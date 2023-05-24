@@ -17,63 +17,93 @@ int init(Game *pGame);
 bool loadMusic(Game *pGame);
 #endif
 void run(Game *pGame);
-void close(Game *pGame);
+void closeG(Game *pGame);
 void *updateScreen(void *pGameIn);
+
+Game *createGame()
+{
+    Game *pNew_game = (Game *)malloc(sizeof(Game));
+    pNew_game->pPlayer = NULL;
+    pNew_game->pMultiPlayer = NULL;
+    pNew_game->pWindow = NULL;
+    pNew_game->pRenderer= NULL;
+    pNew_game->pPlayerTexture = NULL;
+    pNew_game->pPacket = NULL;
+    pNew_game->pClient = NULL;
+    #ifdef SDL_MIXER_H_
+    pNew_game->pMusic = NULL;
+    pNew_game->pCharge = NULL;
+    pNew_game->pHit = NULL;
+    pNew_game->pBonk = NULL;
+    pNew_game->pWin = NULL;
+    pNew_game->pMenuSwitch = NULL;
+    #endif
+    return pNew_game;
+}
 
 int main(int argv, char **args)
 {
     printf("If the game doesnt start, try again or comment out \"#include <SDL2/SDL_mixer.h>\" in \"\\include\\definitions.h\"\n");
-    Game game;
+    Game *pGame = createGame();
     // game.serverThread;
-    char mapName[31];
+    char *mapName = (char *)malloc(31*sizeof(char));
 
     // game.serverIsHosted = false;
-
-    if (init(&game))
+    if(!pGame)
     {
-        close(&game);
+        printf("Couldnt create Game\n");
+        //closeG(pGame);
+        free(mapName);
+        //free(pGame);
+        return 1;
+    }
+    if (init(pGame))
+    {
+        closeG(pGame);
+        free(pGame);
         return 1;
     }
     while (1)
     {
-        switch (mainMenu(&game))
+        switch (mainMenu(pGame))
         {
         case PLAY:
-            if (testSelectMenu(&game, mapName))
+            if (testSelectMenu(pGame, mapName))
                 break;
-            run(&game);
+            run(pGame);
             break;
         case EDIT:
-            if (testSelectMenu(&game, mapName))
+            if (testSelectMenu(pGame, mapName))
                 break;
-            levelEditor(&game);
+            levelEditor(pGame);
             break;
         case QUIT:
             printf("Closing...\n");
 
             printf("Closing game...\n");
-            close(&game);
+            closeG(pGame);
+            free(pGame);
             printf("Done closing!\n");
             return 0;
             break;
         case JOIN:
-            switch (serverSelectMenu(&game))
+            switch (serverSelectMenu(pGame))
             {
             case 0:
                 break;
             case 1:
-                if (joinServerMenu(&game))
+                if (joinServerMenu(pGame))
                     break;
             case 2:
-                while (!serverLobby(&game))
+                while (!serverLobby(pGame))
                 {
-                    run(&game);
+                    run(pGame);
                 }
                 break;
             }
             break;
         case CATSEL:
-            if (catSelMenu(&game))
+            if (catSelMenu(pGame))
                 break;
             break;
         case HOST:
@@ -84,11 +114,15 @@ int main(int argv, char **args)
             break;
         }
     }
+    closeG(pGame);
+    free(pGame);
+    free(mapName);
+    return 0;
 }
 
 int init(Game *pGame)
 {
-    printf("\n\n\nLoading.");
+    //printf("\n\n\nLoading.");
     pGame->isConnected = false;
     char windowTitle[100] = "CatClash   |";
     if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO) != 0)
@@ -306,6 +340,8 @@ int init(Game *pGame)
     pGame->packetAllocatedFlag = 0;
 
     pGame->ui.playerTookDamage = false;
+
+    sem_init(&pGame->pGameSemaphore, 0, 1);
 
     return 0;
 }
@@ -554,7 +590,7 @@ void run(Game *pGame)
     }*/
 }
 
-void close(Game *pGame)
+void closeG(Game *pGame)
 {
 
     if (pGame->pMultiPlayer)
@@ -670,7 +706,7 @@ void close(Game *pGame)
 void *updateScreen(void *pGameIn)
 {
     Game *pGame = (Game *)pGameIn;
-
+    
     SDL_Rect backGround;
     backGround.x = pGame->map[0].wall.x;
     backGround.y = pGame->map[0].wall.y + (pGame->world.tileSize - pGame->map[0].wall.h);
@@ -680,7 +716,7 @@ void *updateScreen(void *pGameIn)
     SDL_RenderClear(pGame->pRenderer);
     SDL_RenderCopy(pGame->pRenderer, pGame->pTileTextures[19], NULL, &backGround);
     SDL_Rect temp;
-
+    sem_wait(&pGame->pGameSemaphore);
     translatePositionToScreen(pGame);
     if (pGame->ui.playerTookDamage)
     {
@@ -784,6 +820,7 @@ void *updateScreen(void *pGameIn)
     }
 
     SDL_RenderPresent(pGame->pRenderer);
+    sem_post(&pGame->pGameSemaphore);
 
     return NULL;
 }

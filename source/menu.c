@@ -282,6 +282,7 @@ int catSelMenu(Game *pGame)
 
 int mainMenu(Game *pGame)
 {
+    pGame->isConnected = false;
     SelectedMode mode = PLAY;
 
     bool quit = false;

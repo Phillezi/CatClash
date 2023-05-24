@@ -1,6 +1,8 @@
 #include "../include/newClient.h"
 #include "../include/player.h"
+#ifdef _WIN32
 #include "../include/getDefaultGateway.h"
+#endif
 #include <semaphore.h>
 #include <time.h>
 #include <stdio.h>
@@ -297,6 +299,7 @@ void *timeoutIpThread(void *pNetScanIn)
     if (sem_timedwait(&pNet->waitingForMsg, &ts))
     {
         printf("Semaphore timed out\n");
+        #ifdef _WIN32
         if (_pthread_tryjoin(pNet->threadId, NULL) != 0)
         {
             if (pthread_cancel(pNet->threadId) != 0)
@@ -305,6 +308,13 @@ void *timeoutIpThread(void *pNetScanIn)
                 // SDL_Delay(2000); //printf("Could not cancel thread\n");
             }
         }
+        #else
+        if (pthread_cancel(pNet->threadId) != 0)
+            {
+                pthread_join(pNet->threadId, NULL);
+                // SDL_Delay(2000); //printf("Could not cancel thread\n");
+            }
+        #endif
     }
     else
     {
@@ -312,14 +322,22 @@ void *timeoutIpThread(void *pNetScanIn)
         if (sem_timedwait(&pNet->doneWaitingForMsg, &ts))
         {
             printf("Semaphore timed out\n");
-            if (_pthread_tryjoin(pNet->threadId, NULL) != 0)
+            #ifdef _WIN32
+        if (_pthread_tryjoin(pNet->threadId, NULL) != 0)
+        {
+            if (pthread_cancel(pNet->threadId) != 0)
             {
-                if (pthread_cancel(pNet->threadId) != 0)
-                {
-                    pthread_join(pNet->threadId, NULL);
-                    // SDL_Delay(2000); //printf("Could not cancel thread\n");
-                }
+                pthread_join(pNet->threadId, NULL);
+                // SDL_Delay(2000); //printf("Could not cancel thread\n");
             }
+        }
+        #else
+        if (pthread_cancel(pNet->threadId) != 0)
+            {
+                pthread_join(pNet->threadId, NULL);
+                // SDL_Delay(2000); //printf("Could not cancel thread\n");
+            }
+        #endif
         }
     }
 
