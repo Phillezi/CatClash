@@ -145,6 +145,7 @@ int init(Game *pGame)
 
     if (readConfig(pGame)) // couldnt read config
     {
+        pGame->config.fps = 60;
         pGame->config.vSync = false;
         pGame->config.multiThreading = true;
         pGame->config.volumeMusic = 15;
