@@ -508,6 +508,7 @@ void run(Game *pGame)
                 }
                 else
                 {
+                    static int idle = 0;
                     if (pGame->isConnected)
                         getPlayerData(pGame);
                     if (oldCharge != 0 && pGame->pPlayer->charge == 0)
@@ -528,7 +529,13 @@ void run(Game *pGame)
                             oldCharge = pGame->pPlayer->charge;
                             // printf("Trying to send data\n");
                             sendData(pGame);
+                            idle = 1;
                         }
+                        else if (idle)
+                        {
+                            sendData(pGame);
+                            idle = 0;
+                        } 
                     }
                 }
                 if (pGame->pPlayer->hp < previousPlayerHP)
