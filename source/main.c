@@ -740,6 +740,7 @@ void *updateScreen(void *pGameIn)
     {
         pGame->ui.damageRedChannel--;
     }
+    
     pGame->isDrawing = true; // temporary fix to screen-tearing?
     int darkness = 0;
     for (int i = 0; i < MAPSIZE * MAPSIZE; i++)
@@ -834,6 +835,5 @@ void *updateScreen(void *pGameIn)
 
     SDL_RenderPresent(pGame->pRenderer);
     sem_post(&pGame->pGameSemaphore);
-
     return NULL;
 }
