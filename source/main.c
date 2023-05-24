@@ -186,7 +186,7 @@ int init(Game *pGame)
     if (!loadMusic(pGame))
     {
         printf("Failed to load music\n");
-        //return 1;
+        return 1;
     }
     else if (Mix_PlayingMusic() == 0)
     {
@@ -352,8 +352,6 @@ int init(Game *pGame)
     pGame->pPlayer->charging = 0;
     pGame->tempID = 0;
 
-    //sem_init(&pGame->pGameSemaphore, 0, 1);
-
     return 0;
 }
 
@@ -364,7 +362,6 @@ bool loadMusic(Game *pGame)
     pGame->pMusic = Mix_LoadMUS("resources/music/catTheme.wav");
     if (pGame->pMusic == NULL)
     {
-        #undef SDL_MIXER_H_
         printf("Failed to load background music: %s\n", Mix_GetError());
         return 0;
     }
@@ -373,35 +370,30 @@ bool loadMusic(Game *pGame)
     pGame->pCharge = Mix_LoadWAV("resources/music/charging.wav");
     if((pGame->pCharge == NULL))
     {
-        #undef SDL_MIXER_H_
         printf("Failed to load sound effects: %s\n", Mix_GetError());
         return 0;
     }
     pGame->pHit = Mix_LoadWAV("resources/music/hit.wav");
     if((pGame->pHit == NULL))
     {
-        #undef SDL_MIXER_H_
         printf("Failed to load sound effects: %s\n", Mix_GetError());
         return 0;
     }
     pGame->pBonk = Mix_LoadWAV("resources/music/bonk.wav");
     if((pGame->pBonk == NULL))
     {
-        #undef SDL_MIXER_H_
         printf("Failed to load sound effects: %s\n", Mix_GetError());
         return 0;
     }
     pGame->pWin = Mix_LoadWAV("resources/music/win.wav");
     if((pGame->pWin == NULL))
     {
-        #undef SDL_MIXER_H_
         printf("Failed to load sound effects: %s\n", Mix_GetError());
         return 0;
     }
     pGame->pMenuSwitch = Mix_LoadWAV("resources/music/menuSwitch.wav");
     if ((pGame->pMenuSwitch == NULL))
     {
-        #undef SDL_MIXER_H_
         printf("Failed to load sound effects: %s\n", Mix_GetError());
         return 0;
     }
@@ -411,9 +403,6 @@ bool loadMusic(Game *pGame)
 }
 #endif
 
-/*
-TODO: Uppdateringar styrda av semaforer för att göra spelet mer effektivt
-*/
 void run(Game *pGame)
 {
     bool playerWasConnected = false;
@@ -494,14 +483,16 @@ void run(Game *pGame)
                     }
                     if (pGame->isConnected)
                         getPlayerData(pGame);
+                    
                     if (oldCharge != 0 && pGame->pPlayer->charge == 0)
                     {
-#ifdef SDL_MIXER_H_
+                        #ifdef SDL_MIXER_H_
                         Mix_PlayChannel(-1, pGame->pBonk, 0);
-#else
+                        #else
                         ;
-#endif
+                        #endif
                     }
+                    
 
                     pthread_create(&movementThread, NULL, handleInput, (void *)pGame);
                 }

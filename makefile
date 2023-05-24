@@ -1,7 +1,7 @@
 # Makefile for Windows
 SRCDIR=./source
 CC=gcc
-CFLAGS = -c -O3
+CFLAGS = -g -c
 LDFLAGS = -Wall
 
 # Determine the operating system
