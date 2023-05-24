@@ -298,6 +298,8 @@ int init(Game *pGame)
 
     pGame->packetAllocatedFlag = 0;
 
+    pGame->ui.playerTookDamage = false;
+
     return 0;
 }
 
@@ -360,7 +362,6 @@ void run(Game *pGame)
                 freeText(pGame->ui.pFpsText);
             sprintf(buffer, "%d", frameCounter);
             pGame->ui.pFpsText = createText(pGame->pRenderer, 0, 255, 0, pGame->ui.pFpsFont, buffer, pGame->windowWidth - pGame->world.tileSize, pGame->world.tileSize);
-            // printf("%s\n", buffer);
             frameCounter = 0;
         }
 
@@ -387,6 +388,7 @@ void run(Game *pGame)
             if (movementDeltaTime >= (1000 / 60))
             {
                 movementPreviousTime = SDL_GetTicks();
+                int previousPlayerHP = pGame->pPlayer->hp;
                 if (pGame->config.multiThreading)
                 {
                     static int idle = 0;
@@ -415,11 +417,11 @@ void run(Game *pGame)
                         getPlayerData(pGame);
                     if (oldCharge != 0 && pGame->pPlayer->charge == 0)
                     {
-#ifdef SDL_MIXER_H_
+                        #ifdef SDL_MIXER_H_
                         Mix_PlayChannel(-1, pGame->pBonk, 0);
-#else
+                        #else
                         ;
-#endif
+                        #endif
                     }
 
                     pthread_create(&movementThread, NULL, handleInput, (void *)pGame);
@@ -428,6 +430,12 @@ void run(Game *pGame)
                 {
                     if (pGame->isConnected)
                         getPlayerData(pGame);
+                    if (oldCharge != 0 && pGame->pPlayer->charge == 0)
+                    {
+                        #ifdef SDL_MIXER_H_
+                        Mix_PlayChannel(-1, pGame->pBonk, 0);
+                        #endif
+                    }
                     handleInput(pGame);
                     int keepAliveDelta = SDL_GetTicks() - prevUDPTransfer;
                     if (pGame->isConnected)
@@ -443,6 +451,13 @@ void run(Game *pGame)
                         }
                     }
                 }
+                if(pGame->pPlayer->hp < previousPlayerHP)
+                {
+                    pGame->ui.playerTookDamage = true;
+                    #ifdef SDL_MIXER_H_
+                    Mix_PlayChannel(-1, pGame->pHit, 0);
+                    #endif
+                }
 
                 if (pGame->pPlayer->hp <= 0 && pGame->pPlayer->state == ALIVE)
                 {
@@ -454,9 +469,9 @@ void run(Game *pGame)
                     if (pGame->pPlayer->state == ALIVE)
                     {
                         pGame->pPlayer->state = WIN;
-#ifdef SDL_MIXER_H_
+                        #ifdef SDL_MIXER_H_
                         Mix_PlayChannel(-1, pGame->pWin, 0);
-#endif
+                        #endif
                     }
                 }
 
@@ -637,7 +652,15 @@ void *updateScreen(void *pGameIn)
     SDL_Rect temp;
 
     translatePositionToScreen(pGame);
-
+    if(pGame->ui.playerTookDamage)
+    {
+        pGame->ui.playerTookDamage = false;
+        pGame->ui.damageRedChannel = 255;
+    }
+    else if(pGame->ui.damageRedChannel > 0)
+    {
+        pGame->ui.damageRedChannel--;
+    }
     pGame->isDrawing = true; // temporary fix to screen-tearing?
     int darkness = 0;
     for (int i = 0; i < MAPSIZE * MAPSIZE; i++)
@@ -649,7 +672,7 @@ void *updateScreen(void *pGameIn)
             if (darkness > 255)
                 darkness = 255;
             SDL_SetRenderDrawBlendMode(pGame->pRenderer, SDL_BLENDMODE_BLEND);
-            SDL_SetRenderDrawColor(pGame->pRenderer, 0, 0, 0, darkness);
+            SDL_SetRenderDrawColor(pGame->pRenderer, pGame->ui.damageRedChannel, 0, 0, darkness);
             if (pGame->map[i].type > 0)
             {
                 SDL_RenderCopy(pGame->pRenderer, pGame->pTileTextures[pGame->map[i].type], NULL, &pGame->map[i].wall);
@@ -694,7 +717,8 @@ void *updateScreen(void *pGameIn)
                 }
             }
 
-            SDL_SetRenderDrawColor(pGame->pRenderer, 0, 0, 0, darkness);
+            SDL_SetRenderDrawColor(pGame->pRenderer, pGame->ui.damageRedChannel, 0, 0, darkness);
+                
             if (pGame->map[i].type <= 0)
             {
                 temp = pGame->map[i].wall;
@@ -730,4 +754,6 @@ void *updateScreen(void *pGameIn)
     }
 
     SDL_RenderPresent(pGame->pRenderer);
+
+    return NULL;
 }

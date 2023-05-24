@@ -101,6 +101,8 @@ typedef struct text Text;
 
 struct uiElements
 {
+    bool playerTookDamage;
+    Uint8 damageRedChannel;
     SDL_Rect chargebar;
     SDL_Rect healthbar;
     SDL_Rect fpsFrame;
@@ -131,7 +133,7 @@ typedef struct playerNet
 struct game
 {
     bool packetAllocatedFlag;
-    bool isConnected;
+    volatile bool isConnected;
     bool isDrawing;
     int tempID;
     int nrOfPlayers;
