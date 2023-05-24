@@ -30,6 +30,30 @@ Game *createGame()
     pNew_game->pPlayerTexture = NULL;
     pNew_game->pPacket = NULL;
     pNew_game->pClient = NULL;
+    for(int i = 0; i < TILES; i++)
+        pNew_game->pTileTextures[i] = NULL;
+
+    // Set variables
+    pNew_game->isConnected = false;
+    pNew_game->packetAllocatedFlag = 0;
+    pNew_game->ui.playerTookDamage = false;
+    pNew_game->isDrawing = false;
+    pNew_game->nrOfPlayers = 0;
+    pNew_game->nrOfPlayersAlive = 0;
+    pNew_game->state = START;
+
+    // UI stuff
+    pNew_game->ui.playerTookDamage = false;
+    pNew_game->ui.damageRedChannel = 0;
+    pNew_game->ui.pMenuText = NULL;
+    pNew_game->ui.pOverText = NULL;
+    pNew_game->ui.pFpsText = NULL;
+    pNew_game->ui.pPlayerName = NULL;
+    pNew_game->ui.pWinText = NULL;
+    pNew_game->ui.pGameFont = NULL;
+    pNew_game->ui.pFpsFont = NULL;
+    pNew_game->ui.pNameTagFont = NULL;
+
     #ifdef SDL_MIXER_H_
     pNew_game->pMusic = NULL;
     pNew_game->pCharge = NULL;
@@ -38,6 +62,7 @@ Game *createGame()
     pNew_game->pWin = NULL;
     pNew_game->pMenuSwitch = NULL;
     #endif
+
     return pNew_game;
 }
 
@@ -45,16 +70,12 @@ int main(int argv, char **args)
 {
     printf("If the game doesnt start, try again or comment out \"#include <SDL2/SDL_mixer.h>\" in \"\\include\\definitions.h\"\n");
     Game *pGame = createGame();
-    // game.serverThread;
     char *mapName = (char *)malloc(31*sizeof(char));
 
-    // game.serverIsHosted = false;
     if(!pGame)
     {
         printf("Couldnt create Game\n");
-        //closeG(pGame);
         free(mapName);
-        //free(pGame);
         return 1;
     }
     if (init(pGame))
@@ -122,8 +143,7 @@ int main(int argv, char **args)
 
 int init(Game *pGame)
 {
-    //printf("\n\n\nLoading.");
-    pGame->isConnected = false;
+    printf("\n\n\nLoading.");
     char windowTitle[100] = "CatClash   |";
     if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO) != 0)
     {
@@ -204,6 +224,7 @@ int init(Game *pGame)
         printf("Error: Failed to create player\n");
         return 1;
     }
+
     #ifdef SDL_MIXER_H_
     setVolume(pGame);
     #endif
@@ -328,12 +349,7 @@ int init(Game *pGame)
 
     pGame->pPlayer->idle = 1;
     pGame->pPlayer->charging = 0;
-
     pGame->tempID = 0;
-
-    pGame->packetAllocatedFlag = 0;
-
-    pGame->ui.playerTookDamage = false;
 
     //sem_init(&pGame->pGameSemaphore, 0, 1);
 
