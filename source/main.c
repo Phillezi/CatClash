@@ -420,6 +420,8 @@ void run(Game *pGame)
     bool exit = false;
     int frameCounter = 0, oneSecTimer = 0, previousTime = 0, movementPreviousTime = 0;
     int previousPlayerHP = pGame->pPlayer->hp;
+    if(pGame->config.multiThreading)
+        pthread_create(&movementThread, NULL, handleInput, (void *)pGame);
     while (!exit)
     {
         if (SDL_GetTicks() - oneSecTimer >= 1000) // Performance monitor
