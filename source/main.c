@@ -352,6 +352,7 @@ void run(Game *pGame)
     pthread_t movementThread;
     bool exit = false;
     int frameCounter = 0, oneSecTimer = 0, previousTime = 0, movementPreviousTime = 0;
+    int previousPlayerHP = pGame->pPlayer->hp;
     while (!exit)
     {
         if (SDL_GetTicks() - oneSecTimer >= 1000) // Performance monitor
@@ -388,7 +389,7 @@ void run(Game *pGame)
             if (movementDeltaTime >= (1000 / 60))
             {
                 movementPreviousTime = SDL_GetTicks();
-                int previousPlayerHP = pGame->pPlayer->hp;
+                
                 if (pGame->config.multiThreading)
                 {
                     static int idle = 0;
@@ -454,6 +455,7 @@ void run(Game *pGame)
                 if(pGame->pPlayer->hp < previousPlayerHP)
                 {
                     pGame->ui.playerTookDamage = true;
+                    previousPlayerHP = pGame->pPlayer->hp;
                     #ifdef SDL_MIXER_H_
                     Mix_PlayChannel(-1, pGame->pHit, 0);
                     #endif

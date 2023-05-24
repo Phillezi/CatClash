@@ -159,10 +159,6 @@ void *handleInput(void *pGameIn) // Game *pGame)
                 {
                     damage = pGame->pPlayer->charge * 2;
                     pGame->pPlayer->charge = 1;
-                    #ifdef SDL_MIXER_H_
-                    if (Mix_PlayChannel(-1, pGame->pHit, 0) == -1)
-                        printf("Failed to play hit sound effect\n");
-                    #endif
                 }
                 break;
             }
