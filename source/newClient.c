@@ -359,7 +359,12 @@ void *scanForGamesOnLocalNetwork(void *arg)
 
     char ipStr[16], defaultGateway[16], subnetmask[16];
 
+    #ifdef _WIN32
     getDefaultGateway(defaultGateway, subnetmask);
+    #else
+    strcpy(defaultGateway,"192.168.1.1");
+    printf("Could not get default gateway of your OS, setting default-gateway to: 192.168.1.1\n");
+    #endif
 
     printf("Default Gateway: %s\n", defaultGateway);
     printf("Subnet-mask: %s\n", subnetmask);
@@ -413,8 +418,12 @@ void *scanForGamesOnLocalNetwork(void *arg)
     for (int i = 0; i < 255; i++)
     {
         sem_wait(&net[i].done);
+        #ifdef _WIN32
         if (_pthread_tryjoin(tryOpenThread[i], NULL) != 0)
             pthread_cancel(tryOpenThread[i]);
+        #else
+            pthread_join(tryOpenThread[i], NULL);
+        #endif
 
         Uint8 errFlag = 0;
 
@@ -486,12 +495,15 @@ void *scanForGamesOnLocalNetwork(void *arg)
                 }
             }
         }
-
+        #ifdef _WIN32
         if (_pthread_tryjoin(timeoutThread[i], NULL) != 0)
         {
             printf("Trying to cancel timeout Thread\n");
             pthread_cancel(timeoutThread[i]);
         }
+        #else
+        pthread_join(timeoutThread[i], NULL);
+        #endif
 
         // sem_destroy(&net[i].started);
         // sem_destroy(&net[i].done);
@@ -556,8 +568,12 @@ void *scanForGamesFromSavedList(void *arg)
     for (int i = 0; i < nrOfIps; i++)
     {
         sem_wait(&net[i].done);
+        #ifdef _WIN32
         if (_pthread_tryjoin(tryOpenThread[i], NULL) != 0)
             pthread_cancel(tryOpenThread[i]);
+        #else
+            pthread_join(tryOpenThread[i], NULL);
+        #endif
 
         Uint8 errFlag = 0;
 
@@ -630,11 +646,15 @@ void *scanForGamesFromSavedList(void *arg)
             }
         }
 
+        #ifdef _WIN32
         if (_pthread_tryjoin(timeoutThread[i], NULL) != 0)
         {
             printf("Trying to cancel timeout Thread\n");
             pthread_cancel(timeoutThread[i]);
         }
+        #else
+        pthread_join(timeoutThread[i], NULL);
+        #endif
     }
 
     pLocalServer->searchDone = true; // set done with scan flag to true

@@ -113,11 +113,14 @@ int init(Game *pGame)
     #ifdef SDL_MIXER_H_
     // Initialize SDL_mixer
     printf(".");
+
     pGame->pMusic = NULL;
     pGame->pCharge = NULL;
     pGame->pHit = NULL;
+    pGame->pBonk = NULL;
     pGame->pWin = NULL;
     pGame->pMenuSwitch = NULL;
+
     printf(".");
     if (Mix_Init(MIX_INIT_OGG | MIX_INIT_FLAC | MIX_INIT_MID | MIX_INIT_MOD | MIX_INIT_MP3) == 0)
     {
@@ -320,11 +323,31 @@ bool loadMusic(Game *pGame)
 
     // Load sound effects
     pGame->pCharge = Mix_LoadWAV("resources/music/charging.wav");
+    if((pGame->pCharge == NULL))
+    {
+        printf("Failed to load sound effects: %s\n", Mix_GetError());
+        return 0;
+    }
     pGame->pHit = Mix_LoadWAV("resources/music/hit.wav");
+    if((pGame->pHit == NULL))
+    {
+        printf("Failed to load sound effects: %s\n", Mix_GetError());
+        return 0;
+    }
     pGame->pBonk = Mix_LoadWAV("resources/music/bonk.wav");
+    if((pGame->pBonk == NULL))
+    {
+        printf("Failed to load sound effects: %s\n", Mix_GetError());
+        return 0;
+    }
     pGame->pWin = Mix_LoadWAV("resources/music/win.wav");
+    if((pGame->pWin == NULL))
+    {
+        printf("Failed to load sound effects: %s\n", Mix_GetError());
+        return 0;
+    }
     pGame->pMenuSwitch = Mix_LoadWAV("resources/music/menuSwitch.wav");
-    if ((pGame->pCharge == NULL) || (pGame->pHit == NULL) || (pGame->pBonk == NULL) || (pGame->pWin == NULL) || (pGame->pMenuSwitch == NULL))
+    if ((pGame->pMenuSwitch == NULL))
     {
         printf("Failed to load sound effects: %s\n", Mix_GetError());
         return 0;
