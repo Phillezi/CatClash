@@ -16,8 +16,7 @@ Cat Clash is a multiplayer game developed as part of the HI1038 "Projektkurs ino
 - Multiplayer functionality: Play with your friends and crash into each other's cats.
 - Cute cat characters: Choose from a variety of cute cat characters to crash around the game world.
 - Create your own maps!: Using the built in level-editor you can create fun and unique maps to play with your friends.
-- Collision physics: Experience realistic collision physics as the cats bump into each other.
-- Scoring system: The last cat alive wins.
+- Competitive gameplay: The last cat alive wins.
 
 ## Requirements
 - C compiler
@@ -25,6 +24,7 @@ Cat Clash is a multiplayer game developed as part of the HI1038 "Projektkurs ino
 - SDL2_image library
 - SDL2_ttf library
 - SDL2_net library
+- SDL2_mixer library (can be disabled by removing "#include <SDL2/SDL_mixer.h>" from "include/definitions.h")
 - dirent library
 - pthread library
 
