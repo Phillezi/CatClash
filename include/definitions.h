@@ -110,6 +110,7 @@ struct uiElements
     SDL_Rect fpsFrame;
     Text *pMenuText, *pOverText, *pFpsText, *pPlayerName, *pWinText;
     TTF_Font *pGameFont, *pFpsFont, *pNameTagFont;
+    SDL_Texture *pHealthBarTexture;
 };
 typedef struct uiElements UiE;
 

@@ -319,10 +319,10 @@ int init(Game *pGame)
     pGame->ui.chargebar.w = pGame->pPlayer->charge;
     pGame->ui.chargebar.h = pGame->world.tileSize;
 
-    pGame->ui.healthbar.x = ((pGame->windowWidth / 2) + (MAX_CHARGE / 2) + 5);
+    pGame->ui.healthbar.x = pGame->windowWidth-((pGame->world.tileSize/2)*9) - (pGame->world.tileSize/2);
     pGame->ui.healthbar.y = ((3 * pGame->windowHeight) / 4);
-    pGame->ui.healthbar.w = pGame->pPlayer->hp;
-    pGame->ui.healthbar.h = pGame->world.tileSize;
+    pGame->ui.healthbar.w = ((pGame->world.tileSize/2)*9);
+    pGame->ui.healthbar.h = pGame->world.tileSize/2;
 
     pGame->movementAmount = pGame->world.tileSize / TILESIZE;
 
@@ -349,6 +349,13 @@ int init(Game *pGame)
     for (int i = 0; i < MAX_PLAYERS; i++)
     {
         loadMedia(pGame->pRenderer, &pGame->pPlayerTexture, pGame->gSpriteClips, i);
+    }
+
+    SDL_Surface *pTemp = IMG_Load("resources/HealthBar.png");
+    if(pTemp)
+    {
+        pGame->ui.pHealthBarTexture = SDL_CreateTextureFromSurface(pGame->pRenderer, pTemp);
+        SDL_FreeSurface(pTemp);
     }
 
     pGame->pPlayer->idle = 1;
@@ -564,7 +571,7 @@ void run(Game *pGame)
                     }
                 }
 
-                pGame->ui.healthbar.w = pGame->pPlayer->hp;
+                pGame->ui.healthbar.w = ((float)pGame->pPlayer->hp/255) * ((pGame->world.tileSize/2)*9);
                 pGame->ui.chargebar.w = pGame->pPlayer->charge;
             }
             previousTime = SDL_GetTicks();
@@ -652,6 +659,13 @@ void closeG(Game *pGame)
         printf("Freeing memory of: pPlayerTexture\n");
         SDL_DestroyTexture(pGame->pPlayerTexture);
     }
+
+    if(pGame->ui.pHealthBarTexture)
+    {
+        printf("Freeing memory of: pMenuText\n");
+        SDL_DestroyTexture(pGame->ui.pHealthBarTexture);
+    }
+
 
     if (pGame->ui.pMenuText)
     {
@@ -838,8 +852,10 @@ void *updateScreen(void *pGameIn)
 
     if (pGame->pPlayer->state == ALIVE)
     {
-        SDL_SetRenderDrawColor(pGame->pRenderer, 255 - pGame->pPlayer->hp, pGame->pPlayer->hp, 0, 255);
-        SDL_RenderFillRect(pGame->pRenderer, &pGame->ui.healthbar);
+        //SDL_SetRenderDrawColor(pGame->pRenderer, 255 - pGame->pPlayer->hp, pGame->pPlayer->hp, 0, 255);
+        //SDL_RenderFillRect(pGame->pRenderer, &pGame->ui.healthbar);
+        SDL_Rect hpOrgin = {0, 0, ((float)pGame->pPlayer->hp/255) * (32*9), (pGame->world.tileSize/2)};
+        SDL_RenderCopy(pGame->pRenderer, pGame->ui.pHealthBarTexture, &hpOrgin, &pGame->ui.healthbar);
 
         SDL_SetRenderDrawColor(pGame->pRenderer, 0, 0, 255, 255);
         SDL_RenderFillRect(pGame->pRenderer, &pGame->ui.chargebar);
