@@ -10,7 +10,7 @@ int levelEditor(Game *pGame)
     while (!exit)
     {
         SDL_Event event;
-        while (SDL_PollEvent(&event))
+        while (SDL_WaitEventTimeout(&event, 1000 / pGame->config.fps))
         {
             if (event.type == SDL_QUIT)
             {
@@ -24,7 +24,7 @@ int levelEditor(Game *pGame)
             }
         }
         int timeDelta = SDL_GetTicks() - previousTime;
-        if (timeDelta >= 1000 / FPS)
+        if (timeDelta >= 1000 / pGame->config.fps)
         {
             previousTime = SDL_GetTicks();
             lvlhandleInput(pGame, &mouseX, &mouseY);

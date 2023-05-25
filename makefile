@@ -6,8 +6,8 @@ LDFLAGS = -Wall
 
 # Determine the operating system
 ifeq ($(OS),Windows_NT)
-	EXE_EXT = .exe
-	LDFLAGS += -lmingw32 -lSDL2main -lSDL2_image -lSDL2 -lSDL2_net -lSDL2_ttf -lSDL2_mixer -lpthread -liphlpapi -lws2_32
+	EXE_EXT =.exe
+	LDFLAGS +=-lmingw32 -lSDL2main -lSDL2_image -lSDL2 -lSDL2_net -lSDL2_ttf -lSDL2_mixer -lpthread -liphlpapi -lws2_32
 all:
 	@echo "Building main"
 	$(CC) $(CFLAGS) $(SRCDIR)/main.c 
@@ -49,4 +49,5 @@ all:
 endif
 
 clean:
+	rm *.exe
 	rm *.o

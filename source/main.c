@@ -54,6 +54,9 @@ Game *createGame()
     pNew_game->ui.pFpsFont = NULL;
     pNew_game->ui.pNameTagFont = NULL;
 
+    // Net stuff
+    pNew_game->socketDesc = 0;
+
     #ifdef SDL_MIXER_H_
     pNew_game->pMusic = NULL;
     pNew_game->pCharge = NULL;
@@ -359,12 +362,13 @@ int init(Game *pGame)
 bool loadMusic(Game *pGame)
 {
     // Load background music
-    pGame->pMusic = Mix_LoadMUS("resources/music/catTheme.wav");
+    pGame->pMusic = Mix_LoadMUS("resources/music/CatTheme.wav");
     if (pGame->pMusic == NULL)
     {
         printf("Failed to load background music: %s\n", Mix_GetError());
         return 0;
     }
+    printf("Loaded music\n");
 
     // Load sound effects
     pGame->pCharge = Mix_LoadWAV("resources/music/charging.wav");
@@ -373,30 +377,35 @@ bool loadMusic(Game *pGame)
         printf("Failed to load sound effects: %s\n", Mix_GetError());
         return 0;
     }
+    printf("Loaded charge\n");
     pGame->pHit = Mix_LoadWAV("resources/music/hit.wav");
     if((pGame->pHit == NULL))
     {
         printf("Failed to load sound effects: %s\n", Mix_GetError());
         return 0;
     }
+    printf("Loaded hit\n");
     pGame->pBonk = Mix_LoadWAV("resources/music/bonk.wav");
     if((pGame->pBonk == NULL))
     {
         printf("Failed to load sound effects: %s\n", Mix_GetError());
         return 0;
     }
+    printf("Loaded bonk\n");
     pGame->pWin = Mix_LoadWAV("resources/music/win.wav");
     if((pGame->pWin == NULL))
     {
         printf("Failed to load sound effects: %s\n", Mix_GetError());
         return 0;
     }
+    printf("Loaded win\n");
     pGame->pMenuSwitch = Mix_LoadWAV("resources/music/menuSwitch.wav");
     if ((pGame->pMenuSwitch == NULL))
     {
         printf("Failed to load sound effects: %s\n", Mix_GetError());
         return 0;
     }
+    printf("Loaded MenuSwitch\n");
 
     // Successfully loaded music
     return 1;
@@ -701,6 +710,7 @@ void closeG(Game *pGame)
         printf("Freeing memory of: pWindow\n");
         SDL_DestroyWindow(pGame->pWindow);
     }
+
 #ifdef SDL_MIXER_H_
     Mix_FreeChunk(pGame->pCharge);
     Mix_FreeChunk(pGame->pHit);
@@ -781,13 +791,13 @@ void *updateScreen(void *pGameIn)
                     }
                 }
             }
-            if (i == (((pGame->pPlayer->y / pGame->map[0].wall.w) * MAPSIZE) + ((pGame->pPlayer->x - 1) / pGame->map[0].wall.w) + 2))
+            if (i == (((pGame->pPlayer->y / pGame->map[0].wall.w) * MAPSIZE) + ((pGame->pPlayer->x-1) / pGame->map[0].wall.w) + 2))
             {
                 drawPlayer(pGame, *pGame->pPlayer, pGame->pPlayer->id);
             }
             for (int j = 0; j < pGame->nrOfPlayers; j++)
             {
-                if (i == (((pGame->pMultiPlayer[j].y / pGame->map[0].wall.w) * MAPSIZE) + ((pGame->pMultiPlayer[j].x - 1) / pGame->map[0].wall.w) + 2))
+                if (i == (((pGame->pMultiPlayer[j].y / pGame->map[0].wall.w) * MAPSIZE) + ((pGame->pMultiPlayer[j].x-1) / pGame->map[0].wall.w) + 2))
                 {
                     drawPlayer(pGame, pGame->pMultiPlayer[j], pGame->pMultiPlayer[j].id);
                     if (pGame->pMultiPlayer[j].name[0])
