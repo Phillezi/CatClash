@@ -11,6 +11,7 @@ ifeq ($(OS),Windows_NT)
 all:
 	@echo "Building main"
 	$(CC) $(CFLAGS) $(SRCDIR)/main.c 
+	$(CC) $(CFLAGS) $(SRCDIR)/game.c 
 	$(CC) $(CFLAGS) $(SRCDIR)/init.c
 	$(CC) $(CFLAGS) $(SRCDIR)/text.c
 	$(CC) $(CFLAGS) $(SRCDIR)/player.c  
@@ -19,7 +20,7 @@ all:
 	$(CC) $(CFLAGS) $(SRCDIR)/ioHandler.c
 	$(CC) $(CFLAGS) $(SRCDIR)/newClient.c
 	$(CC) $(CFLAGS) $(SRCDIR)/getDefaultGateway.c
-	$(CC) main.o init.o text.o player.o menu.o levelEditor.o ioHandler.o newClient.o getDefaultGateway.o -o main$(EXE_EXT) $(LDFLAGS)
+	$(CC) main.o game.o init.o text.o player.o menu.o levelEditor.o ioHandler.o newClient.o getDefaultGateway.o -o main$(EXE_EXT) $(LDFLAGS)
 	@echo "Building Server"
 	$(CC) $(CFLAGS) $(SRCDIR)/betterServer.c 
 	$(CC) betterServer.o init.o text.o ioHandler.o player.o -o betterServer$(EXE_EXT) $(LDFLAGS)
@@ -35,6 +36,7 @@ else
 all:
 	@echo "Building main"
 	$(CC) $(CFLAGS) $(SRCDIR)/main.c 
+	$(CC) $(CFLAGS) $(SRCDIR)/game.c 
 	$(CC) $(CFLAGS) $(SRCDIR)/init.c
 	$(CC) $(CFLAGS) $(SRCDIR)/text.c
 	$(CC) $(CFLAGS) $(SRCDIR)/player.c  
@@ -42,7 +44,7 @@ all:
 	$(CC) $(CFLAGS) $(SRCDIR)/levelEditor.c
 	$(CC) $(CFLAGS) $(SRCDIR)/ioHandler.c
 	$(CC) $(CFLAGS) $(SRCDIR)/newClient.c
-	$(CC) main.o init.o text.o player.o menu.o levelEditor.o ioHandler.o newClient.o -o main$(EXE_EXT) $(LDFLAGS)
+	$(CC) main.o game.o init.o text.o player.o menu.o levelEditor.o ioHandler.o newClient.o -o main$(EXE_EXT) $(LDFLAGS)
 	@echo "Building Server"
 	$(CC) $(CFLAGS) $(SRCDIR)/betterServer.c 
 	$(CC) betterServer.o init.o text.o ioHandler.o player.o -o betterServer$(EXE_EXT) $(LDFLAGS)
