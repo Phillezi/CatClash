@@ -64,22 +64,22 @@ Cat Clash is a multiplayer game developed as part of the HI1038 "Projektkurs ino
    ```
 
 ## Usage
-## 0. Toggle settings in the config file ("/resources/config.txt").
+### 0. Toggle settings in the config file ("/resources/config.txt").
    Here you can toggle fps, vsync, resolution, music and sound volume and enable/disable multithreading.
-## 1. Run the game:
+### 1. Run the game:
 
    ```bash
    ./main
    ```
-## 2. Run the server:
+### 2. Run the server:
 
    ```bash
    ./betterServer
    ```
    Then select a local map to host using the GUI of the server.
-## 3. Join the hosted server;
+### 3. Join the hosted server;
    ### Take note of the IP-Address of the computer that is hosting the server:
-   #### Windows:
+   ### Windows:
    ##### To play in LAN mode
    ```powershell
    ipconfig
@@ -92,7 +92,7 @@ Cat Clash is a multiplayer game developed as part of the HI1038 "Projektkurs ino
    NOTE: This is not ideal as it opens up your network to the entire internet and makes you more vulnerable. 
    DO THIS AT YOUR OWN RISK.
    
-   ### Join using the GUI
+   ### Join using the GUI:
    #### Windows specific features:
    ##### Scan local network:
    On windows you have the ability to scan for games on your local network, NOTE: This only works for Class C networks and creates a lot of unnecessary network traffic.
@@ -102,10 +102,10 @@ Cat Clash is a multiplayer game developed as part of the HI1038 "Projektkurs ino
    #### Type in ip:
    In the "Join Server" menu, press search and type in the ip-address of the desired server to join. 
    
-## 4. Play the game.
+### 4. Play the game.
    ### Lobby:
    When you have joined the server you will be greeted by a lobby, this lobby shows the other joined players and their cats.
    Here you can wait for all your friends to join and then press space to go in to the game level.
    ### Controls:
    You can move your cat using W A S D or the arrow keys, and space to charge.
-## 5. Enjoy the multiplayer gaming experience with your friends!
+### 5. Enjoy the multiplayer gaming experience with your friends!
