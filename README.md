@@ -99,7 +99,8 @@ Cat Clash is a multiplayer game developed as part of the HI1038 "Projektkurs ino
    ##### Scan from list:
    You also have the ability to scan for servers from a list containing saved ips, this list is located in "resources/network/saved_ips.txt".
    You can add ips to the list as plain text with one ip per line or separating them with a space, the list can be changed during runtime.
-   #### Type in ip:
+   #### On all OS:
+   ##### Type in ip:
    In the "Join Server" menu, press search and type in the ip-address of the desired server to join. 
    
 ### 4. Play the game.
