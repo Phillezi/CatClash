@@ -100,7 +100,7 @@ Cat Clash is a multiplayer game developed as part of the HI1038 "Projektkurs ino
    3. Click Details next to the network you're connected to.
    4. Scroll down to see your Mac's local IP address.
    
-   ##### To play in WAN mode
+   ### To play in WAN mode
    If you want to play over the internet the process isnt quite as simple.
    You will need to open your routers settings and port forward the port "1234" over both UDP and TCP to your local address of the computer hosting the network with the same port: "1234".
    The server can now be accesed from the public ip of the network that the computer hosting the server is connected to.
