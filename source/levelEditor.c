@@ -17,22 +17,24 @@ int levelEditor(Game *pGame)
                 exit = true;
                 break;
             }
-
             else if (event.type == SDL_MOUSEWHEEL)
             {
                 lvlhandleZoom(pGame, event.wheel.y);
+            }
+            else
+            {
+                lvlhandleInput(pGame, &mouseX, &mouseY);
+                lvlAutoWalls(pGame);
+                lvlupdateScreen(pGame, mouseX, mouseY);
             }
         }
         int timeDelta = SDL_GetTicks() - previousTime;
         if (timeDelta >= 1000 / pGame->config.fps)
         {
             previousTime = SDL_GetTicks();
+            
             lvlhandleInput(pGame, &mouseX, &mouseY);
-            if (true)
-            {
-                lvlAutoWalls(pGame);
-            }
-
+            lvlAutoWalls(pGame);
             lvlupdateScreen(pGame, mouseX, mouseY);
         }
     }
