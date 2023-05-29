@@ -1,4 +1,4 @@
-# Grupp 4 HI1038, Cat Clash - Multiplayer Game
+# Grupp 4 HI1038, Cat Clash - A Multiplayer Game Using SDL2
 
 ![Cat Clash](cat_clash_banner.png)
 
@@ -21,12 +21,12 @@ Cat Clash is a multiplayer game developed as part of the HI1038 "Projektkurs ino
 - Competitive gameplay: The last cat alive wins.
 
 ## Requirements
-- C compiler
+- C compiler (the current makefile is made with GCC in mind)
 - SDL2 library
 - SDL2_image library
 - SDL2_ttf library
 - SDL2_net library
-- SDL2_mixer library (can be disabled by removing "#include <SDL2/SDL_mixer.h>" from "include/definitions.h")
+- SDL2_mixer library (can be disabled by removing "#include <SDL2/SDL_mixer.h>" from "/include/definitions.h")
 - dirent library
 - pthread library
 
@@ -83,14 +83,27 @@ Cat Clash is a multiplayer game developed as part of the HI1038 "Projektkurs ino
    ### Take note of the IP-Address of the computer that is hosting the server:
    ### Windows:
    ##### To play in LAN mode
-   ```powershell
+   ```cmd
    ipconfig
    ```
    Then look for "IPv4 Address. . . . . . . . . . . : [your local ip here]"
+   ### Linux:
+   ##### To play in LAN mode
+   ```bash
+   ip address
+   ```
+   This will display your network interfaces addresses, look for "inet" followed by an ip-address, ignore "127.0.0.1" since it is your localhost address.
+   ### MacOS:
+   ##### To play in LAN mode
+   1. Open the Apple menu and click System Settings.
+   2. Click Network in the left panel and then select Wi-Fi or Ethernet (for wired connections).
+   3. Click Details next to the network you're connected to.
+   4. Scroll down to see your Mac's local IP address.
    
    ##### To play in WAN mode
    If you want to play over the internet the process isnt quite as simple.
    You will need to open your routers settings and port forward the port "1234" over both UDP and TCP to your local address of the computer hosting the network with the same port: "1234".
+   The server can now be accesed from the public ip of the network that the computer hosting the server is connected to.
    NOTE: This is not ideal as it opens up your network to the entire internet and makes you more vulnerable. 
    DO THIS AT YOUR OWN RISK.
    
@@ -112,3 +125,4 @@ Cat Clash is a multiplayer game developed as part of the HI1038 "Projektkurs ino
    ### Controls:
    You can move your cat using W A S D or the arrow keys, and space to charge.
 ### 5. Enjoy the multiplayer gaming experience with your friends!
+   Have fun and play with friends!
