@@ -11,6 +11,9 @@
 
 ## Description
 Cat Clash is a multiplayer game developed as part of the HI1038 "Projektkurs inom data- och nätverksteknik" course. The game revolves around adorable cats crashing into each other, and it is built using the SDL2 library in the C programming language.
+### Trailer:
+Here is a trailer of the game: 
+[![CatClashTrailer](https://img.youtube.com/vi/lHLUrGcpPVY/0.jpg)](https://www.youtube.com/watch?v=lHLUrGcpPVY)
 
 ## Features
 - Multiplayer functionality: Play with your friends and crash into each other's cats.
