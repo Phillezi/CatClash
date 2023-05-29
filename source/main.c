@@ -24,6 +24,7 @@ int main(int argv, char **args)
     }
     if (initGame(pGame))
     {
+        free(mapName);
         closeGame(pGame);
         return 1;
     }
